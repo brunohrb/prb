@@ -517,10 +517,11 @@ async function render(){
         <div class="linha">
           <div>${r.data} • ${r.desc}</div>
           <div class="${r.valor<0?'pos':'neg'}">${fmt(r.valor)}</div>
-         <div class="acoes">
-  <span onclick="editar('${s}',${i})">✏️</span>
-  <span onclick="excluir('${s}',${i})">🗑️</span>
-</div>
+         ${(!mesFechado() && podeLancar())?`
+  <div class="acoes">
+    <span onclick="editar('${s}',${i})">✏️</span>
+    <span onclick="excluir('${s}',${i})">🗑️</span>
+  </div>`:""}
         </div>
       `).join("")}
 
@@ -1051,4 +1052,5 @@ async function calcularSaldoAnteriorOnline(socio, mes, ano){
 
 </body>
 </html>
+
 
