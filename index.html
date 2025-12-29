@@ -673,6 +673,12 @@ async function excluir(s, i){
 
   if(!confirm("Excluir lançamento?")) return;
 
+  // 🧾 REGISTRA LOG ANTES (snapshot seguro)
+  await registrarLog(
+    "EXCLUIU",
+    `${s} • ${fmt(item.valor)}`
+  );
+
   const { error } = await supabaseClient
     .from("lancamentos")
     .delete()
@@ -684,17 +690,16 @@ async function excluir(s, i){
     return;
   }
 
-  // 🧾 LOG DA EXCLUSÃO (AQUI É O PONTO-CHAVE)
-  await registrarLog(
-    "EXCLUIU",
-    `${s} • ${fmt(item.valor)}`
-  );
-
-  // 🔄 Recarrega tudo do Supabase
   await carregarLancamentosSupabaseSeguro();
   render();
   renderIndicadores();
+
+  // 🔁 ATUALIZA LOG SE A ABA ESTIVER ABERTA
+  if(!document.getElementById("abaLog").classList.contains("hidden")){
+    renderLogs();
+  }
 }
+
 
 /* ===== MODAL ===== */
 function fecharModal(){modal.classList.add("hidden")}
@@ -1005,6 +1010,7 @@ async function calcularSaldoAnteriorOnline(socio, mes, ano){
 
 </body>
 </html>
+
 
 
 
