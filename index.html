@@ -875,7 +875,7 @@ async function saldoAnteriorOnline(socio, mes, ano){
 }
 
 async function calcularSaldoAnteriorOnline(socio, mes, ano){
-  // data limite = primeiro dia do mês atual
+  // limite = primeiro dia do mês atual
   const limite = `${ano}-${String(mes+1).padStart(2,"0")}-01`;
 
   // 1️⃣ soma TODAS as retiradas até o mês anterior
@@ -898,9 +898,11 @@ async function calcularSaldoAnteriorOnline(socio, mes, ano){
   // 2️⃣ salário mensal fixo
   const salarioMensal = salarioBase(socio);
 
-  // 3️⃣ quantos meses já se passaram desde o início
-  const mesesDecorridos =
-    (ano - baseInicial.ano) * 12 + (mes - baseInicial.mes);
+  // 3️⃣ cálculo CORRETO de meses decorridos (mês absoluto)
+  const mesAtualAbs = ano * 12 + mes;
+  const mesInicialAbs = baseInicial.ano * 12 + baseInicial.mes;
+
+  const mesesDecorridos = mesAtualAbs - mesInicialAbs;
 
   const totalSalarios = salarioMensal * mesesDecorridos;
 
@@ -912,6 +914,7 @@ async function calcularSaldoAnteriorOnline(socio, mes, ano){
 
 </body>
 </html>
+
 
 
 
