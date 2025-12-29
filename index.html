@@ -684,6 +684,12 @@ async function excluir(s, i){
     return;
   }
 
+  // 🧾 LOG DA EXCLUSÃO (AQUI É O PONTO-CHAVE)
+  await registrarLog(
+    "EXCLUIU",
+    `${s} • ${fmt(item.valor)}`
+  );
+
   // 🔄 Recarrega tudo do Supabase
   await carregarLancamentosSupabaseSeguro();
   render();
@@ -999,6 +1005,7 @@ async function calcularSaldoAnteriorOnline(socio, mes, ano){
 
 </body>
 </html>
+
 
 
 
