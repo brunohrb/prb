@@ -729,6 +729,8 @@ function fmt(v){return v.toLocaleString("pt-BR",{style:"currency",currency:"BRL"
 function mask(el){el.value=fmt(parseMoeda(el.value))}
 
 async function registrarLog(acao, detalhes){
+  if(!usuarioLogado) return;
+
   const { error } = await supabaseClient
     .from("logs")
     .insert([{
@@ -738,7 +740,9 @@ async function registrarLog(acao, detalhes){
     }]);
 
   if(error){
-    console.error("Erro ao registrar log:", error);
+    console.error("Erro ao salvar log:", error);
+  } else {
+    console.log("Log salvo:", acao, detalhes);
   }
 }
 
@@ -984,6 +988,7 @@ async function calcularSaldoAnteriorOnline(socio, mes, ano){
 
 </body>
 </html>
+
 
 
 
