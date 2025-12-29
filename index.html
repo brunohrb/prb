@@ -838,6 +838,35 @@ const fim = `${a}-${String(m+1).padStart(2,"0")}-31`;
   console.log("Supabase carregado:", lancamentosSupabase);
 }
 
+async function saldoAnteriorOnline(socio, mes, ano){
+  // soma todas as retiradas ANTES deste mês
+  const fim = `${ano}-${String(mes+1).padStart(2,"0")}-01`;
+
+  const { data, error } = await supabaseClient
+    .from("lancamentos")
+    .select("valor")
+    .eq("socio", socio)
+    .lt("data", fim);
+
+  if(error){
+    console.error("Erro saldo anterior:", error);
+    return 0;
+  }
+
+  const totalRetirado = data.reduce((soma, l) => soma + Number(l.valor), 0);
+
+  // salário mensal * número de meses trabalhados
+  // por enquanto usamos salárioBase
+  const salarioMes = salarioBase(socio);
+
+  // conta quantos meses já passaram desde o início
+  const mesesTrabalhados =
+    (ano - baseInicial.ano) * 12 + (mes - baseInicial.mes);
+
+  const salarioAcumulado = salarioMes * mesesTrabalhados;
+
+  return salarioAcumulado - totalRetirado;
+}
 
 
 
@@ -845,5 +874,6 @@ const fim = `${a}-${String(m+1).padStart(2,"0")}-31`;
 
 </body>
 </html>
+
 
 
