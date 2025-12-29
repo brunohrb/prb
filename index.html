@@ -567,13 +567,11 @@ async function add(s){
 
   const lancamento = {
     socio: s,
-    data: new Date(),
     descricao: desc,
     valor: valor,
-    criado_por: usuarioLogado
+    data: new Date().toISOString()
   };
 
-  // 1️⃣ salva no Supabase
   const { error } = await supabaseClient
     .from("lancamentos")
     .insert([lancamento]);
@@ -584,36 +582,15 @@ async function add(s){
     return;
   }
 
-  // 2️⃣ continua salvando local (por enquanto)
-  let m = +mes.value;
-  let a = +ano.value;
-let arr = [];
+  // limpa campos
+  document.getElementById("d_"+s).value = "";
+  document.getElementById("v_"+s).value = "";
 
-if (
-  lancamentosSupabase &&
-  lancamentosSupabase[s] &&
-  lancamentosSupabase[s].length > 0
-) {
-  arr = lancamentosSupabase[s];
-} else {
-  arr = JSON.parse(localStorage.getItem(m+"-"+a+"_"+s)) || [];
-}
-
-  arr.push({
-    data:new Date().toLocaleDateString("pt-BR",{day:"2-digit",month:"2-digit"}),
-    desc:desc,
-    valor:valor
-  });
-
-  localStorage.setItem(m+"-"+a+"_"+s,JSON.stringify(arr));
-
-  registrarLog("ADICIONOU", `${s} • ${desc} • ${valor}`);
-
+  // 🔄 recarrega do Supabase (ESSENCIAL)
+  await carregarLancamentosSupabaseSeguro();
   render();
   renderIndicadores();
 }
-
-
 
 
 function editar(s,i){
@@ -867,3 +844,4 @@ async function carregarLancamentosSupabaseSeguro(){
 
 </body>
 </html>
+
