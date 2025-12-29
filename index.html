@@ -411,19 +411,31 @@ function init(){
 
 /* ===== ABAS ===== */
 function abrirAba(a){
- abaLanc.classList.toggle("hidden",a!=="lanc");
- abaInd.classList.toggle("hidden",a!=="ind");
- abaConf.classList.toggle("hidden",a!=="conf");
- abaLog.classList.toggle("hidden",a!=="log");
+  const abas = {
+    lanc: document.getElementById("abaLanc"),
+    ind:  document.getElementById("abaInd"),
+    conf: document.getElementById("abaConf"),
+    log:  document.getElementById("abaLog")
+  };
 
- tabLanc.classList.toggle("active",a==="lanc");
- tabInd.classList.toggle("active",a==="ind");
- tabConf.classList.toggle("active",a==="conf");
- tabLog.classList.toggle("active",a==="log");
+  const tabs = {
+    lanc: document.getElementById("tabLanc"),
+    ind:  document.getElementById("tabInd"),
+    conf: document.getElementById("tabConf"),
+    log:  document.getElementById("tabLog")
+  };
 
- if(a==="lanc") render();
- if(a==="ind") renderIndicadores();
- if(a==="log") renderLogs();
+  // esconde todas
+  Object.values(abas).forEach(el => el.classList.add("hidden"));
+  Object.values(tabs).forEach(el => el.classList.remove("active"));
+
+  // mostra só a clicada
+  abas[a].classList.remove("hidden");
+  tabs[a].classList.add("active");
+
+  // atualizações específicas
+  if(a === "ind") renderIndicadores();
+  if(a === "log") renderLogs();
 }
 
 
@@ -914,6 +926,7 @@ async function calcularSaldoAnteriorOnline(socio, mes, ano){
 
 </body>
 </html>
+
 
 
 
