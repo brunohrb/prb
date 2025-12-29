@@ -959,10 +959,32 @@ async function calcularSaldoAnteriorOnline(socio, mes, ano){
 }
 
 
+
+	async function testeLog(){
+  const { error } = await supabaseClient
+    .from("logs")
+    .insert([{
+      usuario: usuarioLogado,
+      acao: "TESTE",
+      detalhes: "Log manual de teste"
+    }]);
+
+  if(error){
+    alert("Erro log: " + error.message);
+    console.error(error);
+  } else {
+    alert("LOG INSERIDO COM SUCESSO");
+  }
+}
+
+
+
+	
 </script>
 
 </body>
 </html>
+
 
 
 
