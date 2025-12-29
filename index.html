@@ -518,10 +518,10 @@ async function render(){
           <div>${r.data} • ${r.desc}</div>
           <div class="${r.valor<0?'pos':'neg'}">${fmt(r.valor)}</div>
           ${(!mesFechado() && podeLancar())?`
-            <div class="acoes">
-              <span onclick="editar('${s}',${i})">✏️</span>
-              <span onclick="excluir('${s}',${i})">🗑️</span>
-            </div>`:""}
+ <div class="acoes">
+  <span onclick="editar('${s}',${i})">✏️</span>
+  <span onclick="excluir('${s}',${i})">🗑️</span>
+</div>
         </div>
       `).join("")}
 
@@ -639,24 +639,66 @@ renderIndicadores();
 }
 
 
-function editar(s,i){
- let m=+mes.value,a=+ano.value;
- let arr=JSON.parse(localStorage.getItem(m+"-"+a+"_"+s));
- edicao={s,i,m,a};
- mdDesc.value=arr[i].desc;
- mdValor.value=fmt(arr[i].valor);
- modal.classList.remove("hidden");
+function editar(s, i){
+  const item = lancamentosSupabase[s][i];
+
+  if(!item){
+    alert("Lançamento não encontrado");
+    return;
+  }
+
+  edicao = {
+    socio: s,
+    index: i,
+    id: item.id,
+    descAntes: item.desc,
+    valorAntes: item.valor
+  };
+
+  mdDesc.value = item.desc;
+  mdValor.value = fmt(item.valor);
+
+  modal.classList.remove("hidden");
 }
-function salvarEdicao(){
- let arr=JSON.parse(localStorage.getItem(edicao.m+"-"+edicao.a+"_"+edicao.s));
- arr[edicao.i].desc=mdDesc.value;
- arr[edicao.i].valor=parseMoeda(mdValor.value);
- localStorage.setItem(edicao.m+"-"+edicao.a+"_"+edicao.s,JSON.stringify(arr));
- fecharModal();
-registrarLog("EDITOU", `${edicao.s} • ${mdDesc.value} • ${arr[edicao.i].valor}`);
- render();
- renderIndicadores();
+
+async function salvarEdicao(){
+  const novaDesc = mdDesc.value;
+  const novoValor = parseMoeda(mdValor.value);
+
+  if(!novaDesc || !novoValor){
+    alert("Preencha descrição e valor");
+    return;
+  }
+
+  // 1️⃣ Atualiza no Supabase
+  const { error } = await supabaseClient
+    .from("lancamentos")
+    .update({
+      descricao: novaDesc,
+      valor: novoValor
+    })
+    .eq("id", edicao.id);
+
+  if(error){
+    alert("Erro ao atualizar lançamento");
+    console.error(error);
+    return;
+  }
+
+  // 2️⃣ REGISTRA LOG DE EDIÇÃO (ANTES → DEPOIS)
+  await registrarLog(
+    "EDITOU",
+    `${edicao.socio} • ${edicao.descAntes} (${fmt(edicao.valorAntes)}) → ${novaDesc} (${fmt(novoValor)})`
+  );
+
+  fecharModal();
+
+  // 3️⃣ Recarrega tudo
+  await carregarLancamentosSupabaseSeguro();
+  render();
+  renderIndicadores();
 }
+
 async function excluir(s, i){
   const item = lancamentosSupabase[s][i];
 
@@ -1010,5 +1052,3 @@ async function calcularSaldoAnteriorOnline(socio, mes, ano){
 
 </body>
 </html>
-
-
