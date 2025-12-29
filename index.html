@@ -737,7 +737,9 @@ function fmt(v){return v.toLocaleString("pt-BR",{style:"currency",currency:"BRL"
 function mask(el){el.value=fmt(parseMoeda(el.value))}
 
 async function registrarLog(acao, detalhes){
-  if(!usuarioLogado) return;
+  alert("registrarLog foi chamado");
+
+  alert("usuarioLogado = " + usuarioLogado);
 
   const { error } = await supabaseClient
     .from("logs")
@@ -748,11 +750,13 @@ async function registrarLog(acao, detalhes){
     }]);
 
   if(error){
-    console.error("Erro ao salvar log:", error);
+    alert("ERRO AO SALVAR LOG:\n" + error.message);
+    console.error(error);
   } else {
-    console.log("Log salvo:", acao, detalhes);
+    alert("LOG SALVO COM SUCESSO");
   }
 }
+
 
 
 function alterarSenha(){
@@ -996,6 +1000,7 @@ async function calcularSaldoAnteriorOnline(socio, mes, ano){
 
 </body>
 </html>
+
 
 
 
