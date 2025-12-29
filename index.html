@@ -728,16 +728,20 @@ function parseMoeda(v){
 function fmt(v){return v.toLocaleString("pt-BR",{style:"currency",currency:"BRL"})}
 function mask(el){el.value=fmt(parseMoeda(el.value))}
 
-function registrarLog(acao, detalhes){
- let logs = JSON.parse(localStorage.getItem("logs_prb")) || [];
- logs.push({
-  usuario: usuarioLogado || "9583adc5-b42b-44e0-9f0b-a1c30207544a",
-  acao,
-  detalhes,
-  data: new Date().toLocaleString("pt-BR")
- });
- localStorage.setItem("logs_prb", JSON.stringify(logs));
+async function registrarLog(acao, detalhes){
+  const { error } = await supabaseClient
+    .from("logs")
+    .insert([{
+      usuario: usuarioLogado,
+      acao,
+      detalhes
+    }]);
+
+  if(error){
+    console.error("Erro ao registrar log:", error);
+  }
 }
+
 
 function alterarSenha(){
  const atual = document.getElementById("senhaAtual").value;
@@ -766,29 +770,42 @@ function alterarSenha(){
  document.getElementById("novaSenha").value = "";
 }
 
-function renderLogs(){
- const lista = document.getElementById("listaLogs");
- lista.innerHTML = "";
+async function renderLogs(){
+  const lista = document.getElementById("listaLogs");
+  lista.innerHTML = "";
 
- let logs = JSON.parse(localStorage.getItem("logs_prb")) || [];
+  const { data, error } = await supabaseClient
+    .from("logs")
+    .select("*")
+    .order("criado_em", { ascending: false })
+    .limit(100);
 
- if(logs.length === 0){
-  lista.innerHTML = "<div class='small'>Nenhuma ação registrada.</div>";
-  return;
- }
+  if(error){
+    lista.innerHTML = "<div class='small'>Erro ao carregar logs.</div>";
+    console.error(error);
+    return;
+  }
 
- logs.slice().reverse().forEach(l=>{
-  lista.innerHTML += `
-   <div class="linha">
-    <div>
-     <b>${l.usuario}</b> • ${l.acao}<br>
-     <span class="small">${l.detalhes}</span>
-    </div>
-    <div class="small">${l.data}</div>
-   </div>
-  `;
- });
+  if(data.length === 0){
+    lista.innerHTML = "<div class='small'>Nenhuma ação registrada.</div>";
+    return;
+  }
+
+  data.forEach(l => {
+    lista.innerHTML += `
+      <div class="linha">
+        <div>
+          <b>${l.usuario}</b> • ${l.acao}<br>
+          <span class="small">${l.detalhes}</span>
+        </div>
+        <div class="small">
+          ${new Date(l.criado_em).toLocaleString("pt-BR")}
+        </div>
+      </div>
+    `;
+  });
 }
+
 
 
 async function salvarLancamentoSupabase(lancamento){
@@ -946,6 +963,7 @@ async function calcularSaldoAnteriorOnline(socio, mes, ano){
 
 </body>
 </html>
+
 
 
 
