@@ -875,27 +875,15 @@ async function saldoAnteriorOnline(socio, mes, ano){
 }
 
 async function calcularSaldoAnteriorOnline(socio, mes, ano){
-  // mês anterior
-  let pm = mes - 1;
-  let pa = ano;
+  // data limite = primeiro dia do mês atual
+  const limite = `${ano}-${String(mes+1).padStart(2,"0")}-01`;
 
-  if (pm < 0) {
-    pm = 11;
-    pa--;
-  }
-
-  // ⚠️ salário FIXO do sócio (não por competência)
-  const salarioFixo = salarioBase(socio);
-
-  const inicio = `${pa}-${String(pm+1).padStart(2,"0")}-01`;
-  const fim = `${pa}-${String(pm+1).padStart(2,"0")}-31`;
-
+  // 1️⃣ soma TODAS as retiradas até o mês anterior
   const { data, error } = await supabaseClient
     .from("lancamentos")
     .select("valor")
     .eq("socio", socio)
-    .gte("data", inicio)
-    .lte("data", fim);
+    .lt("data", limite);
 
   if (error) {
     console.error("Erro saldo anterior:", error);
@@ -907,15 +895,24 @@ async function calcularSaldoAnteriorOnline(socio, mes, ano){
     0
   );
 
-  return salarioFixo - totalRetirado;
-}
+  // 2️⃣ salário mensal fixo
+  const salarioMensal = salarioBase(socio);
 
+  // 3️⃣ quantos meses já se passaram desde o início
+  const mesesDecorridos =
+    (ano - baseInicial.ano) * 12 + (mes - baseInicial.mes);
+
+  const totalSalarios = salarioMensal * mesesDecorridos;
+
+  return totalSalarios - totalRetirado;
+}
 
 
 </script>
 
 </body>
 </html>
+
 
 
 
