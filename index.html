@@ -292,7 +292,6 @@ input:focus,select:focus{
  <button class="primary" onclick="salvarSalarios()">Salvar salários</button>
  <hr>
 <h4>Alterar minha senha</h4>
-<input id="senhaAtual" type="password" placeholder="Senha atual">
 <input id="novaSenha" type="password" placeholder="Nova senha">
 <button class="primary" onclick="alterarSenha()">Alterar senha</button>
 
@@ -808,35 +807,33 @@ async function registrarLog(acao, detalhes){
   }
 }
 
+async function alterarSenha(){
+  const nova = document.getElementById("novaSenha").value;
 
+  if(!nova || nova.length < 6){
+    alert("A nova senha deve ter pelo menos 6 caracteres");
+    return;
+  }
 
+  const { error } = await supabaseClient.auth.updateUser({
+    password: nova
+  });
 
-function alterarSenha(){
- const atual = document.getElementById("senhaAtual").value;
- const nova = document.getElementById("novaSenha").value;
+  if(error){
+    alert("Erro ao alterar senha: " + error.message);
+    console.error(error);
+    return;
+  }
 
- if(!usuarioLogado){
-  alert("Nenhum usuário logado");
-  return;
- }
+  await registrarLog(
+    "ALTEROU SENHA",
+    "Usuário alterou a própria senha"
+  );
 
- if(usuarios[usuarioLogado] !== atual){
-  alert("Senha atual incorreta");
-  return;
- }
-
- if(nova.length < 4){
-  alert("Nova senha muito curta");
-  return;
- }
-
- usuarios[usuarioLogado] = nova;
- localStorage.setItem("usuarios_prb", JSON.stringify(usuarios));
-
- alert("Senha alterada com sucesso");
- document.getElementById("senhaAtual").value = "";
- document.getElementById("novaSenha").value = "";
+  alert("Senha alterada com sucesso!");
+  document.getElementById("novaSenha").value = "";
 }
+
 
 async function renderLogs(){
   const lista = document.getElementById("listaLogs");
@@ -1052,5 +1049,6 @@ async function calcularSaldoAnteriorOnline(socio, mes, ano){
 
 </body>
 </html>
+
 
 
