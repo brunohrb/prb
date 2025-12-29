@@ -624,10 +624,18 @@ async function add(s){
   document.getElementById("d_"+s).value = "";
   document.getElementById("v_"+s).value = "";
 
-  // 🔄 recarrega do Supabase (ESSENCIAL)
-  await carregarLancamentosSupabaseSeguro();
-  render();
-  renderIndicadores();
+ // 🔄 recarrega do Supabase (ESSENCIAL)
+await carregarLancamentosSupabaseSeguro();
+
+// 🧾 REGISTRA LOG (AQUI É O LUGAR CERTO)
+await registrarLog(
+  "ADICIONOU",
+  `${s} • ${desc} • ${fmt(valor)}`
+);
+
+render();
+renderIndicadores();
+
 }
 
 
@@ -988,6 +996,7 @@ async function calcularSaldoAnteriorOnline(socio, mes, ano){
 
 </body>
 </html>
+
 
 
 
