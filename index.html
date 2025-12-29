@@ -884,10 +884,9 @@ async function calcularSaldoAnteriorOnline(socio, mes, ano){
     pa--;
   }
 
-  // 1️⃣ salário do mês anterior
-  const salarioAnterior = salarioBase(socio);
+  // ⚠️ salário FIXO do sócio (não por competência)
+  const salarioFixo = salarioBase(socio);
 
-  // 2️⃣ soma das retiradas do mês anterior
   const inicio = `${pa}-${String(pm+1).padStart(2,"0")}-01`;
   const fim = `${pa}-${String(pm+1).padStart(2,"0")}-31`;
 
@@ -908,15 +907,16 @@ async function calcularSaldoAnteriorOnline(socio, mes, ano){
     0
   );
 
-  // 3️⃣ saldo final do mês anterior
-  return salarioAnterior - totalRetirado;
+  return salarioFixo - totalRetirado;
 }
+
 
 
 </script>
 
 </body>
 </html>
+
 
 
 
