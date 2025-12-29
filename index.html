@@ -535,35 +535,55 @@ async function render(){
 }
 
 /* ===== INDICADORES ===== */
-function renderIndicadores(){
- indicadores.innerHTML="";
- let anoSel=+anoIndicador.value;
- let totalGeral=0;
- socios.forEach(s=>{
-  let soma=0;
-  Object.keys(localStorage).forEach(k=>{
-   if(k.endsWith("_"+s)){
-    let [ma]=k.split("_");
-    let [,a]=ma.split("-");
-    if(+a===anoSel){
-     let arr=JSON.parse(localStorage.getItem(k));
-     soma+=arr.reduce((x,y)=>x+y.valor,0);
+async function renderIndicadores(){
+  indicadores.innerHTML = "";
+
+  const anoSel = +anoIndicador.value;
+
+  let totalGeral = 0;
+
+  for (const s of socios) {
+
+    const inicio = `${anoSel}-01-01`;
+    const fim = `${anoSel}-12-31`;
+
+    const { data, error } = await supabaseClient
+      .from("lancamentos")
+      .select("valor")
+      .eq("socio", s)
+      .gte("data", inicio)
+      .lte("data", fim);
+
+    if(error){
+      console.error("Erro indicadores:", error);
+      continue;
     }
-   }
-  });
-  totalGeral+=soma;
-  indicadores.innerHTML+=`
-   <div class="card">
-    <div class="socio"><span>${s.toUpperCase()}</span></div>
-    <b>Total no ano</b><br>${fmt(soma)}
-   </div>`;
- });
- indicadores.innerHTML+=`
-  <div class="card">
-   <div class="socio"><span>TOTAL</span></div>
-   <b>3 sócios</b><br>${fmt(totalGeral)}
-  </div>`;
+
+    const soma = data.reduce(
+      (acc, l) => acc + Number(l.valor),
+      0
+    );
+
+    totalGeral += soma;
+
+    indicadores.innerHTML += `
+      <div class="card">
+        <div class="socio"><span>${s.toUpperCase()}</span></div>
+        <b>Total no ano</b><br>
+        ${fmt(soma)}
+      </div>
+    `;
+  }
+
+  indicadores.innerHTML += `
+    <div class="card">
+      <div class="socio"><span>TOTAL</span></div>
+      <b>3 sócios</b><br>
+      ${fmt(totalGeral)}
+    </div>
+  `;
 }
+
 
 /* ===== CRUD ===== */
 function podeLancar(){
@@ -926,6 +946,7 @@ async function calcularSaldoAnteriorOnline(socio, mes, ano){
 
 </body>
 </html>
+
 
 
 
