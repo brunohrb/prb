@@ -633,6 +633,11 @@ await registrarLog(
   `${s} • ${desc} • ${fmt(valor)}`
 );
 
+	await registrarLog(
+  "EXCLUIU",
+  `${s} • ${fmt(item.valor)}`
+);
+	
 render();
 renderIndicadores();
 
@@ -737,25 +742,24 @@ function fmt(v){return v.toLocaleString("pt-BR",{style:"currency",currency:"BRL"
 function mask(el){el.value=fmt(parseMoeda(el.value))}
 
 async function registrarLog(acao, detalhes){
-  alert("registrarLog foi chamado");
+  const user = (await supabaseClient.auth.getUser()).data.user;
 
-  alert("usuarioLogado = " + usuarioLogado);
+  if(!user) return;
 
   const { error } = await supabaseClient
     .from("logs")
     .insert([{
-      usuario: usuarioLogado,
+      usuario: user.id,
+      usuario_nome: user.email,
       acao,
       detalhes
     }]);
 
   if(error){
-    alert("ERRO AO SALVAR LOG:\n" + error.message);
-    console.error(error);
-  } else {
-    alert("LOG SALVO COM SUCESSO");
+    console.error("Erro ao salvar log:", error);
   }
 }
+
 
 
 
@@ -811,7 +815,7 @@ async function renderLogs(){
     lista.innerHTML += `
       <div class="linha">
         <div>
-          <b>${l.usuario}</b> • ${l.acao}<br>
+          <b>${l.usuario_nome || l.usuario}</b> • ${l.acao}<br>
           <span class="small">${l.detalhes}</span>
         </div>
         <div class="small">
@@ -1000,6 +1004,7 @@ async function calcularSaldoAnteriorOnline(socio, mes, ano){
 
 </body>
 </html>
+
 
 
 
