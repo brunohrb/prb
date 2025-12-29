@@ -1,0 +1,869 @@
+	<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<title>PRB • Pró-Labore</title>
+
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+
+<style>
+:root{
+ --azul:#1f3c88;
+ --bg:#f3f5f9;
+ --card:#ffffff;
+ --texto:#333;
+ --borda:#ddd;
+}
+.dark{
+ --bg:#0f172a;
+ --card:#020617;
+ --texto:#e5e7eb;
+ --borda:#334155;
+}
+*{box-sizing:border-box}
+body{
+ margin:0;
+ background:var(--bg);
+ color:var(--texto);
+ font-family:Segoe UI,Arial,sans-serif;
+}
+.hidden{display:none!important}
+.container{
+ max-width:1200px;
+ margin:24px auto;
+ background:var(--card);
+ padding:28px;
+ border-radius:22px;
+ box-shadow:0 12px 30px rgba(0,0,0,.08);
+}
+header{
+ display:flex;
+ justify-content:space-between;
+ align-items:center;
+ margin-bottom:22px;
+}
+.brand{display:flex;align-items:center;gap:14px}
+.logo{
+ width:56px;height:56px;border-radius:14px;
+ background:linear-gradient(135deg,var(--azul),#4f6bdc);
+ color:#fff;
+ display:flex;align-items:center;justify-content:center;
+ font-weight:700;font-size:22px;
+}
+.grid{
+ display:grid;
+ grid-template-columns:repeat(3,1fr);
+ gap:22px;
+}
+@media(max-width:900px){
+ .grid{grid-template-columns:1fr}
+}
+
+.card{
+ background:var(--card);
+ border:1px solid var(--borda);
+ border-radius:20px;
+ padding:22px;
+}
+.socio{text-align:center;font-weight:700;margin-bottom:12px}
+.socio span{
+ border:2px solid var(--azul);
+ border-radius:50px;
+ padding:6px 18px;
+}
+
+input,select,button{
+ padding:10px;
+ font-size:14px;
+ border-radius:10px;
+ border:1px solid var(--borda);
+ width:100%;
+ background:transparent;
+ color:var(--texto);
+}
+button{border:none;cursor:pointer}
+.primary{background:var(--azul);color:#fff}
+.secondary{background:#64748b;color:#fff}
+.danger{background:#c0392b;color:#fff}
+
+.linha{
+ display:flex;
+ justify-content:space-between;
+ align-items:center;
+ padding:8px 0;
+ border-bottom:1px dashed var(--borda);
+ font-size:14px;
+}
+.acoes span{cursor:pointer;margin-left:10px}
+
+.pos{color:#16a34a}
+.neg{color:#dc2626}
+.small{font-size:13px;color:#94a3b8}
+
+.tabs{
+ display:flex;
+ gap:6px;
+}
+.tabs button{
+ padding:8px 14px;
+ border-radius:10px;
+ background:#eee;
+}
+.tabs .active{
+ background:var(--azul);
+ color:#fff;
+}
+
+.modal{
+ position:fixed;inset:0;
+ background:rgba(0,0,0,.45);
+ display:flex;
+ align-items:center;
+ justify-content:center;
+ z-index:1000;
+}
+.modal-box{
+ background:var(--card);
+ width:340px;
+ padding:24px;
+ border-radius:20px;
+}
+.toggle{cursor:pointer;font-size:18px}
+
+/* =========================
+   VISUAL MODERNO – PRB UI
+   (PATCH SEGURO)
+========================= */
+
+body{
+ font-family: Inter, Segoe UI, system-ui, -apple-system, Arial, sans-serif;
+}
+
+/* Cards flutuantes */
+.card{
+ border:none;
+ box-shadow:0 10px 30px rgba(0,0,0,.08);
+ transition:transform .2s ease, box-shadow .2s ease;
+}
+.card:hover{
+ transform:translateY(-3px);
+ box-shadow:0 16px 40px rgba(0,0,0,.12);
+}
+
+/* Header mais clean */
+header{
+ padding-bottom:10px;
+ border-bottom:1px solid rgba(0,0,0,.05);
+}
+
+/* Logo mais premium */
+.logo{
+ box-shadow:0 6px 16px rgba(0,0,0,.25);
+}
+
+/* Abas estilo “pill” */
+.tabs{
+ background:rgba(0,0,0,.03);
+ padding:6px;
+ border-radius:14px;
+}
+.tabs button{
+ background:transparent;
+ border:none;
+ font-weight:600;
+ color:#64748b;
+}
+.tabs button.active{
+ background:var(--azul);
+ color:#fff;
+ box-shadow:0 4px 12px rgba(0,0,0,.2);
+}
+
+/* Inputs mais modernos */
+input,select{
+ background:rgba(0,0,0,.02);
+ border:none;
+ border-radius:12px;
+}
+input:focus,select:focus{
+ outline:none;
+ box-shadow:0 0 0 2px rgba(31,60,136,.25);
+ background:#fff;
+}
+
+/* MOBILE */
+@media(max-width:700px){
+ header{
+  flex-direction:column;
+  gap:12px;
+ }
+ .tabs{
+  width:100%;
+  overflow-x:auto;
+ }
+ .tabs button{
+  white-space:nowrap;
+ }
+}
+
+/* 👆 O CSS NOVO TERMINA AQUI */
+</style>
+
+</head>
+
+<body>
+
+<!-- LOGIN -->
+<div class="container" id="loginTela">
+<header class="brand">
+ <div class="logo">PRB</div>
+ <h2>Controle de Pró-Labore</h2>
+</header>
+<input id="user" placeholder="Usuário">
+<input id="pass" type="password" placeholder="Senha">
+<button class="primary" onclick="login()">Entrar</button>
+</div>
+
+<!-- APP -->
+<div class="container hidden" id="app">
+<header>
+ <div class="brand">
+  <div class="logo">PRB</div>
+  <select id="mes"></select>
+  <select id="ano"></select>
+ </div>
+ <div class="tabs">
+  <button id="tabLanc" class="active" onclick="abrirAba('lanc')">Lançamentos</button>
+  <button id="tabInd" onclick="abrirAba('ind')">Indicadores</button>
+  <button id="tabConf" onclick="abrirAba('conf')">Configurações</button>
+  <span class="toggle" onclick="toggleTema()">🌙</span>
+<button id="tabLog" onclick="abrirAba('log')">Logs</button>
+
+ </div>
+
+
+
+</header>
+
+<!-- LANÇAMENTOS -->
+<div id="abaLanc">
+ <div id="statusMes" class="small"></div>
+ <div class="grid" id="cards"></div>
+ <button class="secondary" onclick="alternarFechamento()">Fechar / Reabrir mês</button>
+</div>
+
+<!-- INDICADORES -->
+<div id="abaInd" class="hidden">
+ <h3>Indicadores por ano</h3>
+ <select id="anoIndicador"></select>
+ <div class="grid" id="indicadores"></div>
+</div>
+
+<!-- LOGS -->
+<div id="abaLog" class="hidden">
+ <h3>Log de atividades</h3>
+
+ <div style="margin-bottom:10px" class="small">
+  Mostra todas as ações realizadas no sistema
+ </div>
+
+ <div class="card">
+  <div id="listaLogs"></div>
+ </div>
+</div>
+
+
+<!-- CONFIG -->
+<div id="abaConf" class="hidden">
+ <h3>Configurações</h3>
+
+ <label>Salário padrão (competência atual)</label>
+ <input id="salPadrao" oninput="mask(this)">
+
+
+ <div class="grid">
+  <input id="sal_paulo" placeholder="Paulo (opcional)" oninput="mask(this)">
+  <input id="sal_rafael" placeholder="Rafael (opcional)" oninput="mask(this)">
+  <input id="sal_bruno" placeholder="Bruno (opcional)" oninput="mask(this)">
+ </div>
+
+ <button class="primary" onclick="salvarSalarios()">Salvar salários</button>
+ <hr>
+<h4>Alterar minha senha</h4>
+<input id="senhaAtual" type="password" placeholder="Senha atual">
+<input id="novaSenha" type="password" placeholder="Nova senha">
+<button class="primary" onclick="alterarSenha()">Alterar senha</button>
+
+ <button class="secondary" onclick="backup()">Backup (.json)</button>
+ <button class="secondary" onclick="exportarExcel()">Exportar Excel</button>
+</div>
+</div>
+
+<!-- MODAL -->
+<div class="modal hidden" id="modal">
+ <div class="modal-box">
+  <h3>Editar lançamento</h3>
+  <input id="mdDesc">
+  <input id="mdValor" oninput="mask(this)">
+  <button class="primary" onclick="salvarEdicao()">Salvar</button>
+  <button class="secondary" onclick="fecharModal()">Cancelar</button>
+ </div>
+</div>
+
+
+
+
+<script>
+const SUPABASE_URL = "https://xuwwgprchhfshrqdhuqn.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_HnqNNHIYrLbexVdrr-9DVA_gmprLLqe";
+
+const supabaseClient = supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_ANON_KEY
+);
+
+
+/* ===== DADOS ===== */
+let usuarios = JSON.parse(localStorage.getItem("usuarios_prb")) || {
+ admin:"admin123",
+ paulo:"1234",
+ rafael:"1234",
+ bruno:"1234"
+};
+
+const socios=["paulo","rafael","bruno"];
+const meses=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+const baseInicial={mes:11,ano:2025};
+let edicao=null;
+
+let lancamentosSupabase = {};
+
+
+/* ===== LOGIN ===== */
+let usuarioLogado = localStorage.getItem("usuario_logado") || null;
+
+async function login() {
+  const email = document.getElementById("user").value;
+  const password = document.getElementById("pass").value;
+
+  if (!email || !password) {
+    alert("Informe email e senha");
+    return;
+  }
+
+  const { data, error } = await supabaseClient.auth.signInWithPassword({
+    email,
+    password
+  });
+
+  if (error) {
+    alert("Erro no login: " + error.message);
+    return;
+  }
+
+  usuarioLogado = data.user.id;
+  localStorage.setItem("usuario_logado", usuarioLogado);
+
+  document.getElementById("loginTela").classList.add("hidden");
+  document.getElementById("app").classList.remove("hidden");
+
+  init();
+}
+ 
+
+/* ===== INIT ===== */
+function init(){
+  mes.innerHTML="";
+  ano.innerHTML="";
+  anoIndicador.innerHTML="";
+
+  meses.forEach((m,i)=>{
+    mes.innerHTML += `<option value="${i}">${m}</option>`;
+  });
+
+  let y = new Date().getFullYear();
+  for(let a = 2025; a <= y + 3; a++){
+    ano.innerHTML += `<option>${a}</option>`;
+    anoIndicador.innerHTML += `<option>${a}</option>`;
+  }
+
+  mes.value = new Date().getMonth();
+  ano.value = y;
+  anoIndicador.value = y;
+
+  mes.onchange = ano.onchange = () => {
+    carregarLancamentosSupabaseSeguro().then(render);
+  };
+
+  anoIndicador.onchange = renderIndicadores;
+
+  aplicarTema();
+
+  // ⬇️ AQUI ESTÁ A CHAVE
+  carregarLancamentosSupabaseSeguro().then(() => {
+    render();
+    renderIndicadores();
+  });
+}
+
+
+/* ===== ABAS ===== */
+function abrirAba(a){
+ abaLanc.classList.toggle("hidden",a!=="lanc");
+ abaInd.classList.toggle("hidden",a!=="ind");
+ abaConf.classList.toggle("hidden",a!=="conf");
+ abaLog.classList.toggle("hidden",a!=="log");
+
+ tabLanc.classList.toggle("active",a==="lanc");
+ tabInd.classList.toggle("active",a==="ind");
+ tabConf.classList.toggle("active",a==="conf");
+ tabLog.classList.toggle("active",a==="log");
+
+ if(a==="lanc") render();
+ if(a==="ind") renderIndicadores();
+ if(a==="log") renderLogs();
+}
+
+
+/* ===== FECHAMENTO ===== */
+function chaveFechamento(){return "fechado_"+mes.value+"-"+ano.value}
+function mesFechado(){return localStorage.getItem(chaveFechamento())==="1"}
+function alternarFechamento(){
+ if(mesFechado()) localStorage.removeItem(chaveFechamento());
+ else localStorage.setItem(chaveFechamento(),"1");
+ render();
+}
+
+/* ===== SALÁRIO POR COMPETÊNCIA ===== */
+function chaveSal(s){return "sal_"+mes.value+"-"+ano.value+"_"+s}
+function salvarSalarios(){
+ localStorage.setItem(chaveSal("padrao"),parseMoeda(salPadrao.value));
+ socios.forEach(s=>{
+  let v=document.getElementById("sal_"+s).value;
+  if(v) localStorage.setItem(chaveSal(s),parseMoeda(v));
+ });
+ alert("Salários salvos para esta competência");
+}
+function salarioBase(s){
+ let m=+mes.value,a=+ano.value;
+ while(a>=baseInicial.ano){
+  let ks="sal_"+m+"-"+a+"_"+s;
+  if(localStorage.getItem(ks)) return +localStorage.getItem(ks);
+  let kp="sal_"+m+"-"+a+"_padrao";
+  if(localStorage.getItem(kp)) return +localStorage.getItem(kp);
+  m--; if(m<0){m=11;a--}
+ }
+ return 0;
+}
+
+/* ===== SALDO ===== */
+function chaveSaldo(m,a,s){return "saldo_"+m+"-"+a+"_"+s}
+function saldoAnterior(m,a,s){
+ if(a<baseInicial.ano || (a===baseInicial.ano && m<baseInicial.mes)) return 0;
+ let pm=m-1,pa=a;
+ if(pm<0){pm=11;pa--}
+ return Number(localStorage.getItem(chaveSaldo(pm,pa,s)))||0;
+}
+
+
+
+
+
+/* ===== RENDER ===== */
+function render(){
+ cards.innerHTML="";
+ let m=+mes.value,a=+ano.value;
+ statusMes.innerHTML=mesFechado()?"🔒 Mês fechado":"🔓 Mês aberto";
+
+ socios.forEach(s=>{
+let arr = lancamentosSupabase[s] || [];
+  let total=arr.reduce((x,y)=>x+y.valor,0);
+  let base=salarioBase(s);
+  let prev=saldoAnterior(m,a,s);
+  let saldo=base+prev-total;
+
+  cards.innerHTML+=`
+  <div class="card">
+   <div class="socio"><span>${s.toUpperCase()}</span></div>
+   <div class="small">Salário: ${fmt(base)}</div>
+   <div class="small">Saldo anterior: <b class="${prev>=0?'pos':'neg'}">${fmt(prev)}</b></div>
+
+   ${(!mesFechado() && podeLancar())?`
+    <input id="d_${s}" placeholder="Descrição">
+    <input id="v_${s}" placeholder="R$ 0,00 (aceita negativo)" oninput="mask(this)">
+    <button class="primary" onclick="add('${s}')">OK</button>
+   `:`<div class="small">Lançamentos bloqueados</div>`}
+
+   ${arr.map((r,i)=>`
+    <div class="linha">
+     <div>${r.data} • ${r.desc}</div>
+     <div class="${r.valor<0?'pos':'neg'}">${fmt(r.valor)}</div>
+     ${(!mesFechado() && podeLancar())?`
+      <div class="acoes">
+       <span onclick="editar('${s}',${i})">✏️</span>
+       <span onclick="excluir('${s}',${i})">🗑️</span>
+      </div>`:""}
+    </div>
+   `).join("")}
+
+   <div class="small">
+    Total mês: ${fmt(total)}<br>
+    Saldo final: <b class="${saldo>=0?'pos':'neg'}">${fmt(saldo)}</b>
+   </div>
+  </div>`;
+ });
+}
+
+/* ===== INDICADORES ===== */
+function renderIndicadores(){
+ indicadores.innerHTML="";
+ let anoSel=+anoIndicador.value;
+ let totalGeral=0;
+ socios.forEach(s=>{
+  let soma=0;
+  Object.keys(localStorage).forEach(k=>{
+   if(k.endsWith("_"+s)){
+    let [ma]=k.split("_");
+    let [,a]=ma.split("-");
+    if(+a===anoSel){
+     let arr=JSON.parse(localStorage.getItem(k));
+     soma+=arr.reduce((x,y)=>x+y.valor,0);
+    }
+   }
+  });
+  totalGeral+=soma;
+  indicadores.innerHTML+=`
+   <div class="card">
+    <div class="socio"><span>${s.toUpperCase()}</span></div>
+    <b>Total no ano</b><br>${fmt(soma)}
+   </div>`;
+ });
+ indicadores.innerHTML+=`
+  <div class="card">
+   <div class="socio"><span>TOTAL</span></div>
+   <b>3 sócios</b><br>${fmt(totalGeral)}
+  </div>`;
+}
+
+/* ===== CRUD ===== */
+function podeLancar(){
+ let hoje = new Date();
+ let m = +mes.value;
+ let a = +ano.value;
+ return m === hoje.getMonth() && a === hoje.getFullYear();
+}
+
+
+async function add(s){
+  const desc = document.getElementById("d_"+s).value;
+  const valor = parseMoeda(document.getElementById("v_"+s).value);
+
+  if(!desc || !valor){
+    alert("Preencha descrição e valor");
+    return;
+  }
+
+  const lancamento = {
+    socio: s,
+    data: new Date(),
+    descricao: desc,
+    valor: valor,
+    criado_por: usuarioLogado
+  };
+
+  // 1️⃣ salva no Supabase
+  const { error } = await supabaseClient
+    .from("lancamentos")
+    .insert([lancamento]);
+
+  if(error){
+    alert("Erro ao salvar no servidor");
+    console.error(error);
+    return;
+  }
+
+  // 2️⃣ continua salvando local (por enquanto)
+  let m = +mes.value;
+  let a = +ano.value;
+let arr = [];
+
+if (
+  lancamentosSupabase &&
+  lancamentosSupabase[s] &&
+  lancamentosSupabase[s].length > 0
+) {
+  arr = lancamentosSupabase[s];
+} else {
+  arr = JSON.parse(localStorage.getItem(m+"-"+a+"_"+s)) || [];
+}
+
+  arr.push({
+    data:new Date().toLocaleDateString("pt-BR",{day:"2-digit",month:"2-digit"}),
+    desc:desc,
+    valor:valor
+  });
+
+  localStorage.setItem(m+"-"+a+"_"+s,JSON.stringify(arr));
+
+  registrarLog("ADICIONOU", `${s} • ${desc} • ${valor}`);
+
+  render();
+  renderIndicadores();
+}
+
+
+
+
+function editar(s,i){
+ let m=+mes.value,a=+ano.value;
+ let arr=JSON.parse(localStorage.getItem(m+"-"+a+"_"+s));
+ edicao={s,i,m,a};
+ mdDesc.value=arr[i].desc;
+ mdValor.value=fmt(arr[i].valor);
+ modal.classList.remove("hidden");
+}
+function salvarEdicao(){
+ let arr=JSON.parse(localStorage.getItem(edicao.m+"-"+edicao.a+"_"+edicao.s));
+ arr[edicao.i].desc=mdDesc.value;
+ arr[edicao.i].valor=parseMoeda(mdValor.value);
+ localStorage.setItem(edicao.m+"-"+edicao.a+"_"+edicao.s,JSON.stringify(arr));
+ fecharModal();
+registrarLog("EDITOU", `${edicao.s} • ${mdDesc.value} • ${arr[edicao.i].valor}`);
+ render();
+ renderIndicadores();
+}
+async function excluir(s, i){
+  const item = lancamentosSupabase[s][i];
+
+  if(!item){
+    alert("Lançamento não encontrado");
+    return;
+  }
+
+  if(!item.id){
+    alert("Erro: lançamento sem ID");
+    console.error(item);
+    return;
+  }
+
+  if(!confirm("Excluir lançamento?")) return;
+
+  const { error } = await supabaseClient
+    .from("lancamentos")
+    .delete()
+    .eq("id", item.id);
+
+  if(error){
+    alert("Erro ao excluir no servidor");
+    console.error(error);
+    return;
+  }
+
+  // 🔄 Recarrega tudo do Supabase
+  await carregarLancamentosSupabaseSeguro();
+  render();
+  renderIndicadores();
+}
+
+/* ===== MODAL ===== */
+function fecharModal(){modal.classList.add("hidden")}
+
+/* ===== BACKUP / EXCEL ===== */
+function backup(){
+ let data=JSON.stringify(localStorage);
+ let blob=new Blob([data],{type:"application/json"});
+ let a=document.createElement("a");
+ a.href=URL.createObjectURL(blob);
+ a.download="prb-backup.json";
+ a.click();
+}
+function exportarExcel(){
+ let dados=[];
+ Object.keys(localStorage).forEach(k=>{
+  if(k.includes("_")){
+   let arr=JSON.parse(localStorage.getItem(k));
+   if(Array.isArray(arr)){
+    arr.forEach(r=>dados.push({chave:k,descricao:r.desc,valor:r.valor}));
+   }
+  }
+ });
+ let ws=XLSX.utils.json_to_sheet(dados);
+ let wb=XLSX.utils.book_new();
+ XLSX.utils.book_append_sheet(wb,ws,"PRB");
+ XLSX.writeFile(wb,"prolabore.xlsx");
+}
+
+/* ===== TEMA ===== */
+function toggleTema(){
+ document.body.classList.toggle("dark");
+ localStorage.setItem("tema",document.body.classList.contains("dark")?"dark":"light");
+}
+function aplicarTema(){
+ if(localStorage.getItem("tema")==="dark") document.body.classList.add("dark");
+}
+
+/* ===== UTIL ===== */
+function parseMoeda(v){
+ let neg=v.includes("-");
+ let n=Number(v.replace(/[^\d]/g,""))/100||0;
+ return neg?-n:n;
+}
+function fmt(v){return v.toLocaleString("pt-BR",{style:"currency",currency:"BRL"})}
+function mask(el){el.value=fmt(parseMoeda(el.value))}
+
+function registrarLog(acao, detalhes){
+ let logs = JSON.parse(localStorage.getItem("logs_prb")) || [];
+ logs.push({
+  usuario: usuarioLogado || "9583adc5-b42b-44e0-9f0b-a1c30207544a",
+  acao,
+  detalhes,
+  data: new Date().toLocaleString("pt-BR")
+ });
+ localStorage.setItem("logs_prb", JSON.stringify(logs));
+}
+
+function alterarSenha(){
+ const atual = document.getElementById("senhaAtual").value;
+ const nova = document.getElementById("novaSenha").value;
+
+ if(!usuarioLogado){
+  alert("Nenhum usuário logado");
+  return;
+ }
+
+ if(usuarios[usuarioLogado] !== atual){
+  alert("Senha atual incorreta");
+  return;
+ }
+
+ if(nova.length < 4){
+  alert("Nova senha muito curta");
+  return;
+ }
+
+ usuarios[usuarioLogado] = nova;
+ localStorage.setItem("usuarios_prb", JSON.stringify(usuarios));
+
+ alert("Senha alterada com sucesso");
+ document.getElementById("senhaAtual").value = "";
+ document.getElementById("novaSenha").value = "";
+}
+
+function renderLogs(){
+ const lista = document.getElementById("listaLogs");
+ lista.innerHTML = "";
+
+ let logs = JSON.parse(localStorage.getItem("logs_prb")) || [];
+
+ if(logs.length === 0){
+  lista.innerHTML = "<div class='small'>Nenhuma ação registrada.</div>";
+  return;
+ }
+
+ logs.slice().reverse().forEach(l=>{
+  lista.innerHTML += `
+   <div class="linha">
+    <div>
+     <b>${l.usuario}</b> • ${l.acao}<br>
+     <span class="small">${l.detalhes}</span>
+    </div>
+    <div class="small">${l.data}</div>
+   </div>
+  `;
+ });
+}
+
+
+async function salvarLancamentoSupabase(lancamento){
+  const { error } = await supabaseClient
+    .from("lancamentos")
+    .insert([lancamento]);
+
+  if(error){
+    console.error("Erro Supabase:", error);
+    alert("Erro ao salvar no servidor");
+    return false;
+  }
+  return true;
+}
+
+
+async function carregarLancamentosSupabase(mes, ano) {
+  const inicio = new Date(ano, mes, 1).toISOString();
+  const fim = new Date(ano, mes + 1, 0, 23, 59, 59).toISOString();
+
+  const { data, error } = await supabaseClient
+    .from("lancamentos")
+.select("id, socio, data, descricao, valor")
+    .gte("data", inicio)
+    .lte("data", fim);
+
+  if (error) {
+    console.error("Erro ao ler Supabase:", error);
+    return {};
+  }
+
+  // 🔁 Converte para o formato atual do sistema
+  const mapa = {};
+  socios.forEach(s => mapa[s] = []);
+
+  data.forEach(l => {
+    mapa[l.socio].push({
+      data: new Date(l.data).toLocaleDateString("pt-BR", {
+        day: "2-digit",
+        month: "2-digit"
+      }),
+      desc: l.descricao,
+      valor: l.valor
+    });
+  });
+
+  return mapa;
+}
+
+async function carregarLancamentosSupabaseSeguro(){
+  let m = +mes.value;
+  let a = +ano.value;
+
+  const inicio = new Date(a, m, 1).toISOString();
+  const fim = new Date(a, m + 1, 0, 23, 59, 59).toISOString();
+
+  const { data, error } = await supabaseClient
+    .from("lancamentos")
+    .select("id, socio, data, descricao, valor")
+    .gte("data", inicio)
+    .lte("data", fim);
+
+  if (error) {
+    console.error("Erro ao ler Supabase:", error);
+    lancamentosSupabase = {};
+    return;
+  }
+
+  lancamentosSupabase = {};
+  socios.forEach(s => lancamentosSupabase[s] = []);
+
+  data.forEach(l => {
+    lancamentosSupabase[l.socio].push({
+      id: l.id,
+      data: new Date(l.data).toLocaleDateString("pt-BR", {
+        day: "2-digit",
+        month: "2-digit"
+      }),
+      desc: l.descricao,
+      valor: l.valor
+    });
+  });
+
+  console.log("Supabase carregado:", lancamentosSupabase);
+}
+
+
+
+
+</script>
+
+</body>
+</html>
