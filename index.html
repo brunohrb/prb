@@ -559,10 +559,10 @@ async function renderIndicadores(){
       continue;
     }
 
-    const soma = data.reduce(
-      (acc, l) => acc + Number(l.valor),
-      0
-    );
+const soma = data.reduce(
+  (acc, l) => acc + Math.abs(Number(l.valor)),
+  0
+);
 
     totalGeral += soma;
 
@@ -946,6 +946,7 @@ async function calcularSaldoAnteriorOnline(socio, mes, ano){
 
 </body>
 </html>
+
 
 
 
