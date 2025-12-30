@@ -634,6 +634,7 @@ function podeLancar(){
 
 
 async function add(s){
+	  const user = (await supabaseClient.auth.getUser()).data.user;
  const parcelado = document.getElementById("p_" + s)?.checked;
     const desc = document.getElementById("d_"+s).value;
   const valorTotal = parseMoeda(document.getElementById("v_"+s).value);
@@ -645,12 +646,14 @@ async function add(s){
 
   // 👉 CASO NÃO PARCELADO (fluxo antigo)
   if(!parcelado){
-    const lancamento = {
-      socio: s,
-      descricao: desc,
-      valor: valorTotal,
-      data: new Date().toISOString()
-    };
+const lancamento = {
+  socio: s,
+  descricao: desc,
+  valor: valorTotal,
+  data: new Date().toISOString(),
+  criado_por: user.id
+};
+
 
     const { error } = await supabaseClient
       .from("lancamentos")
@@ -692,13 +695,15 @@ async function add(s){
   const { data: pai, error: errPai } = await supabaseClient
     .from("lancamentos")
     .insert([{
-      socio: s,
-      descricao: desc,
-      valor: 0,
-      data: new Date().toISOString(),
-      parcelado: true,
-      total_parcelas: parcelas
-    }])
+  socio: s,
+  descricao: desc,
+  valor: 0,
+  data: new Date().toISOString(),
+  parcelado: true,
+  total_parcelas: parcelas,
+  criado_por: user.id
+}])
+
     .select()
     .single();
 
@@ -715,17 +720,19 @@ async function add(s){
 
     await supabaseClient
       .from("lancamentos")
-      .insert([{
-        socio: s,
-        descricao: `${desc} (${i+1}/${parcelas})`,
-        valor: valorParcela < 0 ? valorParcela : valorParcela,
-        data: dataISO,
-        parcelado: true,
-        id_parcelamento: pai.id,
-        parcela_numero: i+1,
-        total_parcelas: parcelas,
-        gerado_automaticamente: true
-      }]);
+     .insert([{
+  socio: s,
+  descricao: `${desc} (${i+1}/${parcelas})`,
+  valor: valorParcela,
+  data: dataISO,
+  parcelado: true,
+  id_parcelamento: pai.id,
+  parcela_numero: i+1,
+  total_parcelas: parcelas,
+  gerado_automaticamente: true,
+  criado_por: user.id
+}]);
+
   }
 
   await registrarLog(
@@ -1316,6 +1323,7 @@ async function calcularSaldoAnteriorOnline(socio, mes, ano){
 
 </body>
 </html>
+
 
 
 
