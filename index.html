@@ -534,11 +534,23 @@ async function render(){
         <b class="${prev>=0?'pos':'neg'}">${fmt(prev)}</b>
       </div>
 
-      ${(!mesFechado() && podeLancar())?`
-        <input id="d_${s}" placeholder="Descrição">
-        <input id="v_${s}" placeholder="R$ 0,00 (aceita negativo)" oninput="mask(this)">
-        <button class="primary" onclick="add('${s}')">OK</button>
-      `:`<div class="small">Lançamentos bloqueados</div>`}
+${(!mesFechado() && podeLancar())?`
+  <input id="d_${s}" placeholder="Descrição">
+  <input id="v_${s}" placeholder="R$ 0,00 (valor TOTAL se parcelado)" oninput="mask(this)">
+
+  <label class="small">
+<input type="checkbox" id="p_${s}" onchange="toggleParcelado('${s}')">
+    Parcelado
+  </label>
+
+  <div id="parc_${s}" class="small hidden">
+    <input id="n_${s}" type="number" placeholder="Nº parcelas">
+    <input id="m_${s}" type="month">
+  </div>
+
+  <button class="primary" onclick="add('${s}')">OK</button>
+`:`<div class="small">Lançamentos bloqueados</div>`}
+
 
       ${arr.map((r,i)=>`
         <div class="linha">
@@ -622,48 +634,113 @@ function podeLancar(){
 
 
 async function add(s){
-  const desc = document.getElementById("d_"+s).value;
-  const valor = parseMoeda(document.getElementById("v_"+s).value);
+ const parcelado = document.getElementById("p_" + s)?.checked;
+    const desc = document.getElementById("d_"+s).value;
+  const valorTotal = parseMoeda(document.getElementById("v_"+s).value);
 
-  if(!desc || !valor){
+  if(!desc || !valorTotal){
     alert("Preencha descrição e valor");
     return;
   }
 
-  const lancamento = {
-    socio: s,
-    descricao: desc,
-    valor: valor,
-    data: new Date().toISOString()
-  };
+  // 👉 CASO NÃO PARCELADO (fluxo antigo)
+  if(!parcelado){
+    const lancamento = {
+      socio: s,
+      descricao: desc,
+      valor: valorTotal,
+      data: new Date().toISOString()
+    };
 
-  const { error } = await supabaseClient
-    .from("lancamentos")
-    .insert([lancamento]);
+    const { error } = await supabaseClient
+      .from("lancamentos")
+      .insert([lancamento]);
 
-  if(error){
-    alert("Erro ao salvar no servidor");
-    console.error(error);
+    if(error){
+      alert("Erro ao salvar no servidor");
+      console.error(error);
+      return;
+    }
+
+    await registrarLog(
+      "ADICIONOU",
+      `${s} • ${desc} • ${fmt(valorTotal)}`
+    );
+
+    document.getElementById("d_"+s).value = "";
+    document.getElementById("v_"+s).value = "";
+
+    await carregarLancamentosSupabaseSeguro();
+    render();
+    renderIndicadores();
     return;
   }
 
-  // limpa campos
+  // 👉 CASO PARCELADO
+  const parcelas = Number(document.getElementById("n_"+s).value);
+  const mesIni = document.getElementById("m_"+s).value;
+
+  if(!parcelas || !mesIni){
+    alert("Informe parcelas e mês inicial");
+    return;
+  }
+
+  const [anoIni, mesIniNum] = mesIni.split("-").map(Number);
+  const valorParcela = +(valorTotal / parcelas).toFixed(2);
+
+  // 1️⃣ cria lançamento PAI
+  const { data: pai, error: errPai } = await supabaseClient
+    .from("lancamentos")
+    .insert([{
+      socio: s,
+      descricao: desc,
+      valor: 0,
+      data: new Date().toISOString(),
+      parcelado: true,
+      total_parcelas: parcelas
+    }])
+    .select()
+    .single();
+
+  if(errPai){
+    alert("Erro ao criar parcelamento");
+    console.error(errPai);
+    return;
+  }
+
+  // 2️⃣ cria parcelas
+  for(let i=0;i<parcelas;i++){
+    const d = somarMes(anoIni, mesIniNum-1, i);
+    const dataISO = `${d.ano}-${String(d.mes+1).padStart(2,"0")}-01`;
+
+    await supabaseClient
+      .from("lancamentos")
+      .insert([{
+        socio: s,
+        descricao: `${desc} (${i+1}/${parcelas})`,
+        valor: valorParcela < 0 ? valorParcela : valorParcela,
+        data: dataISO,
+        parcelado: true,
+        id_parcelamento: pai.id,
+        parcela_numero: i+1,
+        total_parcelas: parcelas,
+        gerado_automaticamente: true
+      }]);
+  }
+
+  await registrarLog(
+    "PARCELADO",
+    `${s} • ${desc} • ${parcelas}x de ${fmt(valorParcela)}`
+  );
+
   document.getElementById("d_"+s).value = "";
   document.getElementById("v_"+s).value = "";
+  document.getElementById("p_"+s).checked = false;
+  document.getElementById("parc_"+s).classList.add("hidden");
 
- // 🔄 recarrega do Supabase (ESSENCIAL)
-await carregarLancamentosSupabaseSeguro();
-
-// 🧾 REGISTRA LOG (AQUI É O LUGAR CERTO)
-await registrarLog(
-  "ADICIONOU",
-  `${s} • ${desc} • ${fmt(valor)}`
-);
-
-render();
-renderIndicadores();
-
-}
+  await carregarLancamentosSupabaseSeguro();
+  render();
+  renderIndicadores();
 
 
 function editar(s, i){
@@ -1214,11 +1291,31 @@ async function calcularSaldoAnteriorOnline(socio, mes, ano){
   renderIndicadores();
 }
 
+
+	function toggleParcelado(s) {
+  const chk = document.getElementById("p_" + s);
+  const box = document.getElementById("parc_" + s);
+  if (chk && box) {
+    box.classList.toggle("hidden", !chk.checked);
+  }
+}
+
+
+	function somarMes(ano, mes, qtd) {
+  const d = new Date(ano, mes + qtd, 1);
+  return {
+    ano: d.getFullYear(),
+    mes: d.getMonth()
+  };
+}
+
+	
 	
 </script>
 
 </body>
 </html>
+
 
 
 
