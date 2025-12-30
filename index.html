@@ -293,7 +293,7 @@ input:focus,select:focus{
 <input id="novaSenha" type="password" placeholder="Nova senha">
 <button class="primary" onclick="alterarSenha()">Alterar senha</button>
 
- <button class="secondary" onclick="backup()">Backup (.json)</button>
+
 <button onclick="gerarBackupExcel()">Exportar Excel</button>
 </div>
 
@@ -742,54 +742,55 @@ async function excluir(s, i){
 /* ===== MODAL ===== */
 function fecharModal(){modal.classList.add("hidden")}
 
-/* ===== BACKUP / EXCEL ===== */
-function backup(){
- let data=JSON.stringify(localStorage);
- let blob=new Blob([data],{type:"application/json"});
- let a=document.createElement("a");
- a.href=URL.createObjectURL(blob);
- a.download="prb-backup.json";
- a.click();
-}
-window.gerarBackupExcel = async function () {
-  console.log("▶ Backup Excel iniciado");
 
+window.gerarBackupExcel = async function () {
   try {
     if (typeof XLSX === "undefined") {
       alert("Biblioteca XLSX não carregada");
       return;
     }
 
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { user } } = await supabaseClient.auth.getUser();
     if (!user) {
       alert("Usuário não autenticado");
       return;
     }
 
-    const { data: lancamentos, error } = await supabase
+    const { data, error } = await supabaseClient
       .from("lancamentos")
-      .select("*")
+      .select("id, socio, data, descricao, valor")
       .order("data", { ascending: true });
 
-    if (error) throw error;
+    if (error) {
+      console.error(error);
+      alert("Erro ao buscar dados");
+      return;
+    }
+
+    // normaliza dados para Excel
+    const dadosExcel = data.map(l => ({
+      ID: l.id,
+      Sócio: l.socio,
+      Data: new Date(l.data).toLocaleDateString("pt-BR"),
+      Descrição: l.descricao,
+      Valor: l.valor
+    }));
 
     const wb = XLSX.utils.book_new();
-    const ws = XLSX.utils.json_to_sheet(lancamentos || []);
+    const ws = XLSX.utils.json_to_sheet(dadosExcel);
     XLSX.utils.book_append_sheet(wb, ws, "Lancamentos");
 
-    const nomeArquivo =
-      "PRB_Backup_" +
-      new Date().toISOString().slice(0, 10) +
-      ".xlsx";
-
-    XLSX.writeFile(wb, nomeArquivo);
+    const nome = `PRB_Backup_${new Date().toISOString().slice(0,10)}.xlsx`;
+    XLSX.writeFile(wb, nome);
 
     alert("Backup Excel gerado com sucesso!");
-  } catch (err) {
-    console.error("Erro no backup Excel:", err);
-    alert("Erro ao gerar backup (veja o console)");
+
+  } catch (e) {
+    console.error("Erro backup Excel:", e);
+    alert("Erro ao gerar Excel (veja o console)");
   }
 };
+
 
 
 /* ===== TEMA ===== */
@@ -1069,6 +1070,7 @@ async function calcularSaldoAnteriorOnline(socio, mes, ano){
 
 </body>
 </html>
+
 
 
 
