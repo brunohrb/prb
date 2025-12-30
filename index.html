@@ -788,7 +788,7 @@ window.gerarBackupExcel = async function () {
     const dadosExcel = data.map(l => ({
       ID: l.id,
       Socio: l.socio,
-      Data: new Date(l.data).toLocaleDateString("pt-BR"),
+Data: new Date(l.data).toISOString().slice(0,10),
       Descricao: l.descricao,
       Valor: l.valor
     }));
@@ -1143,13 +1143,31 @@ async function calcularSaldoAnteriorOnline(socio, mes, ano){
 
 	async function importarLancamentosExcel(rows){
   let inseridos = 0;
+  let erros = 0;
 
   for(const r of rows){
+
+    const socio = String(r.Socio).trim().toLowerCase();
+
+    if(!socios.includes(socio)){
+      console.warn("Sócio inválido:", r.Socio);
+      erros++;
+      continue;
+    }
+
+    const dataISO = String(r.Data).trim();
+
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(dataISO)){
+      console.warn("Data inválida:", r.Data);
+      erros++;
+      continue;
+    }
+
     const lancamento = {
-      socio: String(r.Socio).toLowerCase(),
-      descricao: r.Descricao,
+      socio,
+      descricao: String(r.Descricao).trim(),
       valor: Number(r.Valor),
-      data: new Date(r.Data).toISOString()
+      data: dataISO
     };
 
     const { error } = await supabaseClient
@@ -1158,17 +1176,22 @@ async function calcularSaldoAnteriorOnline(socio, mes, ano){
 
     if(error){
       console.error("Erro ao importar:", error, lancamento);
+      erros++;
       continue;
     }
 
     inseridos++;
   }
 
-  alert(`Importação concluída.\n\nLançamentos importados: ${inseridos}`);
+  alert(
+    `Importação finalizada.\n\n` +
+    `Inseridos: ${inseridos}\n` +
+    `Ignorados: ${erros}`
+  );
 
   await registrarLog(
     "RESTAURACAO",
-    `Importados ${inseridos} lançamentos a partir de Excel`
+    `Importados ${inseridos} lançamentos via Excel`
   );
 
   await carregarLancamentosSupabaseSeguro();
@@ -1181,6 +1204,7 @@ async function calcularSaldoAnteriorOnline(socio, mes, ano){
 
 </body>
 </html>
+
 
 
 
