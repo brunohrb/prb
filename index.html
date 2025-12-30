@@ -294,8 +294,7 @@ input:focus,select:focus{
 <button class="primary" onclick="alterarSenha()">Alterar senha</button>
 
  <button class="secondary" onclick="backup()">Backup (.json)</button>
- <button class="secondary" onclick="exportarExcel()">Exportar Excel</button>
-</div>
+<button onclick="gerarBackupExcel()">Exportar Excel</button>
 </div>
 
 <!-- MODAL -->
@@ -752,21 +751,46 @@ function backup(){
  a.download="prb-backup.json";
  a.click();
 }
-function exportarExcel(){
- let dados=[];
- Object.keys(localStorage).forEach(k=>{
-  if(k.includes("_")){
-   let arr=JSON.parse(localStorage.getItem(k));
-   if(Array.isArray(arr)){
-    arr.forEach(r=>dados.push({chave:k,descricao:r.desc,valor:r.valor}));
-   }
+window.gerarBackupExcel = async function () {
+  console.log("▶ Backup Excel iniciado");
+
+  try {
+    if (typeof XLSX === "undefined") {
+      alert("Biblioteca XLSX não carregada");
+      return;
+    }
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      alert("Usuário não autenticado");
+      return;
+    }
+
+    const { data: lancamentos, error } = await supabase
+      .from("lancamentos")
+      .select("*")
+      .order("data", { ascending: true });
+
+    if (error) throw error;
+
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.json_to_sheet(lancamentos || []);
+    XLSX.utils.book_append_sheet(wb, ws, "Lancamentos");
+
+    const nomeArquivo =
+      "PRB_Backup_" +
+      new Date().toISOString().slice(0, 10) +
+      ".xlsx";
+
+    XLSX.writeFile(wb, nomeArquivo);
+
+    alert("Backup Excel gerado com sucesso!");
+  } catch (err) {
+    console.error("Erro no backup Excel:", err);
+    alert("Erro ao gerar backup (veja o console)");
   }
- });
- let ws=XLSX.utils.json_to_sheet(dados);
- let wb=XLSX.utils.book_new();
- XLSX.utils.book_append_sheet(wb,ws,"PRB");
- XLSX.writeFile(wb,"prolabore.xlsx");
-}
+};
+
 
 /* ===== TEMA ===== */
 function toggleTema(){
@@ -1045,6 +1069,7 @@ async function calcularSaldoAnteriorOnline(socio, mes, ano){
 
 </body>
 </html>
+
 
 
 
