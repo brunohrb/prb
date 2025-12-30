@@ -833,10 +833,19 @@ async function excluir(s, i){
     `${s} • ${fmt(item.valor)}`
   );
 
-  const { error } = await supabaseClient
+ // 🔥 Se for parcelado, apaga TODAS as parcelas
+if (item.id_parcelamento) {
+  await supabaseClient
+    .from("lancamentos")
+    .delete()
+    .eq("id_parcelamento", item.id_parcelamento);
+} else {
+  await supabaseClient
     .from("lancamentos")
     .delete()
     .eq("id", item.id);
+}
+
 
   if(error){
     alert("Erro ao excluir no servidor");
@@ -1328,6 +1337,7 @@ async function calcularSaldoAnteriorOnline(socio, mes, ano){
 
 </body>
 </html>
+
 
 
 
