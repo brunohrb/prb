@@ -544,7 +544,14 @@ ${(!mesFechado() && podeLancar())?`
   </label>
 
   <div id="parc_${s}" class="small hidden">
-    <input id="n_${s}" type="number" placeholder="Nº parcelas">
+    <input
+  id="n_${s}"
+  type="number"
+  min="2"
+  step="1"
+  placeholder="Nº parcelas (mín. 2)"
+>
+
     <input id="m_${s}" type="month">
   </div>
 
@@ -683,10 +690,11 @@ const lancamento = {
   const parcelas = Number(document.getElementById("n_"+s).value);
   const mesIni = document.getElementById("m_"+s).value;
 
-  if(!parcelas || !mesIni){
-    alert("Informe parcelas e mês inicial");
-    return;
-  }
+  if (!parcelas || parcelas < 2 || !mesIni) {
+  alert("Número de parcelas deve ser 2 ou mais");
+  return;
+}
+
 
   const [anoIni, mesIniNum] = mesIni.split("-").map(Number);
   const valorParcela = +(valorTotal / parcelas).toFixed(2);
@@ -1320,6 +1328,7 @@ async function calcularSaldoAnteriorOnline(socio, mes, ano){
 
 </body>
 </html>
+
 
 
 
