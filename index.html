@@ -813,39 +813,28 @@ async function salvarEdicao(){
 
 async function excluir(s, i){
   const item = lancamentosSupabase[s][i];
-
-  if(!item){
-    alert("Lançamento não encontrado");
-    return;
-  }
-
-  if(!item.id){
-    alert("Erro: lançamento sem ID");
-    console.error(item);
-    return;
-  }
+  if(!item) return;
 
   if(!confirm("Excluir lançamento?")) return;
 
-  // 🧾 REGISTRA LOG ANTES (snapshot seguro)
   await registrarLog(
     "EXCLUIU",
     `${s} • ${fmt(item.valor)}`
   );
 
- // 🔥 Se for parcelado, apaga TODAS as parcelas
-if (item.id_parcelamento) {
-  await supabaseClient
-    .from("lancamentos")
-    .delete()
-    .eq("id_parcelamento", item.id_parcelamento);
-} else {
-  await supabaseClient
-    .from("lancamentos")
-    .delete()
-    .eq("id", item.id);
-}
+  let error;
 
+  if(item.id_parcelamento){
+    ({ error } = await supabaseClient
+      .from("lancamentos")
+      .delete()
+      .eq("id_parcelamento", item.id_parcelamento));
+  } else {
+    ({ error } = await supabaseClient
+      .from("lancamentos")
+      .delete()
+      .eq("id", item.id));
+  }
 
   if(error){
     alert("Erro ao excluir no servidor");
@@ -856,11 +845,6 @@ if (item.id_parcelamento) {
   await carregarLancamentosSupabaseSeguro();
   render();
   renderIndicadores();
-
-  // 🔁 ATUALIZA LOG SE A ABA ESTIVER ABERTA
-  if(!document.getElementById("abaLog").classList.contains("hidden")){
-    renderLogs();
-  }
 }
 
 
@@ -885,7 +869,7 @@ window.gerarBackupExcel = async function () {
 
     const { data, error } = await supabaseClient
       .from("lancamentos")
-      .select("id, socio, data, descricao, valor")
+.select("id, socio, data, descricao, valor, parcelado, id_parcelamento")
       .order("data", { ascending: true });
 
     if (error) {
@@ -1041,7 +1025,7 @@ async function carregarLancamentosSupabase(mes, ano) {
 
   const { data, error } = await supabaseClient
     .from("lancamentos")
-.select("id, socio, data, descricao, valor")
+.select("id, socio, data, descricao, valor, parcelado, id_parcelamento")
     .gte("data", inicio)
     .lte("data", fim);
 
@@ -1078,7 +1062,7 @@ const fim = `${a}-${String(m+1).padStart(2,"0")}-31`;
 
   const { data, error } = await supabaseClient
     .from("lancamentos")
-    .select("id, socio, data, descricao, valor")
+.select("id, socio, data, descricao, valor, parcelado, id_parcelamento")
     .gte("data", inicio)
     .lte("data", fim);
 
@@ -1096,12 +1080,17 @@ const fim = `${a}-${String(m+1).padStart(2,"0")}-31`;
   // ❌ IGNORA lançamento pai (controle interno)
   if (l.valor === 0 && l.parcelado === true) return;
 
-  lancamentosSupabase[l.socio].push({
-    id: l.id,
-    data: new Date(l.data).toLocaleDateString("pt-BR", {
-      day: "2-digit",
-      month: "2-digit"
-    }),
+ lancamentosSupabase[l.socio].push({
+  id: l.id,
+  id_parcelamento: l.id_parcelamento || null,
+  data: new Date(l.data).toLocaleDateString("pt-BR", {
+    day: "2-digit",
+    month: "2-digit"
+  }),
+  desc: l.descricao,
+  valor: l.valor
+});
+
     desc: l.descricao,
     valor: l.valor
   });
@@ -1337,6 +1326,7 @@ async function calcularSaldoAnteriorOnline(socio, mes, ano){
 
 </body>
 </html>
+
 
 
 
