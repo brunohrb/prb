@@ -549,7 +549,9 @@ ${(!mesFechado() && podeLancar())?`
   type="number"
   min="2"
   step="1"
+  value="2"
   placeholder="Nº parcelas (mín. 2)"
+  oninput="this.value = Math.max(2, Math.abs(parseInt(this.value) || 2))"
 >
 
     <input id="m_${s}" type="month">
@@ -1328,6 +1330,7 @@ async function calcularSaldoAnteriorOnline(socio, mes, ano){
 
 </body>
 </html>
+
 
 
 
