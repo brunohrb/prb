@@ -1082,17 +1082,22 @@ const fim = `${a}-${String(m+1).padStart(2,"0")}-31`;
   lancamentosSupabase = {};
   socios.forEach(s => lancamentosSupabase[s] = []);
 
-  data.forEach(l => {
-    lancamentosSupabase[l.socio].push({
-      id: l.id,
-      data: new Date(l.data).toLocaleDateString("pt-BR", {
-        day: "2-digit",
-        month: "2-digit"
-      }),
-      desc: l.descricao,
-      valor: l.valor
-    });
+ data.forEach(l => {
+
+  // ❌ IGNORA lançamento pai (controle interno)
+  if (l.valor === 0 && l.parcelado === true) return;
+
+  lancamentosSupabase[l.socio].push({
+    id: l.id,
+    data: new Date(l.data).toLocaleDateString("pt-BR", {
+      day: "2-digit",
+      month: "2-digit"
+    }),
+    desc: l.descricao,
+    valor: l.valor
   });
+});
+
 
   console.log("Supabase carregado:", lancamentosSupabase);
 }
@@ -1323,6 +1328,7 @@ async function calcularSaldoAnteriorOnline(socio, mes, ano){
 
 </body>
 </html>
+
 
 
 
