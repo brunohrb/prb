@@ -295,6 +295,22 @@ input:focus,select:focus{
 
 
 <button onclick="gerarBackupExcel()">Exportar Excel</button>
+
+	<hr>
+
+<button class="danger" onclick="abrirRestoreExcel()">
+  ♻️ Restaurar backup Excel
+</button>
+
+<input
+  type="file"
+  id="inputRestoreExcel"
+  accept=".xlsx"
+  style="display:none"
+  onchange="processarRestoreExcel(event)"
+>
+
+	
 </div>
 
 <!-- MODAL -->
@@ -1065,11 +1081,107 @@ async function calcularSaldoAnteriorOnline(socio, mes, ano){
   }
 }
 
+
+	function abrirRestoreExcel(){
+  if(!confirm("ATENÇÃO: isso irá importar dados do Excel para o sistema.\n\nDeseja continuar?")){
+    return;
+  }
+  document.getElementById("inputRestoreExcel").click();
+}
+
+	async function processarRestoreExcel(event){
+  const file = event.target.files[0];
+  if(!file) return;
+
+  const reader = new FileReader();
+
+  reader.onload = async function(e){
+    try {
+      const data = new Uint8Array(e.target.result);
+      const workbook = XLSX.read(data, { type: "array" });
+
+      const sheetName = "Lancamentos";
+      if(!workbook.Sheets[sheetName]){
+        alert("A planilha precisa ter uma aba chamada 'Lancamentos'");
+        return;
+      }
+
+      const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
+
+      if(rows.length === 0){
+        alert("A planilha não possui lançamentos");
+        return;
+      }
+
+      // valida colunas mínimas
+      const colunasObrigatorias = ["Socio", "Data", "Descricao", "Valor"];
+      const colunasArquivo = Object.keys(rows[0]);
+
+      const faltando = colunasObrigatorias.filter(
+        c => !colunasArquivo.includes(c)
+      );
+
+      if(faltando.length){
+        alert("Colunas ausentes: " + faltando.join(", "));
+        return;
+      }
+
+      if(!confirm(`Foram encontrados ${rows.length} lançamentos.\n\nDeseja importar agora?`)){
+        return;
+      }
+
+      await importarLancamentosExcel(rows);
+
+    } catch(err){
+      console.error(err);
+      alert("Erro ao ler o arquivo Excel");
+    }
+  };
+
+  reader.readAsArrayBuffer(file);
+}
+
+	async function importarLancamentosExcel(rows){
+  let inseridos = 0;
+
+  for(const r of rows){
+    const lancamento = {
+      socio: String(r.Socio).toLowerCase(),
+      descricao: r.Descricao,
+      valor: Number(r.Valor),
+      data: new Date(r.Data).toISOString()
+    };
+
+    const { error } = await supabaseClient
+      .from("lancamentos")
+      .insert([lancamento]);
+
+    if(error){
+      console.error("Erro ao importar:", error, lancamento);
+      continue;
+    }
+
+    inseridos++;
+  }
+
+  alert(`Importação concluída.\n\nLançamentos importados: ${inseridos}`);
+
+  await registrarLog(
+    "RESTAURACAO",
+    `Importados ${inseridos} lançamentos a partir de Excel`
+  );
+
+  await carregarLancamentosSupabaseSeguro();
+  render();
+  renderIndicadores();
+}
+
 	
 </script>
 
 </body>
 </html>
+
 
 
 
