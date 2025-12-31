@@ -360,7 +360,7 @@ let usuarios = JSON.parse(localStorage.getItem("usuarios_prb")) || {
  bruno:"1234"
 };
 
-const socios=["paulo","rafael","bruno"];
+const socios=["paulo","rafael","bruno","familia","obras"];
 const meses=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
 const baseInicial={mes:11,ano:2025};
 let edicao=null;
@@ -517,7 +517,8 @@ async function render(){
   statusMes.innerHTML = mesFechado() ? "🔒 Mês fechado" : "🔓 Mês aberto";
 
   for (const s of socios) {
-    let arr = lancamentosSupabase[s] || [];
+const ehEspecial = (s === "familia" || s === "obras");
+	  let arr = lancamentosSupabase[s] || [];
     let total = arr.reduce((x,y)=>x+y.valor,0);
     let base = salarioBase(s);
 
@@ -529,8 +530,15 @@ async function render(){
     cards.innerHTML += `
     <div class="card">
       <div class="socio"><span>${s.toUpperCase()}</span></div>
-      <div class="small">Salário: ${fmt(base)}</div>
-      <div class="small">Saldo anterior:
+${ehEspecial ? `
+  <div class="small">Centro de custo</div>
+` : `
+  <div class="small">Salário: ${fmt(base)}</div>
+  <div class="small">Saldo anterior:
+    <b class="${prev>=0?'pos':'neg'}">${fmt(prev)}</b>
+  </div>
+`}
+
         <b class="${prev>=0?'pos':'neg'}">${fmt(prev)}</b>
       </div>
 
@@ -538,10 +546,13 @@ ${(!mesFechado() && podeLancar())?`
   <input id="d_${s}" placeholder="Descrição">
   <input id="v_${s}" placeholder="R$ 0,00 (valor TOTAL se parcelado)" oninput="mask(this)">
 
-  <label class="small">
-<input type="checkbox" id="p_${s}" onchange="toggleParcelado('${s}')">
-    Parcelado
-  </label>
+  ${ehEspecial ? `` : `
+<label class="small">
+  <input type="checkbox" id="p_${s}" onchange="toggleParcelado('${s}')">
+  Parcelado
+</label>
+`}
+
 
   <div id="parc_${s}" class="small hidden">
     <input
@@ -575,8 +586,19 @@ ${(!mesFechado() && podeLancar())?`
 
       <div class="small">
         Total mês: ${fmt(total)}<br>
-        Saldo final:
-        <b class="${saldo>=0?'pos':'neg'}">${fmt(saldo)}</b>
+        ${ehEspecial ? `
+  <div class="small">
+    Total do mês:
+    <b class="neg">${fmt(total)}</b>
+  </div>
+` : `
+  <div class="small">
+    Total mês: ${fmt(total)}<br>
+    Saldo final:
+    <b class="${saldo>=0?'pos':'neg'}">${fmt(saldo)}</b>
+  </div>
+`}
+
       </div>
     </div>`;
   }
@@ -1330,3 +1352,4 @@ async function calcularSaldoAnteriorOnline(socio, mes, ano){
 
 </body>
 </html>
+
