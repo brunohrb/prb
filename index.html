@@ -261,14 +261,7 @@ button.danger{ background: #c0392b; }
 <!-- LANÇAMENTOS -->
 <div id="abaLanc">
  <div id="statusMes" class="small"></div>
-<button class="secondary" onclick="abrirGastoEmpresa()">
-  ➕ Novo gasto (Família / Obras)
-</button>
-
  <div class="grid" id="cards"></div>
-	<!-- GASTOS DA EMPRESA -->
-<div class="grid" id="cardsEmpresa" style="margin-top:30px"></div>
-
  <button class="secondary" onclick="alternarFechamento()">Fechar / Reabrir mês</button>
 </div>
 
@@ -335,34 +328,17 @@ button.danger{ background: #c0392b; }
 	
 </div>
 
-<!-- MODAL EDITAR -->
+<!-- MODAL -->
 <div class="modal hidden" id="modal">
-  <div class="modal-box">
-    <h3>Editar lançamento</h3>
-    <input id="mdDesc">
-    <input id="mdValor" oninput="mask(this)">
-    <button class="primary" onclick="salvarEdicao()">Salvar</button>
-    <button class="secondary" onclick="fecharModal()">Cancelar</button>
-  </div>
+ <div class="modal-box">
+  <h3>Editar lançamento</h3>
+  <input id="mdDesc">
+  <input id="mdValor" oninput="mask(this)">
+  <button class="primary" onclick="salvarEdicao()">Salvar</button>
+  <button class="secondary" onclick="fecharModal()">Cancelar</button>
+ </div>
 </div>
 
-<!-- MODAL GASTO EMPRESA -->
-<div class="modal hidden" id="modalGastoEmpresa">
-  <div class="modal-box">
-    <h3>Gasto da empresa</h3>
-
-    <input id="geDesc" placeholder="Descrição do gasto">
-    <input id="geValor" placeholder="Valor" oninput="mask(this)">
-
-    <select id="geCategoria">
-      <option value="familia">Família</option>
-      <option value="obras">Obras</option>
-    </select>
-
-    <button class="primary" onclick="salvarGastoEmpresa()">Salvar</button>
-    <button class="secondary" onclick="fecharGastoEmpresa()">Cancelar</button>
-  </div>
-</div>
 
 
 
@@ -454,11 +430,10 @@ function init(){
 
   // ⬇️ AQUI ESTÁ A CHAVE
   carregarLancamentosSupabaseSeguro().then(() => {
-  render();
-  renderEmpresa();
-  renderIndicadores();
-});
-
+    render();
+    renderIndicadores();
+  });
+}
 
 
 /* ===== ABAS ===== */
@@ -604,8 +579,6 @@ ${(!mesFechado() && podeLancar())?`
         <b class="${saldo>=0?'pos':'neg'}">${fmt(saldo)}</b>
       </div>
     </div>`;
-	  renderEmpresa();
-
   }
 }
 
@@ -1111,25 +1084,22 @@ async function carregarLancamentosSupabaseSeguro(){
   lancamentosSupabase = {};
   socios.forEach(s => lancamentosSupabase[s] = []);
 
- data.forEach(l => {
+  data.forEach(l => {
 
-  // ❌ ignora lançamento pai (parcelamento)
-  if (l.parcelado === true && Number(l.valor) === 0) return;
+    // ❌ ignora lançamento pai (controle interno)
+    if (l.parcelado === true && Number(l.valor) === 0) return;
 
-  // ❌ ignora gasto da empresa (não tem sócio)
-  if (!l.socio) return;
-
-  lancamentosSupabase[l.socio].push({
-    id: l.id,
-    id_parcelamento: l.id_parcelamento || null,
-    data: new Date(l.data).toLocaleDateString("pt-BR", {
-      day: "2-digit",
-      month: "2-digit"
-    }),
-    desc: l.descricao,
-    valor: Number(l.valor)
+    lancamentosSupabase[l.socio].push({
+      id: l.id,
+      id_parcelamento: l.id_parcelamento || null,
+      data: new Date(l.data).toLocaleDateString("pt-BR", {
+        day: "2-digit",
+        month: "2-digit"
+      }),
+      desc: l.descricao,
+      valor: Number(l.valor)
+    });
   });
-});
 
   console.log("Supabase carregado:", lancamentosSupabase);
 }
@@ -1354,153 +1324,9 @@ async function calcularSaldoAnteriorOnline(socio, mes, ano){
   };
 }
 
-function abrirGastoEmpresa(){
-  document.getElementById("modalGastoEmpresa").classList.remove("hidden");
-}
-
-function fecharGastoEmpresa(){
-  document.getElementById("modalGastoEmpresa").classList.add("hidden");
-}
-
-async function salvarGastoEmpresa(){
-  const desc = document.getElementById("geDesc").value;
-  const valor = parseMoeda(document.getElementById("geValor").value);
-  const categoria = document.getElementById("geCategoria").value;
-
-  if(!desc || !valor){
-    alert("Preencha descrição e valor");
-    return;
-  }
-
-  const user = (await supabaseClient.auth.getUser()).data.user;
-
-  const lancamento = {
-    socio: null,
-    descricao: desc,
-    valor: valor,
-    categoria: categoria,
-    tipo: "saida_empresa",
-    data: new Date().toISOString(),
-    criado_por: user.id
-  };
-
-  const { error } = await supabaseClient
-    .from("lancamentos")
-    .insert([lancamento]);
-
-  if(error){
-    alert("Erro ao salvar gasto");
-    console.error(error);
-    return;
-  }
-
-  await registrarLog(
-    "GASTO EMPRESA",
-    `${categoria.toUpperCase()} • ${fmt(valor)}`
-  );
-
-  document.getElementById("geDesc").value = "";
-  document.getElementById("geValor").value = "";
-
-  fecharGastoEmpresa();
-  await carregarLancamentosSupabaseSeguro();
-  render();
-  renderIndicadores();
-}
-
-	async function renderEmpresa(){
-  const box = document.getElementById("cardsEmpresa");
-  if(!box) return;
-
-  box.innerHTML = "";
-
-  const inicio = `${ano.value}-${String(Number(mes.value)+1).padStart(2,"0")}-01`;
-  const fim    = `${ano.value}-${String(Number(mes.value)+1).padStart(2,"0")}-31`;
-
-  const { data, error } = await supabaseClient
-    .from("lancamentos")
-    .select("descricao, valor, categoria")
-    .is("socio", null)
-    .gte("data", inicio)
-    .lte("data", fim);
-
-  if(error){
-    console.error(error);
-    box.innerHTML = "<div class='small'>Erro ao carregar gastos da empresa</div>";
-    return;
-  }
-
-  const grupos = {
-    familia: [],
-    obras: []
-  };
-
-  data.forEach(l => {
-    if(grupos[l.categoria]) grupos[l.categoria].push(l);
-  });
-
-  ["familia","obras"].forEach(cat => {
-    const lista = grupos[cat];
-    const total = lista.reduce((s,l)=>s+Number(l.valor),0);
-
-    box.innerHTML += `
-      <div class="card">
-        <div class="socio">
-          <span>${cat === "familia" ? "FAMÍLIA" : "OBRAS"}</span>
-        </div>
-
-        ${lista.length === 0
-          ? `<div class="small">Nenhum gasto neste mês</div>`
-          : lista.map(l => `
-              <div class="linha">
-                <div>${l.descricao}</div>
-                <div class="neg">${fmt(l.valor)}</div>
-              </div>
-            `).join("")
-        }
-
-        <div class="small" style="margin-top:10px">
-          Total:
-          <b class="neg">${fmt(total)}</b>
-        </div>
-      </div>
-    `;
-  });
-}
-
+	
 	
 </script>
 
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
