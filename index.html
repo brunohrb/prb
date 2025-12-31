@@ -334,31 +334,31 @@ button.danger{ background: #c0392b; }
 
 <!-- MODAL EDITAR -->
 <div class="modal hidden" id="modal">
- <div class="modal-box">
-  <h3>Editar lançamento</h3>
-  <input id="mdDesc">
-  <input id="mdValor" oninput="mask(this)">
-  <button class="primary" onclick="salvarEdicao()">Salvar</button>
-  <button class="secondary" onclick="fecharModal()">Cancelar</button>
- </div>
+  <div class="modal-box">
+    <h3>Editar lançamento</h3>
+    <input id="mdDesc">
+    <input id="mdValor" oninput="mask(this)">
+    <button class="primary" onclick="salvarEdicao()">Salvar</button>
+    <button class="secondary" onclick="fecharModal()">Cancelar</button>
+  </div>
 </div>
 
 <!-- MODAL GASTO EMPRESA -->
 <div class="modal hidden" id="modalGastoEmpresa">
- <div class="modal-box">
-  <h3>Gasto da empresa</h3>
+  <div class="modal-box">
+    <h3>Gasto da empresa</h3>
 
-  <input id="geDesc" placeholder="Descrição do gasto">
-  <input id="geValor" placeholder="Valor" oninput="mask(this)">
+    <input id="geDesc" placeholder="Descrição do gasto">
+    <input id="geValor" placeholder="Valor" oninput="mask(this)">
 
-  <select id="geCategoria">
-    <option value="familia">Família</option>
-    <option value="obras">Obras</option>
-  </select>
+    <select id="geCategoria">
+      <option value="familia">Família</option>
+      <option value="obras">Obras</option>
+    </select>
 
-  <button class="primary" onclick="salvarGastoEmpresa()">Salvar</button>
-  <button class="secondary" onclick="fecharGastoEmpresa()">Cancelar</button>
- </div>
+    <button class="primary" onclick="salvarGastoEmpresa()">Salvar</button>
+    <button class="secondary" onclick="fecharGastoEmpresa()">Cancelar</button>
+  </div>
 </div>
 
 	
@@ -372,59 +372,6 @@ button.danger{ background: #c0392b; }
 </div>
 
 
-function abrirGastoEmpresa(){
-  document.getElementById("modalGastoEmpresa").classList.remove("hidden");
-}
-
-function fecharGastoEmpresa(){
-  document.getElementById("modalGastoEmpresa").classList.add("hidden");
-}
-
-async function salvarGastoEmpresa(){
-  const desc = document.getElementById("geDesc").value;
-  const valor = parseMoeda(document.getElementById("geValor").value);
-  const categoria = document.getElementById("geCategoria").value;
-
-  if(!desc || !valor){
-    alert("Preencha descrição e valor");
-    return;
-  }
-
-  const user = (await supabaseClient.auth.getUser()).data.user;
-
-  const lancamento = {
-    socio: null,
-    descricao: desc,
-    valor: valor,
-    categoria: categoria,
-    tipo: "saida_empresa",
-    data: new Date().toISOString(),
-    criado_por: user.id
-  };
-
-  const { error } = await supabaseClient
-    .from("lancamentos")
-    .insert([lancamento]);
-
-  if(error){
-    alert("Erro ao salvar gasto");
-    console.error(error);
-    return;
-  }
-
-  await registrarLog(
-    "GASTO EMPRESA",
-    `${categoria.toUpperCase()} • ${fmt(valor)}`
-  );
-
-  document.getElementById("geDesc").value = "";
-  document.getElementById("geValor").value = "";
-
-  fecharGastoEmpresa();
-  await carregarLancamentosSupabaseSeguro();
-  render();
-  renderIndicadores();
-}
 
 
 <script>
@@ -1412,12 +1359,66 @@ async function calcularSaldoAnteriorOnline(socio, mes, ano){
   };
 }
 
-	
+	function abrirGastoEmpresa(){
+  document.getElementById("modalGastoEmpresa").classList.remove("hidden");
+}
+
+function fecharGastoEmpresa(){
+  document.getElementById("modalGastoEmpresa").classList.add("hidden");
+}
+
+async function salvarGastoEmpresa(){
+  const desc = document.getElementById("geDesc").value;
+  const valor = parseMoeda(document.getElementById("geValor").value);
+  const categoria = document.getElementById("geCategoria").value;
+
+  if(!desc || !valor){
+    alert("Preencha descrição e valor");
+    return;
+  }
+
+  const user = (await supabaseClient.auth.getUser()).data.user;
+
+  const lancamento = {
+    socio: null,
+    descricao: desc,
+    valor: valor,
+    categoria: categoria,
+    tipo: "saida_empresa",
+    data: new Date().toISOString(),
+    criado_por: user.id
+  };
+
+  const { error } = await supabaseClient
+    .from("lancamentos")
+    .insert([lancamento]);
+
+  if(error){
+    alert("Erro ao salvar gasto");
+    console.error(error);
+    return;
+  }
+
+  await registrarLog(
+    "GASTO EMPRESA",
+    `${categoria.toUpperCase()} • ${fmt(valor)}`
+  );
+
+  document.getElementById("geDesc").value = "";
+  document.getElementById("geValor").value = "";
+
+  fecharGastoEmpresa();
+  await carregarLancamentosSupabaseSeguro();
+  render();
+  renderIndicadores();
+}
+
 	
 </script>
 
 </body>
 </html>
+
 
 
 
