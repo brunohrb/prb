@@ -266,6 +266,9 @@ button.danger{ background: #c0392b; }
 </button>
 
  <div class="grid" id="cards"></div>
+	<!-- GASTOS DA EMPRESA -->
+<div class="grid" id="cardsEmpresa" style="margin-top:30px"></div>
+
  <button class="secondary" onclick="alternarFechamento()">Fechar / Reabrir mês</button>
 </div>
 
@@ -462,10 +465,11 @@ function init(){
 
   // ⬇️ AQUI ESTÁ A CHAVE
   carregarLancamentosSupabaseSeguro().then(() => {
-    render();
-    renderIndicadores();
-  });
-}
+  render();
+  renderEmpresa();
+  renderIndicadores();
+});
+
 
 
 /* ===== ABAS ===== */
@@ -611,6 +615,8 @@ ${(!mesFechado() && podeLancar())?`
         <b class="${saldo>=0?'pos':'neg'}">${fmt(saldo)}</b>
       </div>
     </div>`;
+	  renderEmpresa();
+
   }
 }
 
@@ -1413,11 +1419,72 @@ async function salvarGastoEmpresa(){
   renderIndicadores();
 }
 
+	async function renderEmpresa(){
+  const box = document.getElementById("cardsEmpresa");
+  if(!box) return;
+
+  box.innerHTML = "";
+
+  const inicio = `${ano.value}-${String(Number(mes.value)+1).padStart(2,"0")}-01`;
+  const fim    = `${ano.value}-${String(Number(mes.value)+1).padStart(2,"0")}-31`;
+
+  const { data, error } = await supabaseClient
+    .from("lancamentos")
+    .select("descricao, valor, categoria")
+    .is("socio", null)
+    .gte("data", inicio)
+    .lte("data", fim);
+
+  if(error){
+    console.error(error);
+    box.innerHTML = "<div class='small'>Erro ao carregar gastos da empresa</div>";
+    return;
+  }
+
+  const grupos = {
+    familia: [],
+    obras: []
+  };
+
+  data.forEach(l => {
+    if(grupos[l.categoria]) grupos[l.categoria].push(l);
+  });
+
+  ["familia","obras"].forEach(cat => {
+    const lista = grupos[cat];
+    const total = lista.reduce((s,l)=>s+Number(l.valor),0);
+
+    box.innerHTML += `
+      <div class="card">
+        <div class="socio">
+          <span>${cat === "familia" ? "FAMÍLIA" : "OBRAS"}</span>
+        </div>
+
+        ${lista.length === 0
+          ? `<div class="small">Nenhum gasto neste mês</div>`
+          : lista.map(l => `
+              <div class="linha">
+                <div>${l.descricao}</div>
+                <div class="neg">${fmt(l.valor)}</div>
+              </div>
+            `).join("")
+        }
+
+        <div class="small" style="margin-top:10px">
+          Total:
+          <b class="neg">${fmt(total)}</b>
+        </div>
+      </div>
+    `;
+  });
+}
+
 	
 </script>
 
 </body>
 </html>
+
 
 
 
