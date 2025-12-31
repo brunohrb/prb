@@ -332,10 +332,19 @@ button.danger{ background: #c0392b; }
 	
 </div>
 
-<!-- MODAL -->
+<!-- MODAL EDITAR -->
 <div class="modal hidden" id="modal">
+ <div class="modal-box">
+  <h3>Editar lançamento</h3>
+  <input id="mdDesc">
+  <input id="mdValor" oninput="mask(this)">
+  <button class="primary" onclick="salvarEdicao()">Salvar</button>
+  <button class="secondary" onclick="fecharModal()">Cancelar</button>
+ </div>
+</div>
 
-	<div class="modal hidden" id="modalGastoEmpresa">
+<!-- MODAL GASTO EMPRESA -->
+<div class="modal hidden" id="modalGastoEmpresa">
  <div class="modal-box">
   <h3>Gasto da empresa</h3>
 
@@ -363,7 +372,7 @@ button.danger{ background: #c0392b; }
 </div>
 
 
-	function abrirGastoEmpresa(){
+function abrirGastoEmpresa(){
   document.getElementById("modalGastoEmpresa").classList.remove("hidden");
 }
 
@@ -416,7 +425,6 @@ async function salvarGastoEmpresa(){
   render();
   renderIndicadores();
 }
-
 
 
 <script>
@@ -1410,6 +1418,7 @@ async function calcularSaldoAnteriorOnline(socio, mes, ano){
 
 </body>
 </html>
+
 
 
 
