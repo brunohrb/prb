@@ -361,8 +361,6 @@ let usuarios = JSON.parse(localStorage.getItem("usuarios_prb")) || {
 };
 
 const socios=["paulo","rafael","bruno"];
-	const gruposExtras = ["obras","familia"];
-
 const meses=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
 const baseInicial={mes:11,ano:2025};
 let edicao=null;
@@ -518,45 +516,10 @@ async function render(){
   let m = +mes.value, a = +ano.value;
   statusMes.innerHTML = mesFechado() ? "🔒 Mês fechado" : "🔓 Mês aberto";
 
-  // ===== FOR DOS SÓCIOS (NÃO MEXE) =====
   for (const s of socios) {
-    // ===== SALVAR OBRAS / FAMÍLIA =====
-async function addGrupo(grupo){
-
-  const desc = document.getElementById("d_"+grupo).value;
-  const valor = parseMoeda(document.getElementById("v_"+grupo).value);
-
-  if(!desc || !valor){
-    alert("Preencha descrição e valor");
-    return;
-  }
-
-  const user = (await supabaseClient.auth.getUser()).data.user;
-
-  await supabaseClient
-    .from("lancamentos")
-    .insert([{
-      socio: grupo,
-      descricao: desc,
-      valor: valor,
-      data: new Date().toISOString(),
-      criado_por: user.id
-    }]);
-
-  await registrarLog(
-    "ADICIONOU",
-    `${grupo.toUpperCase()} • ${desc} • ${fmt(valor)}`
-  );
-
-  document.getElementById("d_"+grupo).value = "";
-  document.getElementById("v_"+grupo).value = "";
-
-  await carregarLancamentosSupabaseSeguro();
-  render();
-  renderIndicadores();
-}
-
-
+    let arr = lancamentosSupabase[s] || [];
+    let total = arr.reduce((x,y)=>x+y.valor,0);
+    let base = salarioBase(s);
 
     // ✅ SALDO ANTERIOR ONLINE
     let prev = await calcularSaldoAnteriorOnline(s, m, a);
@@ -724,43 +687,6 @@ const lancamento = {
     renderIndicadores();
     return;
   }
-
-	// ===== SALVAR OBRAS / FAMÍLIA =====
-async function addGrupo(grupo){
-
-  const desc = document.getElementById("d_"+grupo).value;
-  const valor = parseMoeda(document.getElementById("v_"+grupo).value);
-
-  if(!desc || !valor){
-    alert("Preencha descrição e valor");
-    return;
-  }
-
-  const user = (await supabaseClient.auth.getUser()).data.user;
-
-  await supabaseClient
-    .from("lancamentos")
-    .insert([{
-      socio: grupo,
-      descricao: desc,
-      valor: valor,
-      data: new Date().toISOString(),
-      criado_por: user.id
-    }]);
-
-  await registrarLog(
-    "ADICIONOU",
-    `${grupo.toUpperCase()} • ${desc} • ${fmt(valor)}`
-  );
-
-  document.getElementById("d_"+grupo).value = "";
-  document.getElementById("v_"+grupo).value = "";
-
-  await carregarLancamentosSupabaseSeguro();
-  render();
-  renderIndicadores();
-}
-
 
   // 👉 CASO PARCELADO
   const parcelas = Number(document.getElementById("n_"+s).value);
@@ -1155,9 +1081,8 @@ async function carregarLancamentosSupabaseSeguro(){
     return;
   }
 
-lancamentosSupabase = {};
-[...socios, ...gruposExtras].forEach(s => lancamentosSupabase[s] = []);
-
+  lancamentosSupabase = {};
+  socios.forEach(s => lancamentosSupabase[s] = []);
 
   data.forEach(l => {
 
@@ -1405,4 +1330,3 @@ async function calcularSaldoAnteriorOnline(socio, mes, ano){
 
 </body>
 </html>
-
