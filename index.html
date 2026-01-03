@@ -1129,38 +1129,6 @@ async function salvarLancamentoSupabase(lancamento){
 }
 
 
-async function carregarLancamentosSupabase(mes, ano) {
-  const inicio = new Date(ano, mes, 1).toISOString();
-  const fim = new Date(ano, mes + 1, 0, 23, 59, 59).toISOString();
-
-  const { data, error } = await supabaseClient
-    .from("lancamentos")
-.select("id, socio, data, descricao, valor, parcelado, id_parcelamento")
-    .gte("data", inicio)
-    .lte("data", fim);
-
-  if (error) {
-    console.error("Erro ao ler Supabase:", error);
-    return {};
-  }
-
-  // 🔁 Converte para o formato atual do sistema
-  const mapa = {};
-  socios.forEach(s => mapa[s] = []);
-
-  data.forEach(l => {
-    mapa[l.socio].push({
-      data: new Date(l.data).toLocaleDateString("pt-BR", {
-        day: "2-digit",
-        month: "2-digit"
-      }),
-      desc: l.descricao,
-      valor: l.valor
-    });
-  });
-
-  return mapa;
-}
 
 async function carregarLancamentosSupabaseSeguro(){
   let m = +mes.value;
@@ -1431,6 +1399,7 @@ if(!entidades.includes(socio)){
 
 </body>
 </html>
+
 
 
 
