@@ -600,12 +600,23 @@ for (const g of gruposExtras) {
 </button>
 
 
-      ${arr.map(r=>`
-        <div class="linha">
-          <div>${r.data} • ${r.desc}</div>
-          <div class="neg">${fmt(r.valor)}</div>
+ ${arr.map((r,i)=>`
+  <div class="linha">
+    <div>${r.data} • ${r.desc}</div>
+
+    <div style="display:flex;align-items:center;gap:10px">
+      <div class="neg">${fmt(r.valor)}</div>
+
+      ${(!mesFechado() && podeLancar()) ? `
+        <div class="acoes">
+          <span onclick="editar('${g}',${i})">✏️</span>
+          <span onclick="excluir('${g}',${i})">🗑️</span>
         </div>
-      `).join("")}
+      ` : ""}
+    </div>
+  </div>
+`).join("")}
+
 
       <div class="small">
         Total do mês:<br>
@@ -626,7 +637,7 @@ async function renderIndicadores(){
 
   let totalGeral = 0;
 
-  for (const s of socios) {
+for (const s of entidades) {
 
     const inicio = `${anoSel}-01-01`;
     const fim = `${anoSel}-12-31`;
@@ -662,7 +673,7 @@ const soma = data.reduce(
   indicadores.innerHTML += `
     <div class="card">
       <div class="socio"><span>TOTAL</span></div>
-      <b>3 sócios</b><br>
+<b>Total geral</b><br>
       ${fmt(totalGeral)}
     </div>
   `;
@@ -1380,6 +1391,7 @@ if(!entidades.includes(socio)){
 
 </body>
 </html>
+
 
 
 
