@@ -688,50 +688,128 @@ function podeLancar(){
 
 
 async function add(s){
-	  const user = (await supabaseClient.auth.getUser()).data.user;
- const parcelado = document.getElementById("p_" + s)?.checked;
-    const desc = document.getElementById("d_"+s).value;
-  const valorTotal = parseMoeda(document.getElementById("v_"+s).value);
 
-  if(!desc || !valorTotal){
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  if (!user) {
+    alert("Usuário não autenticado");
+    return;
+  }
+
+  const parcelado = document.getElementById("p_" + s)?.checked === true;
+  const desc = document.getElementById("d_" + s).value;
+  const valorTotal = parseMoeda(document.getElementById("v_" + s).value);
+
+  if (!desc || !valorTotal) {
     alert("Preencha descrição e valor");
     return;
   }
 
-	// 👉 CASO NÃO PARCELADO
-if (!parcelado) {
+  /* ==========================
+     👉 CASO NÃO PARCELADO
+  ========================== */
+  if (!parcelado) {
 
-  const lancamento = {
-    socio: s,
-    descricao: desc,
-    valor: valorTotal,
-    data: `${ano.value}-${String(+mes.value + 1).padStart(2,"0")}-01`,
-    criado_por: user.id
-  };
+    const lancamento = {
+      socio: s,
+      descricao: desc,
+      valor: valorTotal,
+      data: `${ano.value}-${String(+mes.value + 1).padStart(2,"0")}-01`,
+      criado_por: user.id
+    };
 
-  const { error } = await supabaseClient
-    .from("lancamentos")
-    .insert([lancamento]);
+    const { error } = await supabaseClient
+      .from("lancamentos")
+      .insert([lancamento]);
 
-  if(error){
-    alert("Erro ao salvar lançamento");
-    console.error(error);
+    if (error) {
+      alert("Erro ao salvar lançamento");
+      console.error(error);
+      return;
+    }
+
+    await registrarLog(
+      "ADICIONOU",
+      `${s.toUpperCase()} • ${desc} • ${fmt(valorTotal)}`
+    );
+
+    document.getElementById("d_" + s).value = "";
+    document.getElementById("v_" + s).value = "";
+
+    await carregarLancamentosSupabaseSeguro();
+    render();
+    renderIndicadores();
+    return; // 🔴 ESSENCIAL
+  }
+
+  /* ==========================
+     👉 CASO PARCELADO
+  ========================== */
+  const parcelas = Number(document.getElementById("n_" + s).value);
+  const mesIni = document.getElementById("m_" + s).value;
+
+  if (!parcelas || parcelas < 2 || !mesIni) {
+    alert("Informe número de parcelas (mín. 2) e mês inicial");
     return;
   }
 
+  const [anoIni, mesIniNum] = mesIni.split("-").map(Number);
+  const valorParcela = +(valorTotal / parcelas).toFixed(2);
+
+  // cria lançamento pai
+  const { data: pai, error: errPai } = await supabaseClient
+    .from("lancamentos")
+    .insert([{
+      socio: s,
+      descricao: desc,
+      valor: 0,
+      data: new Date().toISOString(),
+      parcelado: true,
+      total_parcelas: parcelas,
+      criado_por: user.id
+    }])
+    .select()
+    .single();
+
+  if (errPai) {
+    alert("Erro ao criar parcelamento");
+    console.error(errPai);
+    return;
+  }
+
+  // cria parcelas
+  for (let i = 0; i < parcelas; i++) {
+    const d = somarMes(anoIni, mesIniNum - 1, i);
+    const dataISO = `${d.ano}-${String(d.mes + 1).padStart(2,"0")}-01`;
+
+    await supabaseClient
+      .from("lancamentos")
+      .insert([{
+        socio: s,
+        descricao: `${desc} (${i + 1}/${parcelas})`,
+        valor: valorParcela,
+        data: dataISO,
+        parcelado: true,
+        id_parcelamento: pai.id,
+        parcela_numero: i + 1,
+        total_parcelas: parcelas,
+        gerado_automaticamente: true,
+        criado_por: user.id
+      }]);
+  }
+
   await registrarLog(
-    "ADICIONOU",
-    `${s.toUpperCase()} • ${desc} • ${fmt(valorTotal)}`
+    "PARCELADO",
+    `${s.toUpperCase()} • ${desc} • ${parcelas}x de ${fmt(valorParcela)}`
   );
 
-  document.getElementById("d_"+s).value = "";
-  document.getElementById("v_"+s).value = "";
+  document.getElementById("d_" + s).value = "";
+  document.getElementById("v_" + s).value = "";
+  document.getElementById("p_" + s).checked = false;
+  document.getElementById("parc_" + s).classList.add("hidden");
 
   await carregarLancamentosSupabaseSeguro();
   render();
   renderIndicadores();
-
-  return; // ⬅️ ISSO É MUITO IMPORTANTE
 }
 
 
@@ -1426,6 +1504,7 @@ if(!entidades.includes(socio)){
 
 </body>
 </html>
+
 
 
 
