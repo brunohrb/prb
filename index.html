@@ -766,19 +766,20 @@ async function add(s){
   const [anoIni, mesIniNum] = mesIni.split("-").map(Number);
   const valorParcela = +(valorTotal / parcelas).toFixed(2);
 
-  const { data: pai, error: errPai } = await supabaseClient
-    .from("lancamentos")
-    .insert([{
-      socio: s,
-      descricao: desc,
-      valor: 0,
-data: `${anoIni}-${String(mesIniNum).padStart(2,"0")}-01`,
-      parcelado: true,
-      total_parcelas: parcelas,
-      criado_por: user.id
-    }])
-    .select()
-    .single();
+ const { data: pai, error: errPai } = await supabaseClient
+  .from("lancamentos")
+  .insert([{
+    socio: s,
+    descricao: desc,
+    valor: valorTotal, // ✅ NÃO ZERO
+    data: `${anoIni}-${String(mesIniNum).padStart(2,"0")}-01`,
+    parcelado: true,
+    total_parcelas: parcelas,
+    criado_por: user.id
+  }])
+  .select()
+  .single();
+
 
   if(errPai){
     alert("Erro ao criar parcelamento");
@@ -1169,7 +1170,7 @@ entidades.forEach(e => lancamentosSupabase[e] = []);
   data.forEach(l => {
 
     // ❌ ignora lançamento pai (controle interno)
-    if (l.parcelado === true && Number(l.valor) === 0) return;
+if (l.parcelado === true && l.id_parcelamento === null) return;
 
     lancamentosSupabase[l.socio].push({
       id: l.id,
@@ -1412,6 +1413,7 @@ if(!entidades.includes(socio)){
 
 </body>
 </html>
+
 
 
 
