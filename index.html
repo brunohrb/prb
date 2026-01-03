@@ -688,9 +688,16 @@ function podeLancar(){
 
 
 async function add(s){
-	  const user = (await supabaseClient.auth.getUser()).data.user;
- const parcelado = document.getElementById("p_" + s)?.checked;
-    const desc = document.getElementById("d_"+s).value;
+  const user = (await supabaseClient.auth.getUser()).data.user;
+  if(!user){
+    alert("Usuário não autenticado");
+    return;
+  }
+
+  const chk = document.getElementById("p_" + s);
+  const parcelado = chk && chk.checked;
+
+  const desc = document.getElementById("d_"+s).value;
   const valorTotal = parseMoeda(document.getElementById("v_"+s).value);
 
   if(!desc || !valorTotal){
@@ -698,32 +705,65 @@ async function add(s){
     return;
   }
 
-  // 👉 CASO PARCELADO
+  /* =====================
+     👉 NÃO PARCELADO
+  ===================== */
+  if(!parcelado){
+    const { error } = await supabaseClient
+      .from("lancamentos")
+      .insert([{
+        socio: s,
+        descricao: desc,
+        valor: valorTotal,
+        data: `${ano.value}-${String(+mes.value+1).padStart(2,"0")}-01`,
+        criado_por: user.id
+      }]);
+
+    if(error){
+      alert("Erro ao salvar lançamento");
+      console.error(error);
+      return;
+    }
+
+    await registrarLog(
+      "ADICIONOU",
+      `${s.toUpperCase()} • ${desc} • ${fmt(valorTotal)}`
+    );
+
+    document.getElementById("d_"+s).value = "";
+    document.getElementById("v_"+s).value = "";
+
+    await carregarLancamentosSupabaseSeguro();
+    render();
+    renderIndicadores();
+    return;
+  }
+
+  /* =====================
+     👉 PARCELADO
+  ===================== */
   const parcelas = Number(document.getElementById("n_"+s).value);
   const mesIni = document.getElementById("m_"+s).value;
 
-  if (!parcelas || parcelas < 2 || !mesIni) {
-  alert("Número de parcelas deve ser 2 ou mais");
-  return;
-}
-
+  if(!parcelas || parcelas < 2 || !mesIni){
+    alert("Informe número de parcelas (mín. 2) e mês inicial");
+    return;
+  }
 
   const [anoIni, mesIniNum] = mesIni.split("-").map(Number);
   const valorParcela = +(valorTotal / parcelas).toFixed(2);
 
-  // 1️⃣ cria lançamento PAI
   const { data: pai, error: errPai } = await supabaseClient
     .from("lancamentos")
     .insert([{
-  socio: s,
-  descricao: desc,
-  valor: 0,
-  data: new Date().toISOString(),
-  parcelado: true,
-  total_parcelas: parcelas,
-  criado_por: user.id
-}])
-
+      socio: s,
+      descricao: desc,
+      valor: 0,
+      data: new Date().toISOString(),
+      parcelado: true,
+      total_parcelas: parcelas,
+      criado_por: user.id
+    }])
     .select()
     .single();
 
@@ -733,55 +773,45 @@ async function add(s){
     return;
   }
 
-  // 2️⃣ cria parcelas
-  const [anoIni, mesIniNum] = mesIni.split("-").map(Number);
-const valorParcela = +(valorTotal / parcelas).toFixed(2);
+  const dataBase = new Date(anoIni, mesIniNum - 1, 1);
 
-// mês inicial REAL
-const dataBase = new Date(anoIni, mesIniNum - 1, 1);
-
-for(let i = 0; i < parcelas; i++){
-  const dataParcela = new Date(
-    dataBase.getFullYear(),
-    dataBase.getMonth() + i,
-    1
-  );
-
-  const dataISO = dataParcela.toISOString().slice(0,10);
-
+  for(let i=0;i<parcelas;i++){
+    const d = new Date(
+      dataBase.getFullYear(),
+      dataBase.getMonth() + i,
+      1
+    );
 
     await supabaseClient
       .from("lancamentos")
-     .insert([{
-  socio: s,
-  descricao: `${desc} (${i+1}/${parcelas})`,
-  valor: valorParcela,
-  data: dataISO,
-  parcelado: true,
-  id_parcelamento: pai.id,
-  parcela_numero: i+1,
-  total_parcelas: parcelas,
-  gerado_automaticamente: true,
-  criado_por: user.id
-}]);
-
+      .insert([{
+        socio: s,
+        descricao: `${desc} (${i+1}/${parcelas})`,
+        valor: valorParcela,
+        data: d.toISOString().slice(0,10),
+        parcelado: true,
+        id_parcelamento: pai.id,
+        parcela_numero: i+1,
+        total_parcelas: parcelas,
+        gerado_automaticamente: true,
+        criado_por: user.id
+      }]);
   }
 
   await registrarLog(
     "PARCELADO",
-    `${s} • ${desc} • ${parcelas}x de ${fmt(valorParcela)}`
+    `${s.toUpperCase()} • ${desc} • ${parcelas}x de ${fmt(valorParcela)}`
   );
 
   document.getElementById("d_"+s).value = "";
   document.getElementById("v_"+s).value = "";
-  document.getElementById("p_"+s).checked = false;
+  chk.checked = false;
   document.getElementById("parc_"+s).classList.add("hidden");
 
   await carregarLancamentosSupabaseSeguro();
   render();
   renderIndicadores();
-
-	}
+}
 
 
 	// ===== SALVAR OBRAS / FAMÍLIA =====
@@ -1401,6 +1431,7 @@ if(!entidades.includes(socio)){
 
 </body>
 </html>
+
 
 
 
