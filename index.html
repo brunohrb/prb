@@ -718,13 +718,16 @@ async function add(s) {
 
   // ===== NÃO PARCELADO =====
   if (!parcelado) {
+    // Garante que a data seja salva como YYYY-MM-DD (ex: 2026-01-01)
+    const dataLancamento = `${ano.value}-${String(+mes.value + 1).padStart(2, "0")}-01`;
+    
     const { error } = await supabaseClient
       .from("lancamentos")
       .insert([{
         socio: s,
         descricao: desc,
         valor: valorTotal,
-        data: `${ano.value}-${String(+mes.value + 1).padStart(2, "0")}-01`,
+        data: dataLancamento,
         criado_por: user.id
       }]);
 
@@ -740,11 +743,10 @@ async function add(s) {
     await carregarLancamentosSupabaseSeguro();
     render();
     renderIndicadores();
-
     return;
   }
 
-  // ===== PARCELADO (CORRIGIDO) =====
+  // ===== PARCELADO =====
   const parcelas = Number(document.getElementById("n_" + s).value);
   const mesIni = document.getElementById("m_" + s).value;
 
@@ -757,13 +759,17 @@ async function add(s) {
   const valorParcela = +(valorTotal / parcelas).toFixed(2);
   const idParcelamento = crypto.randomUUID();
 
-  // Loop para criar cada parcela em meses subsequentes
   for (let i = 0; i < parcelas; i++) {
-    // A lógica abaixo garante que o mês avance corretamente (ex: Dezembro -> Janeiro do próximo ano)
+    // Calcula a data correta para cada parcela
     const dataObjeto = new Date(anoIni, (mesIniNum - 1) + i, 1);
-    const dataFormatada = dataObjeto.toISOString().slice(0, 10);
+    
+    // Formata manualmente para evitar problemas de fuso horário do toISOString
+    const y = dataObjeto.getFullYear();
+    const m = String(dataObjeto.getMonth() + 1).padStart(2, "0");
+    const d = "01";
+    const dataFormatada = `${y}-${m}-${d}`;
 
-    const { error } = await supabaseClient
+    await supabaseClient
       .from("lancamentos")
       .insert([{
         socio: s,
@@ -775,13 +781,8 @@ async function add(s) {
         parcela_numero: i + 1,
         criado_por: user.id
       }]);
-
-    if (error) {
-      console.error(`Erro ao salvar parcela ${i + 1}:`, error);
-    }
   }
 
-  // Limpar campos após o sucesso
   document.getElementById("d_" + s).value = "";
   document.getElementById("v_" + s).value = "";
   document.getElementById("p_" + s).checked = false;
@@ -790,9 +791,8 @@ async function add(s) {
   await carregarLancamentosSupabaseSeguro();
   render();
   renderIndicadores();
-  alert("Lançamento parcelado com sucesso!");
+  alert("Parcelas geradas com sucesso!");
 }
-
 	// ===== SALVAR OBRAS / FAMÍLIA =====
 async function addGrupo(grupo){
 
@@ -1107,14 +1107,16 @@ async function salvarLancamentoSupabase(lancamento){
   return true;
 }
 
-
-
-async function carregarLancamentosSupabaseSeguro(){
+async function carregarLancamentosSupabaseSeguro() {
   let m = +mes.value;
   let a = +ano.value;
 
-const inicio = new Date(a, m, 1).toISOString();
-const fim = new Date(a, m + 1, 0, 23, 59, 59).toISOString();
+  // Define o intervalo exato do mês selecionado (YYYY-MM-DD)
+  const inicio = `${a}-${String(m + 1).padStart(2, "0")}-01`;
+  
+  // Calcula o último dia do mês
+  const ultimoDia = new Date(a, m + 1, 0).getDate();
+  const fim = `${a}-${String(m + 1).padStart(2, "0")}-${ultimoDia}`;
 
   const { data, error } = await supabaseClient
     .from("lancamentos")
@@ -1128,28 +1130,28 @@ const fim = new Date(a, m + 1, 0, 23, 59, 59).toISOString();
     return;
   }
 
- lancamentosSupabase = {};
-entidades.forEach(e => lancamentosSupabase[e] = []);
-
+  lancamentosSupabase = {};
+  entidades.forEach(e => lancamentosSupabase[e] = []);
 
   data.forEach(l => {
+    // Ignora lançamento pai se houver
+    if (l.parcelado === true && l.id_parcelamento === null) return;
 
-    // ❌ ignora lançamento pai (controle interno)
-if (l.parcelado === true && l.id_parcelamento === null) return;
+    // IMPORTANTE: Tratar a data vinda do banco para evitar deslocamento de fuso horário
+    // Como salvamos YYYY-MM-DD, pegamos apenas os primeiros 10 caracteres
+    const dataString = l.data.substring(0, 10);
+    const [anoDb, mesDb, diaDb] = dataString.split("-");
 
     lancamentosSupabase[l.socio].push({
       id: l.id,
       id_parcelamento: l.id_parcelamento || null,
-      data: new Date(l.data).toLocaleDateString("pt-BR", {
-        day: "2-digit",
-        month: "2-digit"
-      }),
+      data: `${diaDb}/${mesDb}`, // Exibe apenas Dia/Mês
       desc: l.descricao,
       valor: Number(l.valor)
     });
   });
 
-  console.log("Supabase carregado:", lancamentosSupabase);
+  console.log("Dados filtrados para o mês:", lancamentosSupabase);
 }
 
 async function saldoAnteriorOnline(socio, mes, ano){
@@ -1378,6 +1380,7 @@ if(!entidades.includes(socio)){
 
 </body>
 </html>
+
 
 
 
