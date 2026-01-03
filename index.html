@@ -756,70 +756,6 @@ const parcelado = chkParcelado && chkParcelado.checked === true;
   const [anoIni, mesIniNum] = mesIni.split("-").map(Number);
   const valorParcela = +(valorTotal / parcelas).toFixed(2);
 
-  // cria lançamento pai
-  const { data: pai, error: errPai } = await supabaseClient
-    .from("lancamentos")
-    .insert([{
-      socio: s,
-      descricao: desc,
-      valor: 0,
-      data: new Date().toISOString(),
-      parcelado: true,
-      total_parcelas: parcelas,
-      criado_por: user.id
-    }])
-    .select()
-    .single();
-
-  if (errPai) {
-    alert("Erro ao criar parcelamento");
-    console.error(errPai);
-    return;
-  }
-
-  // cria parcelas
-  for (let i = 0; i < parcelas; i++) {
-    const d = somarMes(anoIni, mesIniNum - 1, i);
-    const dataISO = `${d.ano}-${String(d.mes + 1).padStart(2,"0")}-01`;
-
-    await supabaseClient
-      .from("lancamentos")
-      .insert([{
-        socio: s,
-        descricao: `${desc} (${i + 1}/${parcelas})`,
-        valor: valorParcela,
-        data: dataISO,
-        parcelado: true,
-        id_parcelamento: pai.id,
-        parcela_numero: i + 1,
-        total_parcelas: parcelas,
-        gerado_automaticamente: true,
-        criado_por: user.id
-      }]);
-  }
-
-  await registrarLog(
-    "PARCELADO",
-    `${s.toUpperCase()} • ${desc} • ${parcelas}x de ${fmt(valorParcela)}`
-  );
-
-  document.getElementById("d_" + s).value = "";
-  document.getElementById("v_" + s).value = "";
-  document.getElementById("p_" + s).checked = false;
-  document.getElementById("parc_" + s).classList.add("hidden");
-
-  await carregarLancamentosSupabaseSeguro();
-  render();
-  renderIndicadores();
-}
-
-
-
-
-
-  const [anoIni, mesIniNum] = mesIni.split("-").map(Number);
-  const valorParcela = +(valorTotal / parcelas).toFixed(2);
-
   // 1️⃣ cria lançamento PAI
   const { data: pai, error: errPai } = await supabaseClient
     .from("lancamentos")
@@ -1498,6 +1434,7 @@ if(!entidades.includes(socio)){
 
 </body>
 </html>
+
 
 
 
