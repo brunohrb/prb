@@ -518,14 +518,13 @@ async function render(){
   let m = +mes.value, a = +ano.value;
   statusMes.innerHTML = mesFechado() ? "🔒 Mês fechado" : "🔓 Mês aberto";
 
+  /* ===== CARDS DOS SÓCIOS (COMPLETO, COMO JÁ ERA) ===== */
   for (const s of socios) {
     let arr = lancamentosSupabase[s] || [];
     let total = arr.reduce((x,y)=>x+y.valor,0);
     let base = salarioBase(s);
 
-    // ✅ SALDO ANTERIOR ONLINE
     let prev = await calcularSaldoAnteriorOnline(s, m, a);
-
     let saldo = base + prev - total;
 
     cards.innerHTML += `
@@ -541,37 +540,35 @@ ${(!mesFechado() && podeLancar())?`
   <input id="v_${s}" placeholder="R$ 0,00 (valor TOTAL se parcelado)" oninput="mask(this)">
 
   <label class="small">
-<input type="checkbox" id="p_${s}" onchange="toggleParcelado('${s}')">
+    <input type="checkbox" id="p_${s}" onchange="toggleParcelado('${s}')">
     Parcelado
   </label>
 
   <div id="parc_${s}" class="small hidden">
     <input
-  id="n_${s}"
-  type="number"
-  min="2"
-  step="1"
-  value="2"
-  placeholder="Nº parcelas (mín. 2)"
-  oninput="this.value = Math.max(2, Math.abs(parseInt(this.value) || 2))"
->
-
+      id="n_${s}"
+      type="number"
+      min="2"
+      step="1"
+      value="2"
+      placeholder="Nº parcelas (mín. 2)"
+      oninput="this.value = Math.max(2, Math.abs(parseInt(this.value) || 2))"
+    >
     <input id="m_${s}" type="month">
   </div>
 
   <button class="primary" onclick="add('${s}')">OK</button>
 `:`<div class="small">Lançamentos bloqueados</div>`}
 
-
       ${arr.map((r,i)=>`
         <div class="linha">
           <div>${r.data} • ${r.desc}</div>
           <div class="${r.valor<0?'pos':'neg'}">${fmt(r.valor)}</div>
-         ${(!mesFechado() && podeLancar())?`
-  <div class="acoes">
-    <span onclick="editar('${s}',${i})">✏️</span>
-    <span onclick="excluir('${s}',${i})">🗑️</span>
-  </div>`:""}
+          ${(!mesFechado() && podeLancar())?`
+            <div class="acoes">
+              <span onclick="editar('${s}',${i})">✏️</span>
+              <span onclick="excluir('${s}',${i})">🗑️</span>
+            </div>`:""}
         </div>
       `).join("")}
 
@@ -583,8 +580,7 @@ ${(!mesFechado() && podeLancar())?`
     </div>`;
   }
 
-
-	  // ===== CARDS OBRAS / FAMÍLIA (SÓ VISUAL) =====
+  /* ===== CARDS OBRAS / FAMÍLIA (SOMATÓRIO SIMPLES) ===== */
   for (const g of gruposExtras) {
 
     let arr = lancamentosSupabase[g] || [];
@@ -601,10 +597,8 @@ ${(!mesFechado() && podeLancar())?`
       </div>
     `;
   }
-
-
-	
 }
+
 
 /* ===== INDICADORES ===== */
 async function renderIndicadores(){
@@ -1355,5 +1349,6 @@ async function calcularSaldoAnteriorOnline(socio, mes, ano){
 
 </body>
 </html>
+
 
 
