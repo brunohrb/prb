@@ -536,7 +536,9 @@ async function render(){
   /* ===== CARDS DOS SÓCIOS (COMPLETO, COMO JÁ ERA) ===== */
   for (const s of socios) {
     let arr = lancamentosSupabase[s] || [];
-    let total = arr.reduce((x,y)=>x+y.valor,0);
+let total = arr
+  .filter(l => !(l.parcelado === true && l.id_parcelamento === null))
+  .reduce((x, y) => x + y.valor, 0);
     let base = salarioBase(s);
 
     let prev = await calcularSaldoAnteriorOnline(s, m, a);
@@ -1411,6 +1413,7 @@ if(!entidades.includes(socio)){
 
 </body>
 </html>
+
 
 
 
