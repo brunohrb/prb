@@ -698,6 +698,43 @@ async function add(s){
     return;
   }
 
+	// 👉 CASO NÃO PARCELADO
+if (!parcelado) {
+
+  const lancamento = {
+    socio: s,
+    descricao: desc,
+    valor: valorTotal,
+    data: `${ano.value}-${String(+mes.value + 1).padStart(2,"0")}-01`,
+    criado_por: user.id
+  };
+
+  const { error } = await supabaseClient
+    .from("lancamentos")
+    .insert([lancamento]);
+
+  if(error){
+    alert("Erro ao salvar lançamento");
+    console.error(error);
+    return;
+  }
+
+  await registrarLog(
+    "ADICIONOU",
+    `${s.toUpperCase()} • ${desc} • ${fmt(valorTotal)}`
+  );
+
+  document.getElementById("d_"+s).value = "";
+  document.getElementById("v_"+s).value = "";
+
+  await carregarLancamentosSupabaseSeguro();
+  render();
+  renderIndicadores();
+
+  return; // ⬅️ ISSO É MUITO IMPORTANTE
+}
+
+
   // 👉 CASO PARCELADO
   const parcelas = Number(document.getElementById("n_"+s).value);
   const mesIni = document.getElementById("m_"+s).value;
@@ -1389,6 +1426,7 @@ if(!entidades.includes(socio)){
 
 </body>
 </html>
+
 
 
 
