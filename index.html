@@ -768,28 +768,17 @@ async function add(s){
   const [anoIni, mesIniNum] = mesIni.split("-").map(Number);
   const valorParcela = +(valorTotal / parcelas).toFixed(2);
 
-const { data: pai, error: errPai } = await supabaseClient
-  .from("lancamentos")
-  .insert([{
-    socio: s,
-    descricao: desc,
-    valor: valorTotal,
-    data: `${anoIni}-${String(mesIniNum).padStart(2,"0")}-01`,
-    parcelado: true
-  }])
-  .select()
-  .single();
 
 
 
-  if(errPai){
-    alert("Erro ao criar parcelamento");
-    console.error(errPai);
-    return;
+
   }
 
   const dataBase = new Date(anoIni, mesIniNum - 1, 1);
+const idParcelamento = crypto.randomUUID();
 
+	
+	
   for(let i=0;i<parcelas;i++){
     const d = new Date(
       dataBase.getFullYear(),
@@ -805,7 +794,7 @@ await supabaseClient
     valor: valorParcela,
     data: d.toISOString().slice(0,10),
     parcelado: true,
-    id_parcelamento: pai.id,
+id_parcelamento: idParcelamento
     parcela_numero: i+1,
     gerado_automaticamente: true
   }]);
@@ -1413,6 +1402,7 @@ if(!entidades.includes(socio)){
 
 </body>
 </html>
+
 
 
 
