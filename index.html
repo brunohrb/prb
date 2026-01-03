@@ -768,17 +768,10 @@ async function add(s){
   const [anoIni, mesIniNum] = mesIni.split("-").map(Number);
   const valorParcela = +(valorTotal / parcelas).toFixed(2);
 
-
-
-
-
-  }
-
   const dataBase = new Date(anoIni, mesIniNum - 1, 1);
 const idParcelamento = crypto.randomUUID();
 
-	
-	
+
   for(let i=0;i<parcelas;i++){
     const d = new Date(
       dataBase.getFullYear(),
@@ -1402,6 +1395,7 @@ if(!entidades.includes(socio)){
 
 </body>
 </html>
+
 
 
 
