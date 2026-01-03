@@ -740,8 +740,7 @@ async function add(s){
     await carregarLancamentosSupabaseSeguro();
     render();
     renderIndicadores();
-    return;
-  }
+   }  
 
   // ===== PARCELADO =====
   const parcelas = Number(document.getElementById("n_"+s).value);
@@ -1371,6 +1370,7 @@ if(!entidades.includes(socio)){
 
 </body>
 </html>
+
 
 
 
