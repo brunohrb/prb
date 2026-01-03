@@ -351,6 +351,20 @@ const supabaseClient = supabase.createClient(
   SUPABASE_ANON_KEY
 );
 
+	// ===== ELEMENTOS DOM (OBRIGATÓRIO) =====
+const cards = document.getElementById("cards");
+const statusMes = document.getElementById("statusMes");
+
+const mes = document.getElementById("mes");
+const ano = document.getElementById("ano");
+
+const indicadores = document.getElementById("indicadores");
+const anoIndicador = document.getElementById("anoIndicador");
+
+const modal = document.getElementById("modal");
+const mdDesc = document.getElementById("mdDesc");
+const mdValor = document.getElementById("mdValor");
+
 
 /* ===== DADOS ===== */
 let usuarios = JSON.parse(localStorage.getItem("usuarios_prb")) || {
@@ -1399,6 +1413,7 @@ if(!entidades.includes(socio)){
 
 </body>
 </html>
+
 
 
 
