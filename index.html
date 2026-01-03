@@ -682,76 +682,33 @@ const soma = data.reduce(
 
 /* ===== CRUD ===== */
 function podeLancar(){
-  return !mesFechado();
+ let hoje = new Date();
+ let m = +mes.value;
+ let a = +ano.value;
+ return m === hoje.getMonth() && a === hoje.getFullYear();
 }
 
 
-
 async function add(s){
+	  const user = (await supabaseClient.auth.getUser()).data.user;
+ const parcelado = document.getElementById("p_" + s)?.checked;
+    const desc = document.getElementById("d_"+s).value;
+  const valorTotal = parseMoeda(document.getElementById("v_"+s).value);
 
-  const { data: { user } } = await supabaseClient.auth.getUser();
-  if (!user) {
-    alert("Usuário não autenticado");
-    return;
-  }
-
-const chkParcelado = document.getElementById("p_" + s);
-const parcelado = chkParcelado && chkParcelado.checked === true;
-  const desc = document.getElementById("d_" + s).value;
-  const valorTotal = parseMoeda(document.getElementById("v_" + s).value);
-
-  if (!desc || !valorTotal) {
+  if(!desc || !valorTotal){
     alert("Preencha descrição e valor");
     return;
   }
 
-  /* ==========================
-     👉 CASO NÃO PARCELADO
-  ========================== */
-  if (!parcelado) {
-
-    const lancamento = {
-      socio: s,
-      descricao: desc,
-      valor: valorTotal,
-      data: `${ano.value}-${String(+mes.value + 1).padStart(2,"0")}-01`,
-      criado_por: user.id
-    };
-
-    const { error } = await supabaseClient
-      .from("lancamentos")
-      .insert([lancamento]);
-
-    if (error) {
-      alert("Erro ao salvar lançamento");
-      console.error(error);
-      return;
-    }
-
-    await registrarLog(
-      "ADICIONOU",
-      `${s.toUpperCase()} • ${desc} • ${fmt(valorTotal)}`
-    );
-
-    document.getElementById("d_" + s).value = "";
-    document.getElementById("v_" + s).value = "";
-
-    await carregarLancamentosSupabaseSeguro();
-    render();
-    renderIndicadores();
-    return; // 🔴 ESSENCIAL
-  }
-
-  /* ==========================
-     👉 CASO PARCELADO
-  ========================== */
-  const parcelas = Number(document.getElementById("n_" + s).value);
-  const mesIni = document.getElementById("m_" + s).value;
+  // 👉 CASO PARCELADO
+  const parcelas = Number(document.getElementById("n_"+s).value);
+  const mesIni = document.getElementById("m_"+s).value;
 
   if (!parcelas || parcelas < 2 || !mesIni) {
-    alert("Informe número de parcelas (mín. 2) e mês inicial");
-    return;
-  }
+  alert("Número de parcelas deve ser 2 ou mais");
+  return;
+}
+
 
   const [anoIni, mesIniNum] = mesIni.split("-").map(Number);
   const valorParcela = +(valorTotal / parcelas).toFixed(2);
@@ -1434,19 +1391,5 @@ if(!entidades.includes(socio)){
 
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
