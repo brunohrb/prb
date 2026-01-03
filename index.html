@@ -1124,8 +1124,8 @@ async function carregarLancamentosSupabaseSeguro(){
   let m = +mes.value;
   let a = +ano.value;
 
-  const inicio = `${a}-${String(m+1).padStart(2,"0")}-01`;
-  const fim    = `${a}-${String(m+1).padStart(2,"0")}-31`;
+const inicio = new Date(a, m, 1).toISOString();
+const fim = new Date(a, m + 1, 0, 23, 59, 59).toISOString();
 
   const { data, error } = await supabaseClient
     .from("lancamentos")
@@ -1389,6 +1389,7 @@ if(!entidades.includes(socio)){
 
 </body>
 </html>
+
 
 
 
