@@ -766,19 +766,18 @@ async function add(s){
   const [anoIni, mesIniNum] = mesIni.split("-").map(Number);
   const valorParcela = +(valorTotal / parcelas).toFixed(2);
 
- const { data: pai, error: errPai } = await supabaseClient
+const { data: pai, error: errPai } = await supabaseClient
   .from("lancamentos")
   .insert([{
     socio: s,
     descricao: desc,
-    valor: valorTotal, // ✅ NÃO ZERO
+    valor: valorTotal,
     data: `${anoIni}-${String(mesIniNum).padStart(2,"0")}-01`,
-    parcelado: true,
-    total_parcelas: parcelas,
-    criado_por: user.id
+    parcelado: true
   }])
   .select()
   .single();
+
 
 
   if(errPai){
@@ -796,20 +795,19 @@ async function add(s){
       1
     );
 
-    await supabaseClient
-      .from("lancamentos")
-      .insert([{
-        socio: s,
-        descricao: `${desc} (${i+1}/${parcelas})`,
-        valor: valorParcela,
-        data: d.toISOString().slice(0,10),
-        parcelado: true,
-        id_parcelamento: pai.id,
-        parcela_numero: i+1,
-        total_parcelas: parcelas,
-        gerado_automaticamente: true,
-        criado_por: user.id
-      }]);
+await supabaseClient
+  .from("lancamentos")
+  .insert([{
+    socio: s,
+    descricao: `${desc} (${i+1}/${parcelas})`,
+    valor: valorParcela,
+    data: d.toISOString().slice(0,10),
+    parcelado: true,
+    id_parcelamento: pai.id,
+    parcela_numero: i+1,
+    gerado_automaticamente: true
+  }]);
+
   }
 
   await registrarLog(
@@ -1413,6 +1411,7 @@ if(!entidades.includes(socio)){
 
 </body>
 </html>
+
 
 
 
