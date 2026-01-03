@@ -702,96 +702,51 @@ function podeLancar(){
 
 async function add(s) {
   const { data: { user } } = await supabaseClient.auth.getUser();
-  if (!user) {
-    alert("Usuário não autenticado");
-    return;
-  }
+  if (!user) { alert("Usuário não autenticado"); return; }
 
   const desc = document.getElementById("d_" + s).value;
   const valorTotal = parseMoeda(document.getElementById("v_" + s).value);
   const parcelado = document.getElementById("p_" + s)?.checked;
 
-  if (!desc || !valorTotal) {
-    alert("Preencha descrição e valor");
-    return;
-  }
+  if (!desc || !valorTotal) { alert("Preencha descrição e valor"); return; }
 
-  // ===== NÃO PARCELADO =====
   if (!parcelado) {
-    // Garante que a data seja salva como YYYY-MM-DD (ex: 2026-01-01)
     const dataLancamento = `${ano.value}-${String(+mes.value + 1).padStart(2, "0")}-01`;
-    
-    const { error } = await supabaseClient
-      .from("lancamentos")
-      .insert([{
-        socio: s,
-        descricao: desc,
-        valor: valorTotal,
-        data: dataLancamento,
-        criado_por: user.id
-      }]);
+    const { error } = await supabaseClient.from("lancamentos").insert([{
+      socio: s, descricao: desc, valor: valorTotal, data: dataLancamento, criado_por: user.id
+    }]);
+    if (error) { console.error(error); return; }
+  } else {
+    const parcelas = Number(document.getElementById("n_" + s).value);
+    const mesIni = document.getElementById("m_" + s).value;
+    if (!parcelas || parcelas < 2 || !mesIni) { alert("Informe parcelas e mês inicial"); return; }
 
-    if (error) {
-      alert("Erro ao salvar lançamento");
-      console.error(error);
-      return;
+    const [anoIni, mesIniNum] = mesIni.split("-").map(Number);
+    const valorParcela = +(valorTotal / parcelas).toFixed(2);
+    const idParcelamento = crypto.randomUUID();
+
+    for (let i = 0; i < parcelas; i++) {
+      const dataObjeto = new Date(anoIni, (mesIniNum - 1) + i, 1);
+      const y = dataObjeto.getFullYear();
+      const m = String(dataObjeto.getMonth() + 1).padStart(2, "0");
+      const dataFormatada = `${y}-${m}-01`;
+
+      await supabaseClient.from("lancamentos").insert([{
+        socio: s, descricao: `${desc} (${i + 1}/${parcelas})`, valor: valorParcela,
+        data: dataFormatada, parcelado: true, id_parcelamento: idParcelamento,
+        parcela_numero: i + 1, criado_por: user.id
+      }]);
     }
-
-    document.getElementById("d_" + s).value = "";
-    document.getElementById("v_" + s).value = "";
-
-    await carregarLancamentosSupabaseSeguro();
-    render();
-    renderIndicadores();
-    return;
-  }
-
-  // ===== PARCELADO =====
-  const parcelas = Number(document.getElementById("n_" + s).value);
-  const mesIni = document.getElementById("m_" + s).value;
-
-  if (!parcelas || parcelas < 2 || !mesIni) {
-    alert("Informe número de parcelas (mín. 2) e mês inicial");
-    return;
-  }
-
-  const [anoIni, mesIniNum] = mesIni.split("-").map(Number);
-  const valorParcela = +(valorTotal / parcelas).toFixed(2);
-  const idParcelamento = crypto.randomUUID();
-
-  for (let i = 0; i < parcelas; i++) {
-    // Calcula a data correta para cada parcela
-    const dataObjeto = new Date(anoIni, (mesIniNum - 1) + i, 1);
-    
-    // Formata manualmente para evitar problemas de fuso horário do toISOString
-    const y = dataObjeto.getFullYear();
-    const m = String(dataObjeto.getMonth() + 1).padStart(2, "0");
-    const d = "01";
-    const dataFormatada = `${y}-${m}-${d}`;
-
-    await supabaseClient
-      .from("lancamentos")
-      .insert([{
-        socio: s,
-        descricao: `${desc} (${i + 1}/${parcelas})`,
-        valor: valorParcela,
-        data: dataFormatada,
-        parcelado: true,
-        id_parcelamento: idParcelamento,
-        parcela_numero: i + 1,
-        criado_por: user.id
-      }]);
   }
 
   document.getElementById("d_" + s).value = "";
   document.getElementById("v_" + s).value = "";
-  document.getElementById("p_" + s).checked = false;
-  document.getElementById("parc_" + s).classList.add("hidden");
+  if(document.getElementById("p_" + s)) document.getElementById("p_" + s).checked = false;
+  if(document.getElementById("parc_" + s)) document.getElementById("parc_" + s).classList.add("hidden");
 
   await carregarLancamentosSupabaseSeguro();
   render();
   renderIndicadores();
-  alert("Parcelas geradas com sucesso!");
 }
 	// ===== SALVAR OBRAS / FAMÍLIA =====
 async function addGrupo(grupo){
@@ -1111,49 +1066,43 @@ async function carregarLancamentosSupabaseSeguro() {
   let m = +mes.value;
   let a = +ano.value;
 
-  // Define o intervalo exato do mês selecionado (YYYY-MM-DD)
+  // Filtro no Banco (Primeira camada)
   const inicio = `${a}-${String(m + 1).padStart(2, "0")}-01`;
-  
-  // Calcula o último dia do mês
   const ultimoDia = new Date(a, m + 1, 0).getDate();
   const fim = `${a}-${String(m + 1).padStart(2, "0")}-${ultimoDia}`;
 
   const { data, error } = await supabaseClient
     .from("lancamentos")
-    .select("id, socio, data, descricao, valor, parcelado, id_parcelamento")
+    .select("*")
     .gte("data", inicio)
     .lte("data", fim);
 
-  if (error) {
-    console.error("Erro ao ler Supabase:", error);
-    lancamentosSupabase = {};
-    return;
-  }
+  if (error) { console.error(error); return; }
 
   lancamentosSupabase = {};
   entidades.forEach(e => lancamentosSupabase[e] = []);
 
   data.forEach(l => {
-    // Ignora lançamento pai se houver
     if (l.parcelado === true && l.id_parcelamento === null) return;
 
-    // IMPORTANTE: Tratar a data vinda do banco para evitar deslocamento de fuso horário
-    // Como salvamos YYYY-MM-DD, pegamos apenas os primeiros 10 caracteres
-    const dataString = l.data.substring(0, 10);
-    const [anoDb, mesDb, diaDb] = dataString.split("-");
+    // FILTRAGEM REDUNDANTE NO CLIENTE (Segunda camada)
+    // Extrai o ano e mês da data vinda do banco (YYYY-MM-DD...)
+    const dataDb = l.data.substring(0, 10);
+    const [anoDb, mesDb] = dataDb.split("-").map(Number);
 
-    lancamentosSupabase[l.socio].push({
-      id: l.id,
-      id_parcelamento: l.id_parcelamento || null,
-      data: `${diaDb}/${mesDb}`, // Exibe apenas Dia/Mês
-      desc: l.descricao,
-      valor: Number(l.valor)
-    });
+    // SÓ ADICIONA SE O ANO E MÊS FOREM EXATAMENTE OS SELECIONADOS
+    if (anoDb === a && mesDb === (m + 1)) {
+      lancamentosSupabase[l.socio].push({
+        id: l.id,
+        id_parcelamento: l.id_parcelamento || null,
+        data: `${String(l.data.substring(8,10))}/${String(mesDb).padStart(2,"0")}`,
+        desc: l.descricao,
+        valor: Number(l.valor)
+      });
+    }
   });
-
-  console.log("Dados filtrados para o mês:", lancamentosSupabase);
+  console.log("Dados carregados e filtrados:", lancamentosSupabase);
 }
-
 async function saldoAnteriorOnline(socio, mes, ano){
   // soma todas as retiradas ANTES deste mês
   const fim = `${ano}-${String(mes+1).padStart(2,"0")}-01`;
@@ -1380,6 +1329,7 @@ if(!entidades.includes(socio)){
 
 </body>
 </html>
+
 
 
 
