@@ -734,9 +734,21 @@ async function add(s){
   }
 
   // 2️⃣ cria parcelas
-  for(let i=0;i<parcelas;i++){
-    const d = somarMes(anoIni, mesIniNum-1, i);
-    const dataISO = `${d.ano}-${String(d.mes+1).padStart(2,"0")}-01`;
+  const [anoIni, mesIniNum] = mesIni.split("-").map(Number);
+const valorParcela = +(valorTotal / parcelas).toFixed(2);
+
+// mês inicial REAL
+const dataBase = new Date(anoIni, mesIniNum - 1, 1);
+
+for(let i = 0; i < parcelas; i++){
+  const dataParcela = new Date(
+    dataBase.getFullYear(),
+    dataBase.getMonth() + i,
+    1
+  );
+
+  const dataISO = dataParcela.toISOString().slice(0,10);
+
 
     await supabaseClient
       .from("lancamentos")
@@ -1389,6 +1401,7 @@ if(!entidades.includes(socio)){
 
 </body>
 </html>
+
 
 
 
