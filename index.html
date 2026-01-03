@@ -595,9 +595,10 @@ for (const g of gruposExtras) {
       <input id="d_${g}" placeholder="Descrição">
       <input id="v_${g}" placeholder="R$ 0,00" oninput="mask(this)">
 
-      <button class="primary" onclick="alert('No próximo passo este botão vai salvar 👍')">
-        OK
-      </button>
+    <button class="primary" onclick="addGrupo('${g}')">
+  OK
+</button>
+
 
       ${arr.map(r=>`
         <div class="linha">
@@ -687,6 +688,53 @@ async function add(s){
     alert("Preencha descrição e valor");
     return;
   }
+
+	// ===== SALVAR OBRAS / FAMÍLIA =====
+async function addGrupo(grupo){
+
+  const desc = document.getElementById("d_"+grupo).value;
+  const valor = parseMoeda(document.getElementById("v_"+grupo).value);
+
+  if(!desc || !valor){
+    alert("Preencha descrição e valor");
+    return;
+  }
+
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  if(!user){
+    alert("Usuário não autenticado");
+    return;
+  }
+
+  const { error } = await supabaseClient
+    .from("lancamentos")
+    .insert([{
+      socio: grupo,
+      descricao: desc,
+      valor: valor,
+      data: new Date().toISOString(),
+      criado_por: user.id
+    }]);
+
+  if(error){
+    alert("Erro ao salvar lançamento");
+    console.error(error);
+    return;
+  }
+
+  await registrarLog(
+    "ADICIONOU",
+    `${grupo.toUpperCase()} • ${desc} • ${fmt(valor)}`
+  );
+
+  document.getElementById("d_"+grupo).value = "";
+  document.getElementById("v_"+grupo).value = "";
+
+  await carregarLancamentosSupabaseSeguro();
+  render();
+  renderIndicadores();
+}
+
 
   // 👉 CASO NÃO PARCELADO (fluxo antigo)
   if(!parcelado){
@@ -1366,6 +1414,7 @@ if(!entidades.includes(socio)){
 
 </body>
 </html>
+
 
 
 
