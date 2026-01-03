@@ -791,10 +791,10 @@ async function addGrupo(grupo){
     }]);
 
   if(error){
-    alert("Erro ao salvar lançamento");
-    console.error(error);
-    return;
-  }
+  alert("Erro Supabase:\n" + error.message);
+  console.error("ERRO SUPABASE:", error);
+  return;
+}
 
   await registrarLog(
     "ADICIONOU",
@@ -1380,6 +1380,7 @@ if(!entidades.includes(socio)){
 
 </body>
 </html>
+
 
 
 
