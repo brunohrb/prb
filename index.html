@@ -580,23 +580,38 @@ ${(!mesFechado() && podeLancar())?`
     </div>`;
   }
 
-  /* ===== CARDS OBRAS / FAMÍLIA (SOMATÓRIO SIMPLES) ===== */
-  for (const g of gruposExtras) {
+ /* ===== CARDS OBRAS / FAMÍLIA (COM INPUTS – SEM SALVAR AINDA) ===== */
+for (const g of gruposExtras) {
 
-    let arr = lancamentosSupabase[g] || [];
-    let total = arr.reduce((x,y)=>x+y.valor,0);
+  let arr = lancamentosSupabase[g] || [];
+  let total = arr.reduce((x,y)=>x+y.valor,0);
 
-    cards.innerHTML += `
-      <div class="card">
-        <div class="socio"><span>${g.toUpperCase()}</span></div>
+  cards.innerHTML += `
+    <div class="card">
+      <div class="socio"><span>${g.toUpperCase()}</span></div>
 
-        <div class="small">
-          Total do mês:<br>
-          <b class="neg">${fmt(total)}</b>
+      <input id="d_${g}" placeholder="Descrição">
+      <input id="v_${g}" placeholder="R$ 0,00" oninput="mask(this)">
+
+      <button class="primary" onclick="alert('No próximo passo este botão vai salvar 👍')">
+        OK
+      </button>
+
+      ${arr.map(r=>`
+        <div class="linha">
+          <div>${r.data} • ${r.desc}</div>
+          <div class="neg">${fmt(r.valor)}</div>
         </div>
+      `).join("")}
+
+      <div class="small">
+        Total do mês:<br>
+        <b class="neg">${fmt(total)}</b>
       </div>
-    `;
-  }
+    </div>
+  `;
+}
+
 }
 
 
@@ -1349,6 +1364,7 @@ async function calcularSaldoAnteriorOnline(socio, mes, ano){
 
 </body>
 </html>
+
 
 
 
