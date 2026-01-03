@@ -362,6 +362,8 @@ let usuarios = JSON.parse(localStorage.getItem("usuarios_prb")) || {
 
 const socios=["paulo","rafael","bruno"];
 	const gruposExtras = ["obras","familia"];
+	const entidades = [...socios, ...gruposExtras];
+
 
 const meses=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
 const baseInicial={mes:11,ano:2025};
@@ -1115,7 +1117,7 @@ async function carregarLancamentosSupabaseSeguro(){
   }
 
  lancamentosSupabase = {};
-[...socios, ...gruposExtras].forEach(s => lancamentosSupabase[s] = []);
+entidades.forEach(e => lancamentosSupabase[e] = []);
 
 
   data.forEach(l => {
@@ -1290,7 +1292,7 @@ async function calcularSaldoAnteriorOnline(socio, mes, ano){
 
     const socio = String(r.Socio).trim().toLowerCase();
 
-    if(!socios.includes(socio)){
+if(!entidades.includes(socio)){
       console.warn("Sócio inválido:", r.Socio);
       erros++;
       continue;
@@ -1364,6 +1366,7 @@ async function calcularSaldoAnteriorOnline(socio, mes, ano){
 
 </body>
 </html>
+
 
 
 
