@@ -695,7 +695,8 @@ async function add(s){
     return;
   }
 
-  const parcelado = document.getElementById("p_" + s)?.checked === true;
+const chkParcelado = document.getElementById("p_" + s);
+const parcelado = chkParcelado && chkParcelado.checked === true;
   const desc = document.getElementById("d_" + s).value;
   const valorTotal = parseMoeda(document.getElementById("v_" + s).value);
 
@@ -814,8 +815,19 @@ async function add(s){
 
 
   // 👉 CASO PARCELADO
-  const parcelas = Number(document.getElementById("n_"+s).value);
-  const mesIni = document.getElementById("m_"+s).value;
+if (parcelado) {
+
+  const parcelas = Number(document.getElementById("n_" + s).value);
+  const mesIni = document.getElementById("m_" + s).value;
+
+  if (!parcelas || parcelas < 2 || !mesIni) {
+    alert("Número de parcelas deve ser 2 ou mais");
+    return;
+  }
+
+  // continua parcelamento...
+}
+
 
   if (!parcelas || parcelas < 2 || !mesIni) {
   alert("Número de parcelas deve ser 2 ou mais");
@@ -1504,6 +1516,7 @@ if(!entidades.includes(socio)){
 
 </body>
 </html>
+
 
 
 
