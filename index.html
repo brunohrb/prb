@@ -582,6 +582,28 @@ ${(!mesFechado() && podeLancar())?`
       </div>
     </div>`;
   }
+
+
+	  // ===== CARDS OBRAS / FAMÍLIA (SÓ VISUAL) =====
+  for (const g of gruposExtras) {
+
+    let arr = lancamentosSupabase[g] || [];
+    let total = arr.reduce((x,y)=>x+y.valor,0);
+
+    cards.innerHTML += `
+      <div class="card">
+        <div class="socio"><span>${g.toUpperCase()}</span></div>
+
+        <div class="small">
+          Total do mês:<br>
+          <b class="neg">${fmt(total)}</b>
+        </div>
+      </div>
+    `;
+  }
+
+
+	
 }
 
 /* ===== INDICADORES ===== */
@@ -1333,4 +1355,5 @@ async function calcularSaldoAnteriorOnline(socio, mes, ano){
 
 </body>
 </html>
+
 
