@@ -718,29 +718,31 @@ async function add(s){
 
   // ===== NÃO PARCELADO =====
   if(!parcelado){
-    const { error } = await supabaseClient
-      .from("lancamentos")
-      .insert([{
-        socio: s,
-        descricao: desc,
-        valor: valorTotal,
-        data: `${ano.value}-${String(+mes.value+1).padStart(2,"0")}-01`,
-        criado_por: user.id
-      }]);
+  const { error } = await supabaseClient
+    .from("lancamentos")
+    .insert([{
+      socio: s,
+      descricao: desc,
+      valor: valorTotal,
+      data: `${ano.value}-${String(+mes.value+1).padStart(2,"0")}-01`,
+      criado_por: user.id
+    }]);
 
-    if(error){
-      alert("Erro ao salvar lançamento");
-      console.error(error);
-      return;
-    }
+  if(error){
+    alert("Erro ao salvar lançamento");
+    console.error(error);
+    return;
+  }
 
-    document.getElementById("d_"+s).value = "";
-    document.getElementById("v_"+s).value = "";
+  document.getElementById("d_"+s).value = "";
+  document.getElementById("v_"+s).value = "";
 
-    await carregarLancamentosSupabaseSeguro();
-    render();
-    renderIndicadores();
-   }  
+  await carregarLancamentosSupabaseSeguro();
+  render();
+  renderIndicadores();
+
+  return; 
+}
 
   // ===== PARCELADO =====
   const parcelas = Number(document.getElementById("n_"+s).value);
@@ -1370,6 +1372,7 @@ if(!entidades.includes(socio)){
 
 </body>
 </html>
+
 
 
 
