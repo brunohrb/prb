@@ -772,7 +772,7 @@ async function add(s){
       socio: s,
       descricao: desc,
       valor: 0,
-data: null,
+data: `${anoIni}-${String(mesIniNum).padStart(2,"0")}-01`,
       parcelado: true,
       total_parcelas: parcelas,
       criado_por: user.id
@@ -1412,6 +1412,7 @@ if(!entidades.includes(socio)){
 
 </body>
 </html>
+
 
 
 
