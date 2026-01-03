@@ -418,8 +418,6 @@ async function login() {
 }
 
 	// ===== ELEMENTOS DOM (OBRIGATÓRIO) =====
-const mes = document.getElementById("mes");
-const ano = document.getElementById("ano");
 const anoIndicador = document.getElementById("anoIndicador");
 
 const cards = document.getElementById("cards");
@@ -782,7 +780,7 @@ async function add(s){
       socio: s,
       descricao: desc,
       valor: 0,
-      data: new Date().toISOString(),
+data: null,
       parcelado: true,
       total_parcelas: parcelas,
       criado_por: user.id
@@ -1422,6 +1420,7 @@ if(!entidades.includes(socio)){
 
 </body>
 </html>
+
 
 
 
