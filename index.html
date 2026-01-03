@@ -682,11 +682,9 @@ const soma = data.reduce(
 
 /* ===== CRUD ===== */
 function podeLancar(){
- let hoje = new Date();
- let m = +mes.value;
- let a = +ano.value;
- return m === hoje.getMonth() && a === hoje.getFullYear();
+  return !mesFechado();
 }
+
 
 
 async function add(s){
@@ -1391,5 +1389,6 @@ if(!entidades.includes(socio)){
 
 </body>
 </html>
+
 
 
