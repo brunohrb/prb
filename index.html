@@ -689,88 +689,6 @@ async function add(s){
     return;
   }
 
-	// ===== SALVAR OBRAS / FAMÍLIA =====
-async function addGrupo(grupo){
-
-  const desc = document.getElementById("d_"+grupo).value;
-  const valor = parseMoeda(document.getElementById("v_"+grupo).value);
-
-  if(!desc || !valor){
-    alert("Preencha descrição e valor");
-    return;
-  }
-
-  const { data: { user } } = await supabaseClient.auth.getUser();
-  if(!user){
-    alert("Usuário não autenticado");
-    return;
-  }
-
-  const { error } = await supabaseClient
-    .from("lancamentos")
-    .insert([{
-      socio: grupo,
-      descricao: desc,
-      valor: valor,
-      data: new Date().toISOString(),
-      criado_por: user.id
-    }]);
-
-  if(error){
-    alert("Erro ao salvar lançamento");
-    console.error(error);
-    return;
-  }
-
-  await registrarLog(
-    "ADICIONOU",
-    `${grupo.toUpperCase()} • ${desc} • ${fmt(valor)}`
-  );
-
-  document.getElementById("d_"+grupo).value = "";
-  document.getElementById("v_"+grupo).value = "";
-
-  await carregarLancamentosSupabaseSeguro();
-  render();
-  renderIndicadores();
-}
-
-
-  // 👉 CASO NÃO PARCELADO (fluxo antigo)
-  if(!parcelado){
-const lancamento = {
-  socio: s,
-  descricao: desc,
-  valor: valorTotal,
-  data: new Date().toISOString(),
-  criado_por: user.id
-};
-
-
-    const { error } = await supabaseClient
-      .from("lancamentos")
-      .insert([lancamento]);
-
-    if(error){
-      alert("Erro ao salvar no servidor");
-      console.error(error);
-      return;
-    }
-
-    await registrarLog(
-      "ADICIONOU",
-      `${s} • ${desc} • ${fmt(valorTotal)}`
-    );
-
-    document.getElementById("d_"+s).value = "";
-    document.getElementById("v_"+s).value = "";
-
-    await carregarLancamentosSupabaseSeguro();
-    render();
-    renderIndicadores();
-    return;
-  }
-
   // 👉 CASO PARCELADO
   const parcelas = Number(document.getElementById("n_"+s).value);
   const mesIni = document.getElementById("m_"+s).value;
@@ -843,6 +761,54 @@ const lancamento = {
   renderIndicadores();
 
 	}
+
+
+	// ===== SALVAR OBRAS / FAMÍLIA =====
+async function addGrupo(grupo){
+
+  const desc = document.getElementById("d_"+grupo).value;
+  const valor = parseMoeda(document.getElementById("v_"+grupo).value);
+
+  if(!desc || !valor){
+    alert("Preencha descrição e valor");
+    return;
+  }
+
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  if(!user){
+    alert("Usuário não autenticado");
+    return;
+  }
+
+  const { error } = await supabaseClient
+    .from("lancamentos")
+    .insert([{
+      socio: grupo,
+      descricao: desc,
+      valor: valor,
+      data: new Date().toISOString(),
+      criado_por: user.id
+    }]);
+
+  if(error){
+    alert("Erro ao salvar lançamento");
+    console.error(error);
+    return;
+  }
+
+  await registrarLog(
+    "ADICIONOU",
+    `${grupo.toUpperCase()} • ${desc} • ${fmt(valor)}`
+  );
+
+  document.getElementById("d_"+grupo).value = "";
+  document.getElementById("v_"+grupo).value = "";
+
+  await carregarLancamentosSupabaseSeguro();
+  render();
+  renderIndicadores();
+}
+
 
 function editar(s, i){
   const item = lancamentosSupabase[s][i];
@@ -1414,6 +1380,7 @@ if(!entidades.includes(socio)){
 
 </body>
 </html>
+
 
 
 
