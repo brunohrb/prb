@@ -228,16 +228,19 @@ button.danger{ background: #c0392b; }
 
 <body>
 
-<!-- LOGIN -->
-<div class="container" id="loginTela">
-<header class="brand">
- <div class="logo">PRB</div>
- <h2>Controle de Pró-Labore</h2>
-</header>
-<input id="user" placeholder="Usuário">
-<input id="pass" type="password" placeholder="Senha">
-<button class="primary" onclick="login()">Entrar</button>
+<!-- LOGIN MODERNO -->
+<div class="login-wrapper" id="loginTela">
+  <div class="login-card">
+    <h1>InvestFlow V11</h1>
+    <p>Acesse seu painel financeiro</p>
+
+    <input id="user" type="email" placeholder="Email">
+    <input id="pass" type="password" placeholder="Senha">
+
+    <button onclick="login()">Entrar Agora</button>
+  </div>
 </div>
+
 
 <!-- APP -->
 <div class="container hidden" id="app">
@@ -1329,6 +1332,7 @@ if(!entidades.includes(socio)){
 
 </body>
 </html>
+
 
 
 
