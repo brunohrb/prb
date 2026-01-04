@@ -221,6 +221,77 @@ button.primary{ background: var(--azul); }
 button.secondary{ background: #64748b; }
 button.danger{ background: #c0392b; }
 
+
+	/* =========================
+   LOGIN MODERNO RESPONSIVO
+========================= */
+
+.login-wrapper{
+  position:fixed;
+  inset:0;
+  background:linear-gradient(135deg,#0a58ca,#0d6efd);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.login-card{
+  background:#ffffff;
+  width:100%;
+  max-width:360px;
+  padding:36px 30px;
+  border-radius:18px;
+  box-shadow:0 20px 50px rgba(0,0,0,.25);
+  text-align:center;
+}
+
+.login-card h1{
+  margin:0;
+  font-size:22px;
+  color:#0a58ca;
+}
+
+.login-card p{
+  margin:6px 0 22px;
+  font-size:14px;
+  color:#64748b;
+}
+
+.login-card input{
+  width:100%;
+  padding:12px 14px;
+  margin-bottom:14px;
+  font-size:14px;
+  border-radius:12px;
+  border:1px solid #e5e7eb;
+}
+
+.login-card input:focus{
+  outline:none;
+  box-shadow:0 0 0 2px rgba(13,110,253,.25);
+}
+
+.login-card button{
+  width:100%;
+  padding:12px;
+  border:none;
+  border-radius:12px;
+  background:#0d6efd;
+  color:#fff;
+  font-size:15px;
+  font-weight:600;
+  cursor:pointer;
+}
+
+.login-card button:hover{
+  background:#0b5ed7;
+}
+
+/* Esconde o container antigo do app até logar */
+#app.hidden{
+  display:none;
+}
+	
 	
 </style>
 
@@ -231,8 +302,8 @@ button.danger{ background: #c0392b; }
 <!-- LOGIN MODERNO -->
 <div class="login-wrapper" id="loginTela">
   <div class="login-card">
-    <h1>InvestFlow V11</h1>
-    <p>Acesse seu painel financeiro</p>
+    <h1>PRB Participação</h1>
+    <p> </p>
 
     <input id="user" type="email" placeholder="Email">
     <input id="pass" type="password" placeholder="Senha">
@@ -1332,6 +1403,7 @@ if(!entidades.includes(socio)){
 
 </body>
 </html>
+
 
 
 
