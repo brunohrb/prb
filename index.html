@@ -275,6 +275,87 @@ input:focus,select:focus{
 
 
 
+/* =========================
+   LOGIN FULLSCREEN (APP-LIKE)
+========================= */
+
+.login-wrapper{
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(135deg, #0056b3, #00bfff);
+  z-index: 9999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.login-card{
+  background: #ffffff;
+  width: 92%;
+  max-width: 380px;
+  padding: 42px 34px;
+  border-radius: 22px;
+  box-shadow: 0 15px 40px rgba(0,0,0,.35);
+  text-align: center;
+}
+
+/* TÍTULO */
+.login-card h1{
+  color: #0056b3;
+  margin-bottom: 10px;
+  font-size: 26px;
+  font-weight: 700;
+}
+
+/* SUBTÍTULO */
+.login-card p{
+  color: #555;
+  margin-bottom: 30px;
+  font-size: 15px;
+}
+
+/* INPUTS GRANDES (APP FEEL) */
+.login-card input{
+  padding: 16px;
+  border: 2px solid #eee;
+  border-radius: 12px;
+  width: 100%;
+  margin-bottom: 18px;
+  text-align: center;
+  font-size: 18px;
+}
+
+/* FOCO */
+.login-card input:focus{
+  outline: none;
+  border-color: #0056b3;
+  box-shadow: 0 0 0 3px rgba(0,86,179,.25);
+}
+
+/* BOTÃO GRANDE */
+.login-card button{
+  background: #0056b3;
+  color: white;
+  border: none;
+  padding: 16px;
+  border-radius: 12px;
+  width: 100%;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.login-card button:hover{
+  background: #004494;
+}
+
+/* Desktop: deixa um pouco menor */
+@media (min-width: 900px){
+  .login-card{
+    max-width: 360px;
+    padding: 36px;
+  }
+}
 	
 
 
@@ -938,3 +1019,4 @@ async function carregarLancamentosSupabaseSeguro(){
 
 </body>
 </html>
+
