@@ -2,7 +2,6 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -212,6 +211,17 @@ input:focus,select:focus{
 }
 
 /* 👆 O CSS NOVO TERMINA AQUI */
+	
+	button.primary,
+button.secondary,
+button.danger{
+  background: inherit;
+  color: #fff;
+}
+
+button.primary{ background: var(--azul); }
+button.secondary{ background: #64748b; }
+button.danger{ background: #c0392b; }
 
 
 	/* =========================
@@ -271,6 +281,8 @@ input:focus,select:focus{
   cursor: pointer;
 }
 
+
+
 	
 </style>
 
@@ -291,6 +303,7 @@ input:focus,select:focus{
   </div>
 </div>
 
+
 <!-- APP -->
 <div class="container hidden" id="app">
 <header>
@@ -306,9 +319,7 @@ input:focus,select:focus{
   <span class="toggle" onclick="toggleTema()">🌙</span>
 <button id="tabLog" onclick="abrirAba('log')">Logs</button>
 
- </div>
-
-
+	 </div>
 
 </header>
 
@@ -357,13 +368,29 @@ input:focus,select:focus{
  <button class="primary" onclick="salvarSalarios()">Salvar salários</button>
  <hr>
 <h4>Alterar minha senha</h4>
-<input id="senhaAtual" type="password" placeholder="Senha atual">
 <input id="novaSenha" type="password" placeholder="Nova senha">
 <button class="primary" onclick="alterarSenha()">Alterar senha</button>
 
- <button class="secondary" onclick="backup()">Backup (.json)</button>
- <button class="secondary" onclick="exportarExcel()">Exportar Excel</button>
-</div>
+
+<button class="secondary" onclick="gerarBackupExcel()">
+  📤 Exportar Excel
+</button>
+
+	<hr>
+
+<button class="danger" onclick="abrirRestoreExcel()">
+  ♻️ Restaurar backup Excel
+</button>
+
+<input
+  type="file"
+  id="inputRestoreExcel"
+  accept=".xlsx"
+  style="display:none"
+  onchange="processarRestoreExcel(event)"
+>
+
+	
 </div>
 
 <!-- MODAL -->
@@ -389,6 +416,20 @@ const supabaseClient = supabase.createClient(
   SUPABASE_ANON_KEY
 );
 
+	// ===== ELEMENTOS DOM (OBRIGATÓRIO) =====
+const cards = document.getElementById("cards");
+const statusMes = document.getElementById("statusMes");
+
+const mes = document.getElementById("mes");
+const ano = document.getElementById("ano");
+
+const indicadores = document.getElementById("indicadores");
+const anoIndicador = document.getElementById("anoIndicador");
+
+const modal = document.getElementById("modal");
+const mdDesc = document.getElementById("mdDesc");
+const mdValor = document.getElementById("mdValor");
+
 
 /* ===== DADOS ===== */
 let usuarios = JSON.parse(localStorage.getItem("usuarios_prb")) || {
@@ -399,6 +440,10 @@ let usuarios = JSON.parse(localStorage.getItem("usuarios_prb")) || {
 };
 
 const socios=["paulo","rafael","bruno"];
+	const gruposExtras = ["obras","familia"];
+	const entidades = [...socios, ...gruposExtras];
+
+
 const meses=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
 const baseInicial={mes:11,ano:2025};
 let edicao=null;
@@ -436,7 +481,6 @@ document.getElementById("loginScreen").style.display = "none";
 
   init();
 }
- 
 
 /* ===== INIT ===== */
 function init(){
@@ -476,19 +520,31 @@ function init(){
 
 /* ===== ABAS ===== */
 function abrirAba(a){
- abaLanc.classList.toggle("hidden",a!=="lanc");
- abaInd.classList.toggle("hidden",a!=="ind");
- abaConf.classList.toggle("hidden",a!=="conf");
- abaLog.classList.toggle("hidden",a!=="log");
+  const abas = {
+    lanc: document.getElementById("abaLanc"),
+    ind:  document.getElementById("abaInd"),
+    conf: document.getElementById("abaConf"),
+    log:  document.getElementById("abaLog")
+  };
 
- tabLanc.classList.toggle("active",a==="lanc");
- tabInd.classList.toggle("active",a==="ind");
- tabConf.classList.toggle("active",a==="conf");
- tabLog.classList.toggle("active",a==="log");
+  const tabs = {
+    lanc: document.getElementById("tabLanc"),
+    ind:  document.getElementById("tabInd"),
+    conf: document.getElementById("tabConf"),
+    log:  document.getElementById("tabLog")
+  };
 
- if(a==="lanc") render();
- if(a==="ind") renderIndicadores();
- if(a==="log") renderLogs();
+  // esconde todas
+  Object.values(abas).forEach(el => el.classList.add("hidden"));
+  Object.values(tabs).forEach(el => el.classList.remove("active"));
+
+  // mostra só a clicada
+  abas[a].classList.remove("hidden");
+  tabs[a].classList.add("active");
+
+  // atualizações específicas
+  if(a === "ind") renderIndicadores();
+  if(a === "log") renderLogs();
 }
 
 
@@ -537,169 +593,274 @@ function saldoAnterior(m,a,s){
 
 
 /* ===== RENDER ===== */
-function render(){
- cards.innerHTML="";
- let m=+mes.value,a=+ano.value;
- statusMes.innerHTML=mesFechado()?"🔒 Mês fechado":"🔓 Mês aberto";
+async function render(){
+  cards.innerHTML="";
+  let m = +mes.value, a = +ano.value;
+  statusMes.innerHTML = mesFechado() ? "🔒 Mês fechado" : "🔓 Mês aberto";
 
- socios.forEach(s=>{
-let arr = lancamentosSupabase[s] || [];
-  let total=arr.reduce((x,y)=>x+y.valor,0);
-  let base=salarioBase(s);
-  let prev=saldoAnterior(m,a,s);
-  let saldo=base+prev-total;
+  /* ===== CARDS DOS SÓCIOS (COMPLETO, COMO JÁ ERA) ===== */
+  for (const s of socios) {
+    let arr = lancamentosSupabase[s] || [];
+let total = arr
+  .filter(l => !(l.parcelado === true && l.id_parcelamento === null))
+  .reduce((x, y) => x + y.valor, 0);
+    let base = salarioBase(s);
 
-  cards.innerHTML+=`
-  <div class="card">
-   <div class="socio"><span>${s.toUpperCase()}</span></div>
-   <div class="small">Salário: ${fmt(base)}</div>
-   <div class="small">Saldo anterior: <b class="${prev>=0?'pos':'neg'}">${fmt(prev)}</b></div>
+    let prev = await calcularSaldoAnteriorOnline(s, m, a);
+    let saldo = base + prev - total;
 
-   ${(!mesFechado() && podeLancar())?`
-    <input id="d_${s}" placeholder="Descrição">
-    <input id="v_${s}" placeholder="R$ 0,00 (aceita negativo)" oninput="mask(this)">
-    <button class="primary" onclick="add('${s}')">OK</button>
-   `:`<div class="small">Lançamentos bloqueados</div>`}
+    cards.innerHTML += `
+    <div class="card">
+      <div class="socio"><span>${s.toUpperCase()}</span></div>
+      <div class="small">Salário: ${fmt(base)}</div>
+      <div class="small">Saldo anterior:
+        <b class="${prev>=0?'pos':'neg'}">${fmt(prev)}</b>
+      </div>
 
-   ${arr.map((r,i)=>`
-    <div class="linha">
-     <div>${r.data} • ${r.desc}</div>
-     <div class="${r.valor<0?'pos':'neg'}">${fmt(r.valor)}</div>
-     ${(!mesFechado() && podeLancar())?`
-      <div class="acoes">
-       <span onclick="editar('${s}',${i})">✏️</span>
-       <span onclick="excluir('${s}',${i})">🗑️</span>
-      </div>`:""}
+${(!mesFechado() && podeLancar())?`
+  <input id="d_${s}" placeholder="Descrição">
+  <input id="v_${s}" placeholder="R$ 0,00 (valor TOTAL se parcelado)" oninput="mask(this)">
+
+  <label class="small">
+    <input type="checkbox" id="p_${s}" onchange="toggleParcelado('${s}')">
+    Parcelado
+  </label>
+
+  <div id="parc_${s}" class="small hidden">
+    <input
+      id="n_${s}"
+      type="number"
+      min="2"
+      step="1"
+      value="2"
+      placeholder="Nº parcelas (mín. 2)"
+      oninput="this.value = Math.max(2, Math.abs(parseInt(this.value) || 2))"
+    >
+    <input id="m_${s}" type="month">
+  </div>
+
+  <button class="primary" onclick="add('${s}')">OK</button>
+`:`<div class="small">Lançamentos bloqueados</div>`}
+
+      ${arr.map((r,i)=>`
+        <div class="linha">
+          <div>${r.data} • ${r.desc}</div>
+          <div class="${r.valor<0?'pos':'neg'}">${fmt(r.valor)}</div>
+          ${(!mesFechado() && podeLancar())?`
+            <div class="acoes">
+              <span onclick="editar('${s}',${i})">✏️</span>
+              <span onclick="excluir('${s}',${i})">🗑️</span>
+            </div>`:""}
+        </div>
+      `).join("")}
+
+      <div class="small">
+        Total mês: ${fmt(total)}<br>
+        Saldo final:
+        <b class="${saldo>=0?'pos':'neg'}">${fmt(saldo)}</b>
+      </div>
+    </div>`;
+  }
+
+ /* ===== CARDS OBRAS / FAMÍLIA (COM INPUTS – SEM SALVAR AINDA) ===== */
+for (const g of gruposExtras) {
+
+  let arr = lancamentosSupabase[g] || [];
+  let total = arr.reduce((x,y)=>x+y.valor,0);
+
+  cards.innerHTML += `
+    <div class="card">
+      <div class="socio"><span>${g.toUpperCase()}</span></div>
+
+      <input id="d_${g}" placeholder="Descrição">
+      <input id="v_${g}" placeholder="R$ 0,00" oninput="mask(this)">
+
+    <button class="primary" onclick="addGrupo('${g}')">
+  OK
+</button>
+
+
+ ${arr.map((r,i)=>`
+  <div class="linha">
+    <div>${r.data} • ${r.desc}</div>
+
+    <div style="display:flex;align-items:center;gap:10px">
+      <div class="neg">${fmt(r.valor)}</div>
+
+      ${(!mesFechado() && podeLancar()) ? `
+        <div class="acoes">
+          <span onclick="editar('${g}',${i})">✏️</span>
+          <span onclick="excluir('${g}',${i})">🗑️</span>
+        </div>
+      ` : ""}
     </div>
-   `).join("")}
+  </div>
+`).join("")}
 
-   <div class="small">
-    Total mês: ${fmt(total)}<br>
-    Saldo final: <b class="${saldo>=0?'pos':'neg'}">${fmt(saldo)}</b>
-   </div>
-  </div>`;
- });
+
+      <div class="small">
+        Total do mês:<br>
+        <b class="neg">${fmt(total)}</b>
+      </div>
+    </div>
+  `;
 }
+
+}
+
 
 /* ===== INDICADORES ===== */
-function renderIndicadores(){
- indicadores.innerHTML="";
- let anoSel=+anoIndicador.value;
- let totalGeral=0;
- socios.forEach(s=>{
-  let soma=0;
-  Object.keys(localStorage).forEach(k=>{
-   if(k.endsWith("_"+s)){
-    let [ma]=k.split("_");
-    let [,a]=ma.split("-");
-    if(+a===anoSel){
-     let arr=JSON.parse(localStorage.getItem(k));
-     soma+=arr.reduce((x,y)=>x+y.valor,0);
+async function renderIndicadores(){
+  indicadores.innerHTML = "";
+
+  const anoSel = +anoIndicador.value;
+
+  let totalGeral = 0;
+
+for (const s of entidades) {
+
+    const inicio = `${anoSel}-01-01`;
+    const fim = `${anoSel}-12-31`;
+
+    const { data, error } = await supabaseClient
+      .from("lancamentos")
+      .select("valor")
+      .eq("socio", s)
+      .gte("data", inicio)
+      .lte("data", fim);
+
+    if(error){
+      console.error("Erro indicadores:", error);
+      continue;
     }
-   }
-  });
-  totalGeral+=soma;
-  indicadores.innerHTML+=`
-   <div class="card">
-    <div class="socio"><span>${s.toUpperCase()}</span></div>
-    <b>Total no ano</b><br>${fmt(soma)}
-   </div>`;
- });
- indicadores.innerHTML+=`
-  <div class="card">
-   <div class="socio"><span>TOTAL</span></div>
-   <b>3 sócios</b><br>${fmt(totalGeral)}
-  </div>`;
+
+const soma = data.reduce(
+  (acc, l) => acc + Math.abs(Number(l.valor)),
+  0
+);
+
+    totalGeral += soma;
+
+    indicadores.innerHTML += `
+      <div class="card">
+        <div class="socio"><span>${s.toUpperCase()}</span></div>
+        <b>Total no ano</b><br>
+        ${fmt(soma)}
+      </div>
+    `;
+  }
+
+  indicadores.innerHTML += `
+    <div class="card">
+      <div class="socio"><span>TOTAL</span></div>
+<b>Total geral</b><br>
+      ${fmt(totalGeral)}
+    </div>
+  `;
 }
+
 
 /* ===== CRUD ===== */
 function podeLancar(){
- let hoje = new Date();
- let m = +mes.value;
- let a = +ano.value;
- return m === hoje.getMonth() && a === hoje.getFullYear();
+  return !mesFechado();
 }
 
+async function add(s) {
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  if (!user) { alert("Usuário não autenticado"); return; }
 
-async function add(s){
-  const desc = document.getElementById("d_"+s).value;
-  const valor = parseMoeda(document.getElementById("v_"+s).value);
+  const desc = document.getElementById("d_" + s).value;
+  const valorTotal = parseMoeda(document.getElementById("v_" + s).value);
+  const parcelado = document.getElementById("p_" + s)?.checked;
+
+  if (!desc || !valorTotal) { alert("Preencha descrição e valor"); return; }
+
+  if (!parcelado) {
+    const dataLancamento = `${ano.value}-${String(+mes.value + 1).padStart(2, "0")}-01`;
+    const { error } = await supabaseClient.from("lancamentos").insert([{
+      socio: s, descricao: desc, valor: valorTotal, data: dataLancamento, criado_por: user.id
+    }]);
+    if (error) { console.error(error); return; }
+  } else {
+    const parcelas = Number(document.getElementById("n_" + s).value);
+    const mesIni = document.getElementById("m_" + s).value;
+    if (!parcelas || parcelas < 2 || !mesIni) { alert("Informe parcelas e mês inicial"); return; }
+
+    const [anoIni, mesIniNum] = mesIni.split("-").map(Number);
+    const valorParcela = +(valorTotal / parcelas).toFixed(2);
+    const idParcelamento = crypto.randomUUID();
+
+    for (let i = 0; i < parcelas; i++) {
+      const dataObjeto = new Date(anoIni, (mesIniNum - 1) + i, 1);
+      const y = dataObjeto.getFullYear();
+      const m = String(dataObjeto.getMonth() + 1).padStart(2, "0");
+      const dataFormatada = `${y}-${m}-01`;
+
+      await supabaseClient.from("lancamentos").insert([{
+        socio: s, descricao: `${desc} (${i + 1}/${parcelas})`, valor: valorParcela,
+        data: dataFormatada, parcelado: true, id_parcelamento: idParcelamento,
+        parcela_numero: i + 1, criado_por: user.id
+      }]);
+    }
+  }
+
+  document.getElementById("d_" + s).value = "";
+  document.getElementById("v_" + s).value = "";
+  if(document.getElementById("p_" + s)) document.getElementById("p_" + s).checked = false;
+  if(document.getElementById("parc_" + s)) document.getElementById("parc_" + s).classList.add("hidden");
+
+  await carregarLancamentosSupabaseSeguro();
+  render();
+  renderIndicadores();
+}
+	// ===== SALVAR OBRAS / FAMÍLIA =====
+async function addGrupo(grupo){
+
+  const desc = document.getElementById("d_"+grupo).value;
+  const valor = parseMoeda(document.getElementById("v_"+grupo).value);
 
   if(!desc || !valor){
     alert("Preencha descrição e valor");
     return;
   }
 
-  const lancamento = {
-    socio: s,
-    data: new Date(),
-    descricao: desc,
-    valor: valor,
-    criado_por: usuarioLogado
-  };
-
-  // 1️⃣ salva no Supabase
-  const { error } = await supabaseClient
-    .from("lancamentos")
-    .insert([lancamento]);
-
-  if(error){
-    alert("Erro ao salvar no servidor");
-    console.error(error);
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  if(!user){
+    alert("Usuário não autenticado");
     return;
   }
 
-  // 2️⃣ continua salvando local (por enquanto)
-  let m = +mes.value;
-  let a = +ano.value;
-let arr = [];
+  const { error } = await supabaseClient
+    .from("lancamentos")
+    .insert([{
+      socio: grupo,
+      descricao: desc,
+      valor: valor,
+data: `${ano.value}-${String(+mes.value + 1).padStart(2,"0")}-01`,
+      criado_por: user.id
+    }]);
 
-if (
-  lancamentosSupabase &&
-  lancamentosSupabase[s] &&
-  lancamentosSupabase[s].length > 0
-) {
-  arr = lancamentosSupabase[s];
-} else {
-  arr = JSON.parse(localStorage.getItem(m+"-"+a+"_"+s)) || [];
+  if(error){
+  alert("Erro Supabase:\n" + error.message);
+  console.error("ERRO SUPABASE:", error);
+  return;
 }
 
-  arr.push({
-    data:new Date().toLocaleDateString("pt-BR",{day:"2-digit",month:"2-digit"}),
-    desc:desc,
-    valor:valor
-  });
+  await registrarLog(
+    "ADICIONOU",
+    `${grupo.toUpperCase()} • ${desc} • ${fmt(valor)}`
+  );
 
-  localStorage.setItem(m+"-"+a+"_"+s,JSON.stringify(arr));
+  document.getElementById("d_"+grupo).value = "";
+  document.getElementById("v_"+grupo).value = "";
 
-  registrarLog("ADICIONOU", `${s} • ${desc} • ${valor}`);
-
+  await carregarLancamentosSupabaseSeguro();
   render();
   renderIndicadores();
 }
 
 
-
-
-function editar(s,i){
- let m=+mes.value,a=+ano.value;
- let arr=JSON.parse(localStorage.getItem(m+"-"+a+"_"+s));
- edicao={s,i,m,a};
- mdDesc.value=arr[i].desc;
- mdValor.value=fmt(arr[i].valor);
- modal.classList.remove("hidden");
-}
-function salvarEdicao(){
- let arr=JSON.parse(localStorage.getItem(edicao.m+"-"+edicao.a+"_"+edicao.s));
- arr[edicao.i].desc=mdDesc.value;
- arr[edicao.i].valor=parseMoeda(mdValor.value);
- localStorage.setItem(edicao.m+"-"+edicao.a+"_"+edicao.s,JSON.stringify(arr));
- fecharModal();
-registrarLog("EDITOU", `${edicao.s} • ${mdDesc.value} • ${arr[edicao.i].valor}`);
- render();
- renderIndicadores();
-}
-async function excluir(s, i){
+function editar(s, i){
   const item = lancamentosSupabase[s][i];
 
   if(!item){
@@ -707,18 +868,82 @@ async function excluir(s, i){
     return;
   }
 
-  if(!item.id){
-    alert("Erro: lançamento sem ID");
-    console.error(item);
+  edicao = {
+    socio: s,
+    index: i,
+    id: item.id,
+    descAntes: item.desc,
+    valorAntes: item.valor
+  };
+
+  mdDesc.value = item.desc;
+  mdValor.value = fmt(item.valor);
+
+  modal.classList.remove("hidden");
+}
+
+async function salvarEdicao(){
+  const novaDesc = mdDesc.value;
+  const novoValor = parseMoeda(mdValor.value);
+
+  if(!novaDesc || !novoValor){
+    alert("Preencha descrição e valor");
     return;
   }
 
-  if(!confirm("Excluir lançamento?")) return;
-
+  // 1️⃣ Atualiza no Supabase
   const { error } = await supabaseClient
     .from("lancamentos")
-    .delete()
-    .eq("id", item.id);
+    .update({
+      descricao: novaDesc,
+      valor: novoValor
+    })
+    .eq("id", edicao.id);
+
+  if(error){
+    alert("Erro ao atualizar lançamento");
+    console.error(error);
+    return;
+  }
+
+  // 2️⃣ REGISTRA LOG DE EDIÇÃO (ANTES → DEPOIS)
+  await registrarLog(
+    "EDITOU",
+    `${edicao.socio} • ${edicao.descAntes} (${fmt(edicao.valorAntes)}) → ${novaDesc} (${fmt(novoValor)})`
+  );
+
+  fecharModal();
+
+  // 3️⃣ Recarrega tudo
+  await carregarLancamentosSupabaseSeguro();
+  render();
+  renderIndicadores();
+}
+
+async function excluir(s, i){
+  const item = lancamentosSupabase[s][i];
+  if(!item) return;
+
+  if(!confirm("Excluir lançamento?")) return;
+
+  await registrarLog(
+    "EXCLUIU",
+    `${s} • ${fmt(item.valor)}`
+  );
+
+  let error;
+
+  if(item.id_parcelamento){
+    ({ error } = await supabaseClient
+      .from("lancamentos")
+      .delete()
+      .eq("id_parcelamento", item.id_parcelamento));
+  } else {
+    ({ error } = await supabaseClient
+      .from("lancamentos")
+      .delete()
+      .eq("id", item.id));
+  }
 
   if(error){
     alert("Erro ao excluir no servidor");
@@ -726,39 +951,65 @@ async function excluir(s, i){
     return;
   }
 
-  // 🔄 Recarrega tudo do Supabase
   await carregarLancamentosSupabaseSeguro();
   render();
   renderIndicadores();
 }
 
+
 /* ===== MODAL ===== */
 function fecharModal(){modal.classList.add("hidden")}
 
-/* ===== BACKUP / EXCEL ===== */
-function backup(){
- let data=JSON.stringify(localStorage);
- let blob=new Blob([data],{type:"application/json"});
- let a=document.createElement("a");
- a.href=URL.createObjectURL(blob);
- a.download="prb-backup.json";
- a.click();
-}
-function exportarExcel(){
- let dados=[];
- Object.keys(localStorage).forEach(k=>{
-  if(k.includes("_")){
-   let arr=JSON.parse(localStorage.getItem(k));
-   if(Array.isArray(arr)){
-    arr.forEach(r=>dados.push({chave:k,descricao:r.desc,valor:r.valor}));
-   }
+
+window.gerarBackupExcel = async function () {
+  console.log("▶ Backup Excel iniciado");
+
+  try {
+    if (typeof XLSX === "undefined") {
+      alert("Biblioteca XLSX não carregada");
+      return;
+    }
+
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (!user) {
+      alert("Usuário não autenticado");
+      return;
+    }
+
+    const { data, error } = await supabaseClient
+      .from("lancamentos")
+.select("id, socio, data, descricao, valor, parcelado, id_parcelamento")
+      .order("data", { ascending: true });
+
+    if (error) {
+      console.error(error);
+      alert("Erro ao buscar dados");
+      return;
+    }
+
+    const dadosExcel = data.map(l => ({
+      ID: l.id,
+      Socio: l.socio,
+Data: new Date(l.data).toISOString().slice(0,10),
+      Descricao: l.descricao,
+      Valor: l.valor
+    }));
+
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.json_to_sheet(dadosExcel);
+    XLSX.utils.book_append_sheet(wb, ws, "Lancamentos");
+
+    const nome = `PRB_Backup_${new Date().toISOString().slice(0,10)}.xlsx`;
+    XLSX.writeFile(wb, nome);
+
+    alert("Backup Excel gerado com sucesso!");
+
+  } catch (err) {
+    console.error("Erro no backup Excel:", err);
+    alert("Erro ao gerar backup (veja o console)");
   }
- });
- let ws=XLSX.utils.json_to_sheet(dados);
- let wb=XLSX.utils.book_new();
- XLSX.utils.book_append_sheet(wb,ws,"PRB");
- XLSX.writeFile(wb,"prolabore.xlsx");
-}
+};
+
 
 /* ===== TEMA ===== */
 function toggleTema(){
@@ -778,67 +1029,89 @@ function parseMoeda(v){
 function fmt(v){return v.toLocaleString("pt-BR",{style:"currency",currency:"BRL"})}
 function mask(el){el.value=fmt(parseMoeda(el.value))}
 
-function registrarLog(acao, detalhes){
- let logs = JSON.parse(localStorage.getItem("logs_prb")) || [];
- logs.push({
-  usuario: usuarioLogado || "9583adc5-b42b-44e0-9f0b-a1c30207544a",
-  acao,
-  detalhes,
-  data: new Date().toLocaleString("pt-BR")
- });
- localStorage.setItem("logs_prb", JSON.stringify(logs));
+async function registrarLog(acao, detalhes){
+  const user = (await supabaseClient.auth.getUser()).data.user;
+
+  if(!user) return;
+
+  const { error } = await supabaseClient
+    .from("logs")
+    .insert([{
+      usuario: user.id,
+      usuario_nome: user.email,
+      acao,
+      detalhes
+    }]);
+
+  if(error){
+    console.error("Erro ao salvar log:", error);
+  }
 }
 
-function alterarSenha(){
- const atual = document.getElementById("senhaAtual").value;
- const nova = document.getElementById("novaSenha").value;
+async function alterarSenha(){
+  const nova = document.getElementById("novaSenha").value;
 
- if(!usuarioLogado){
-  alert("Nenhum usuário logado");
-  return;
- }
+  if(!nova || nova.length < 6){
+    alert("A nova senha deve ter pelo menos 6 caracteres");
+    return;
+  }
 
- if(usuarios[usuarioLogado] !== atual){
-  alert("Senha atual incorreta");
-  return;
- }
+  const { error } = await supabaseClient.auth.updateUser({
+    password: nova
+  });
 
- if(nova.length < 4){
-  alert("Nova senha muito curta");
-  return;
- }
+  if(error){
+    alert("Erro ao alterar senha: " + error.message);
+    console.error(error);
+    return;
+  }
 
- usuarios[usuarioLogado] = nova;
- localStorage.setItem("usuarios_prb", JSON.stringify(usuarios));
+  await registrarLog(
+    "ALTEROU SENHA",
+    "Usuário alterou a própria senha"
+  );
 
- alert("Senha alterada com sucesso");
- document.getElementById("senhaAtual").value = "";
- document.getElementById("novaSenha").value = "";
+  alert("Senha alterada com sucesso!");
+  document.getElementById("novaSenha").value = "";
 }
 
-function renderLogs(){
- const lista = document.getElementById("listaLogs");
- lista.innerHTML = "";
 
- let logs = JSON.parse(localStorage.getItem("logs_prb")) || [];
+async function renderLogs(){
+  const lista = document.getElementById("listaLogs");
+  lista.innerHTML = "";
 
- if(logs.length === 0){
-  lista.innerHTML = "<div class='small'>Nenhuma ação registrada.</div>";
-  return;
- }
+  const { data, error } = await supabaseClient
+    .from("logs")
+    .select("*")
+    .order("criado_em", { ascending: false })
+    .limit(100);
 
- logs.slice().reverse().forEach(l=>{
-  lista.innerHTML += `
-   <div class="linha">
-    <div>
-     <b>${l.usuario}</b> • ${l.acao}<br>
-     <span class="small">${l.detalhes}</span>
-    </div>
-    <div class="small">${l.data}</div>
-   </div>
-  `;
- });
+  if(error){
+    lista.innerHTML = "<div class='small'>Erro ao carregar logs.</div>";
+    console.error(error);
+    return;
+  }
+
+  if(data.length === 0){
+    lista.innerHTML = "<div class='small'>Nenhuma ação registrada.</div>";
+    return;
+  }
+
+  data.forEach(l => {
+    lista.innerHTML += `
+      <div class="linha">
+        <div>
+          <b>${l.usuario_nome || l.usuario}</b> • ${l.acao}<br>
+          <span class="small">${l.detalhes}</span>
+        </div>
+        <div class="small">
+          ${new Date(l.criado_em).toLocaleString("pt-BR")}
+        </div>
+      </div>
+    `;
+  });
 }
+
 
 
 async function salvarLancamentoSupabase(lancamento){
@@ -854,81 +1127,273 @@ async function salvarLancamentoSupabase(lancamento){
   return true;
 }
 
-
-async function carregarLancamentosSupabase(mes, ano) {
-  const inicio = new Date(ano, mes, 1).toISOString();
-  const fim = new Date(ano, mes + 1, 0, 23, 59, 59).toISOString();
-
-  const { data, error } = await supabaseClient
-    .from("lancamentos")
-.select("id, socio, data, descricao, valor")
-    .gte("data", inicio)
-    .lte("data", fim);
-
-  if (error) {
-    console.error("Erro ao ler Supabase:", error);
-    return {};
-  }
-
-  // 🔁 Converte para o formato atual do sistema
-  const mapa = {};
-  socios.forEach(s => mapa[s] = []);
-
-  data.forEach(l => {
-    mapa[l.socio].push({
-      data: new Date(l.data).toLocaleDateString("pt-BR", {
-        day: "2-digit",
-        month: "2-digit"
-      }),
-      desc: l.descricao,
-      valor: l.valor
-    });
-  });
-
-  return mapa;
-}
-
-async function carregarLancamentosSupabaseSeguro(){
+async function carregarLancamentosSupabaseSeguro() {
   let m = +mes.value;
   let a = +ano.value;
 
-  const inicio = new Date(a, m, 1).toISOString();
-  const fim = new Date(a, m + 1, 0, 23, 59, 59).toISOString();
+  // Filtro no Banco (Primeira camada)
+  const inicio = `${a}-${String(m + 1).padStart(2, "0")}-01`;
+  const ultimoDia = new Date(a, m + 1, 0).getDate();
+  const fim = `${a}-${String(m + 1).padStart(2, "0")}-${ultimoDia}`;
 
   const { data, error } = await supabaseClient
     .from("lancamentos")
-    .select("id, socio, data, descricao, valor")
+    .select("*")
     .gte("data", inicio)
     .lte("data", fim);
 
-  if (error) {
-    console.error("Erro ao ler Supabase:", error);
-    lancamentosSupabase = {};
-    return;
-  }
+  if (error) { console.error(error); return; }
 
   lancamentosSupabase = {};
-  socios.forEach(s => lancamentosSupabase[s] = []);
+  entidades.forEach(e => lancamentosSupabase[e] = []);
 
   data.forEach(l => {
-    lancamentosSupabase[l.socio].push({
-      id: l.id,
-      data: new Date(l.data).toLocaleDateString("pt-BR", {
-        day: "2-digit",
-        month: "2-digit"
-      }),
-      desc: l.descricao,
-      valor: l.valor
-    });
-  });
+    if (l.parcelado === true && l.id_parcelamento === null) return;
 
-  console.log("Supabase carregado:", lancamentosSupabase);
+    // FILTRAGEM REDUNDANTE NO CLIENTE (Segunda camada)
+    // Extrai o ano e mês da data vinda do banco (YYYY-MM-DD...)
+    const dataDb = l.data.substring(0, 10);
+    const [anoDb, mesDb] = dataDb.split("-").map(Number);
+
+    // SÓ ADICIONA SE O ANO E MÊS FOREM EXATAMENTE OS SELECIONADOS
+    if (anoDb === a && mesDb === (m + 1)) {
+      lancamentosSupabase[l.socio].push({
+        id: l.id,
+        id_parcelamento: l.id_parcelamento || null,
+        data: `${String(l.data.substring(8,10))}/${String(mesDb).padStart(2,"0")}`,
+        desc: l.descricao,
+        valor: Number(l.valor)
+      });
+    }
+  });
+  console.log("Dados carregados e filtrados:", lancamentosSupabase);
+}
+async function saldoAnteriorOnline(socio, mes, ano){
+  // soma todas as retiradas ANTES deste mês
+  const fim = `${ano}-${String(mes+1).padStart(2,"0")}-01`;
+
+  const { data, error } = await supabaseClient
+    .from("lancamentos")
+    .select("valor")
+    .eq("socio", socio)
+    .lt("data", fim);
+
+  if(error){
+    console.error("Erro saldo anterior:", error);
+    return 0;
+  }
+
+  const totalRetirado = data.reduce((soma, l) => soma + Number(l.valor), 0);
+
+  // salário mensal * número de meses trabalhados
+  // por enquanto usamos salárioBase
+  const salarioMes = salarioBase(socio);
+
+  // conta quantos meses já passaram desde o início
+  const mesesTrabalhados =
+    (ano - baseInicial.ano) * 12 + (mes - baseInicial.mes);
+
+  const salarioAcumulado = salarioMes * mesesTrabalhados;
+
+  return salarioAcumulado - totalRetirado;
+}
+
+async function calcularSaldoAnteriorOnline(socio, mes, ano){
+  // limite = primeiro dia do mês atual
+  const limite = `${ano}-${String(mes+1).padStart(2,"0")}-01`;
+
+  // 1️⃣ soma TODAS as retiradas até o mês anterior
+  const { data, error } = await supabaseClient
+    .from("lancamentos")
+    .select("valor")
+    .eq("socio", socio)
+    .lt("data", limite);
+
+  if (error) {
+    console.error("Erro saldo anterior:", error);
+    return 0;
+  }
+
+  const totalRetirado = data.reduce(
+    (soma, l) => soma + Number(l.valor),
+    0
+  );
+
+  // 2️⃣ salário mensal fixo
+  const salarioMensal = salarioBase(socio);
+
+  // 3️⃣ cálculo CORRETO de meses decorridos (mês absoluto)
+  const mesAtualAbs = ano * 12 + mes;
+  const mesInicialAbs = baseInicial.ano * 12 + baseInicial.mes;
+
+  const mesesDecorridos = mesAtualAbs - mesInicialAbs;
+
+  const totalSalarios = salarioMensal * mesesDecorridos;
+
+  return totalSalarios - totalRetirado;
 }
 
 
 
+	async function testeLog(){
+  const { error } = await supabaseClient
+    .from("logs")
+    .insert([{
+      usuario: usuarioLogado,
+      acao: "TESTE",
+      detalhes: "Log manual de teste"
+    }]);
 
+  if(error){
+    alert("Erro log: " + error.message);
+    console.error(error);
+  } else {
+    alert("LOG INSERIDO COM SUCESSO");
+  }
+}
+
+
+	function abrirRestoreExcel(){
+  if(!confirm("ATENÇÃO: isso irá importar dados do Excel para o sistema.\n\nDeseja continuar?")){
+    return;
+  }
+  document.getElementById("inputRestoreExcel").click();
+}
+
+	async function processarRestoreExcel(event){
+  const file = event.target.files[0];
+  if(!file) return;
+
+  const reader = new FileReader();
+
+  reader.onload = async function(e){
+    try {
+      const data = new Uint8Array(e.target.result);
+      const workbook = XLSX.read(data, { type: "array" });
+
+      const sheetName = "Lancamentos";
+      if(!workbook.Sheets[sheetName]){
+        alert("A planilha precisa ter uma aba chamada 'Lancamentos'");
+        return;
+      }
+
+      const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
+
+      if(rows.length === 0){
+        alert("A planilha não possui lançamentos");
+        return;
+      }
+
+      // valida colunas mínimas
+      const colunasObrigatorias = ["Socio", "Data", "Descricao", "Valor"];
+      const colunasArquivo = Object.keys(rows[0]);
+
+      const faltando = colunasObrigatorias.filter(
+        c => !colunasArquivo.includes(c)
+      );
+
+      if(faltando.length){
+        alert("Colunas ausentes: " + faltando.join(", "));
+        return;
+      }
+
+      if(!confirm(`Foram encontrados ${rows.length} lançamentos.\n\nDeseja importar agora?`)){
+        return;
+      }
+
+      await importarLancamentosExcel(rows);
+
+    } catch(err){
+      console.error(err);
+      alert("Erro ao ler o arquivo Excel");
+    }
+  };
+
+  reader.readAsArrayBuffer(file);
+}
+
+	async function importarLancamentosExcel(rows){
+  let inseridos = 0;
+  let erros = 0;
+
+  for(const r of rows){
+
+    const socio = String(r.Socio).trim().toLowerCase();
+
+if(!entidades.includes(socio)){
+      console.warn("Sócio inválido:", r.Socio);
+      erros++;
+      continue;
+    }
+
+    const dataISO = String(r.Data).trim();
+
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(dataISO)){
+      console.warn("Data inválida:", r.Data);
+      erros++;
+      continue;
+    }
+
+    const lancamento = {
+      socio,
+      descricao: String(r.Descricao).trim(),
+      valor: Number(r.Valor),
+      data: dataISO
+    };
+
+    const { error } = await supabaseClient
+      .from("lancamentos")
+      .insert([lancamento]);
+
+    if(error){
+      console.error("Erro ao importar:", error, lancamento);
+      erros++;
+      continue;
+    }
+
+    inseridos++;
+  }
+
+  alert(
+    `Importação finalizada.\n\n` +
+    `Inseridos: ${inseridos}\n` +
+    `Ignorados: ${erros}`
+  );
+
+  await registrarLog(
+    "RESTAURACAO",
+    `Importados ${inseridos} lançamentos via Excel`
+  );
+
+  await carregarLancamentosSupabaseSeguro();
+  render();
+  renderIndicadores();
+}
+
+
+	function toggleParcelado(s) {
+  const chk = document.getElementById("p_" + s);
+  const box = document.getElementById("parc_" + s);
+  if (chk && box) {
+    box.classList.toggle("hidden", !chk.checked);
+  }
+}
+
+
+	function somarMes(ano, mes, qtd) {
+  const d = new Date(ano, mes + qtd, 1);
+  return {
+    ano: d.getFullYear(),
+    mes: d.getMonth()
+  };
+}
+
+	
+	
 </script>
 
 </body>
 </html>
+
+
+
