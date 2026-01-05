@@ -153,23 +153,10 @@ let dadosCache = {
 async function login() {
   const email = document.getElementById("user").value.trim();
   const password = document.getElementById("pass").value.trim();
-  
-  if (!email || !password) {
-    alert("Por favor, preencha e-mail e senha.");
-    return;
-  }
-
-  // Limpa qualquer sessão antiga antes de tentar logar
+  if (!email || !password) { alert("Preencha e-mail e senha."); return; }
   await supabaseClient.auth.signOut();
-
   const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
-  
-  if (error) { 
-    console.error("Erro de login:", error);
-    alert("Erro ao entrar: " + error.message + "\n\nVerifique se o e-mail e senha estão corretos no painel do Supabase."); 
-    return; 
-  }
-  
+  if (error) { alert("Erro ao entrar: " + error.message); return; }
   document.getElementById("loginScreen").style.display = "none";
   document.getElementById("app").classList.remove("hidden");
   init();
@@ -180,31 +167,26 @@ async function init(){
   if (!session) return;
   document.getElementById("loginScreen").style.display = "none";
   document.getElementById("app").classList.remove("hidden");
-  
   mes.innerHTML = meses.map((m,i)=>`<option value="${i}">${m}</option>`).join("");
   let y = new Date().getFullYear();
   let anosHtml = "";
   for(let a = 2025; a <= y + 3; a++) anosHtml += `<option>${a}</option>`;
   ano.innerHTML = anosHtml;
   anoIndicador.innerHTML = anosHtml;
-  
   mes.value = new Date().getMonth();
   ano.value = y;
   anoIndicador.value = y;
-  
   mes.onchange = ano.onchange = async () => { await carregarTudo(); render(); };
   anoIndicador.onchange = renderIndicadores;
-  
   aplicarTema();
   await carregarTudo();
   render();
 }
 
 async function carregarTudo() {
-  const { data: lancs } = await supabaseClient.from("lancamentos").select("*");
+  const { data: lancs } = await supabaseClient.from("movimentacoes").select("*");
   const { data: sals } = await supabaseClient.from("salarios").select("*");
   const { data: fechs } = await supabaseClient.from("fechamentos").select("*");
-  
   dadosCache.lancamentos = lancs || [];
   dadosCache.salarios = sals || [];
   dadosCache.fechamentos = fechs || [];
@@ -226,15 +208,10 @@ function calcularSaldoAte(s, mesAlvo, anoAlvo) {
     let saldoAcumulado = 0;
     let curM = baseInicial.mes;
     let curA = baseInicial.ano;
-
     while (curA < anoAlvo || (curA == anoAlvo && curM < mesAlvo)) {
         const base = obterSalarioBase(s, curM, curA);
-        const gastos = dadosCache.lancamentos
-            .filter(l => l.socio === s && l.ano == curA && l.mes == curM)
-            .reduce((acc, l) => acc + l.valor, 0);
-        
+        const gastos = dadosCache.lancamentos.filter(l => l.socio === s && l.ano == curA && l.mes == curM).reduce((acc, l) => acc + l.valor, 0);
         saldoAcumulado += (base - gastos);
-        
         curM++; if (curM > 11) { curM = 0; curA++; }
     }
     return saldoAcumulado;
@@ -243,12 +220,9 @@ function calcularSaldoAte(s, mesAlvo, anoAlvo) {
 async function render(){
   cards.innerHTML = "Processando...";
   const m = +mes.value, a = +ano.value;
-  
   const fechadoObj = dadosCache.fechamentos.find(x => x.ano == a && x.mes == m);
   const isFechado = fechadoObj ? fechadoObj.fechado : false;
-  
   statusMes.innerHTML = isFechado ? "🔒 Mês fechado" : "🔓 Mês aberto";
-  
   let html = "";
   for (const s of socios) {
     const arr = dadosCache.lancamentos.filter(l => l.socio === s && l.ano == a && l.mes == m);
@@ -256,7 +230,6 @@ async function render(){
     const base = obterSalarioBase(s, m, a);
     const prev = calcularSaldoAte(s, m, a);
     const saldo = base + prev - total;
-    
     html += `<div class="card"><div class="socio"><span>${s.toUpperCase()}</span></div>
       <div class="small">Salário: ${fmt(base)} | Saldo ant: <b class="${prev>=0?'pos':'neg'}">${fmt(prev)}</b></div>
       ${!isFechado ? `<input id="d_${s}" placeholder="Descrição"><input id="v_${s}" placeholder="R$ 0,00" oninput="mask(this)"><button class="primary" onclick="add('${s}')">Adicionar</button>` : ""}
@@ -264,7 +237,6 @@ async function render(){
       ${!isFechado ? `<div class="acoes"><span onclick="excluir('${r.id}')">🗑️</span></div>` : ""}</div>`).join("")}</div>
       <div class="small" style="margin-top:10px">Total: ${fmt(total)} | Saldo: <b class="${saldo>=0?'pos':'neg'}">${fmt(saldo)}</b></div></div>`;
   }
-  
   for (const g of gruposExtras) {
     const arr = dadosCache.lancamentos.filter(l => l.socio === g && l.ano == a && l.mes == m);
     const total = arr.reduce((x,y)=>x+y.valor,0);
@@ -281,20 +253,13 @@ async function add(s) {
   const desc = document.getElementById("d_"+s).value;
   const valor = parseMoeda(document.getElementById("v_"+s).value);
   if(!desc || !valor) return;
-  const { error } = await supabaseClient.from("lancamentos").insert({ socio: s, desc, valor, ano: +ano.value, mes: +mes.value, data: new Date().toISOString().split('T')[0] });
-  if(error) { 
-    console.error("Erro detalhado:", error);
-    alert("Erro ao salvar: " + (error.message || "Verifique sua conexão ou permissões no banco")); 
-  } else { 
-    await registrarLog("ADD", `${s}: ${desc} - ${fmt(valor)}`); 
-    await carregarTudo(); 
-    render(); 
-  }
+  const { error } = await supabaseClient.from("movimentacoes").insert({ socio: s, desc, valor, ano: +ano.value, mes: +mes.value, data: new Date().toISOString().split('T')[0] });
+  if(error) alert("Erro ao salvar: " + error.message); else { await registrarLog("ADD", `${s}: ${desc} - ${fmt(valor)}`); await carregarTudo(); render(); }
 }
 
 async function excluir(id) {
   if(!confirm("Excluir?")) return;
-  await supabaseClient.from("lancamentos").delete().eq("id", id);
+  await supabaseClient.from("movimentacoes").delete().eq("id", id);
   await carregarTudo(); render();
 }
 
@@ -315,8 +280,7 @@ async function salvarSalarios() {
     const v = parseMoeda(document.getElementById("sal_"+s).value);
     if(v > 0) await supabaseClient.from('salarios').upsert({ ano: a, mes: m, tipo: 'individual', socio: s, valor: v }, { onConflict: 'ano, mes, socio, tipo' });
   }
-  alert("Salários salvos!");
-  await carregarTudo();
+  alert("Salários salvos!"); await carregarTudo();
 }
 
 async function registrarLog(tipo, msg) {
@@ -333,9 +297,7 @@ async function renderIndicadores() {
   const a = +anoIndicador.value;
   let html = "";
   for(const s of entidades) {
-    const total = dadosCache.lancamentos
-      .filter(l => l.socio === s && l.ano == a)
-      .reduce((acc, l) => acc + l.valor, 0);
+    const total = dadosCache.lancamentos.filter(l => l.socio === s && l.ano == a).reduce((acc, l) => acc + l.valor, 0);
     html += `<div class="card"><div class="socio"><span>${s.toUpperCase()}</span></div><b>Total: ${fmt(total)}</b></div>`;
   }
   indicadores.innerHTML = html;
@@ -355,13 +317,10 @@ function abrirAba(a){
   ["tabLanc","tabInd","tabConf","tabLog"].forEach(id => document.getElementById(id).classList.remove("active"));
   document.getElementById("aba"+a.charAt(0).toUpperCase()+a.slice(1)).classList.remove("hidden");
   document.getElementById("tab"+a.charAt(0).toUpperCase()+a.slice(1)).classList.add("active");
-  if(a==='log') renderLogs();
-  if(a==='ind') renderIndicadores();
+  if(a==='log') renderLogs(); if(a==='ind') renderIndicadores();
 }
 function fecharModal(){ modal.classList.add("hidden"); }
-
 init();
 </script>
 </body>
 </html>
-
