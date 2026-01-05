@@ -274,12 +274,6 @@ async function render(){
 }
 
 async function add(s) {
-  const { data: { user } } = await supabaseClient.auth.getUser();
-  if (!user) {
-    alert("Usuário não autenticado");
-    return;
-  }
-
   const desc = document.getElementById("d_" + s).value;
   const valorTotal = parseMoeda(document.getElementById("v_" + s).value);
   const parcelado = document.getElementById("p_" + s)?.checked;
@@ -289,21 +283,17 @@ async function add(s) {
     return;
   }
 
-  // 🔹 NÃO PARCELADO
+  // NÃO PARCELADO
   if (!parcelado) {
-    const dataLanc = `${ano.value}-${String(+mes.value + 1).padStart(2, "0")}-01`;
-
     const { error } = await supabaseClient
-.from("movimentacoes")
-.insert([{
-  socio: s,
-  desc: desc,
-  valor: valorTotal,
-  ano: +ano.value,
-  mes: +mes.value,
-  parcelado: false
-}]);
-
+      .from("movimentacoes")
+      .insert([{
+        socio: s,
+        desc: desc,
+        valor: valorTotal,
+        ano: +ano.value,
+        mes: +mes.value
+      }]);
 
     if (error) {
       alert("Erro ao salvar lançamento");
@@ -312,7 +302,7 @@ async function add(s) {
     }
   }
 
-  // 🔹 PARCELADO
+  // PARCELADO
   else {
     const parcelas = Number(document.getElementById("n_" + s).value);
     const mesIni = document.getElementById("m_" + s).value;
@@ -324,39 +314,41 @@ async function add(s) {
 
     const [anoIni, mesIniNum] = mesIni.split("-").map(Number);
     const valorParcela = +(valorTotal / parcelas).toFixed(2);
-    const idParcelamento = crypto.randomUUID();
 
     for (let i = 0; i < parcelas; i++) {
       const dataObj = new Date(anoIni, (mesIniNum - 1) + i, 1);
+
       const y = dataObj.getFullYear();
-      const m = String(dataObj.getMonth() + 1).padStart(2, "0");
+      const m = dataObj.getMonth(); // 0 a 11
 
-      await supabaseClient
-.from("movimentacoes")
-.insert([{
-  socio: s,
-  desc: `${desc} (${i + 1}/${parcelas})`,
-  valor: valorParcela,
-  ano: y,
-  mes: dataObj.getMonth(),
-  parcelado: true,
-  id_parcelamento: idParcelamento,
-  parcela_numero: i + 1
-}]);
+      const { error } = await supabaseClient
+        .from("movimentacoes")
+        .insert([{
+          socio: s,
+          desc: `${desc} (${i + 1}/${parcelas})`,
+          valor: valorParcela,
+          ano: y,
+          mes: m
+        }]);
 
+      if (error) {
+        alert("Erro ao salvar parcela");
+        console.error(error);
+        return;
+      }
     }
   }
 
-  // LIMPA OS CAMPOS
+  // LIMPA CAMPOS
   document.getElementById("d_" + s).value = "";
   document.getElementById("v_" + s).value = "";
   if (document.getElementById("p_" + s)) document.getElementById("p_" + s).checked = false;
   if (document.getElementById("parc_" + s)) document.getElementById("parc_" + s).classList.add("hidden");
 
-  
+  await carregarTudo();
   render();
-  renderIndicadores();
 }
+
 
 
 async function excluir(id) {
@@ -469,6 +461,7 @@ function toggleParcelado(s) {
 </script>
 </body>
 </html>
+
 
 
 
