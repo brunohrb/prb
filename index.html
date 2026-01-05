@@ -122,8 +122,8 @@ button{border:none;cursor:pointer; font-weight:600;}
 // ==========================================
 // CONFIGURAÇÃO DO SUPABASE (COLE SUAS CHAVES AQUI)
 // ==========================================
-const SUPABASE_URL = "https://xuwwgprchhfshrqdhuqn.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_HnqNNHIYrLbexVdrr-9DVA_gmprLLqe";
+const SUPABASE_URL = "COLE_AQUI_O_PROJECT_URL";
+const SUPABASE_ANON_KEY = "COLE_AQUI_A_ANON_PUBLIC_KEY";
 // ==========================================
 
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -267,7 +267,14 @@ async function add(s) {
   const valor = parseMoeda(document.getElementById("v_"+s).value);
   if(!desc || !valor) return;
   const { error } = await supabaseClient.from("lancamentos").insert({ socio: s, desc, valor, ano: +ano.value, mes: +mes.value, data: new Date().toISOString().split('T')[0] });
-  if(error) alert("Erro ao salvar"); else { await registrarLog("ADD", `${s}: ${desc} - ${fmt(valor)}`); await carregarTudo(); render(); }
+  if(error) { 
+    console.error("Erro detalhado:", error);
+    alert("Erro ao salvar: " + (error.message || "Verifique sua conexão ou permissões no banco")); 
+  } else { 
+    await registrarLog("ADD", `${s}: ${desc} - ${fmt(valor)}`); 
+    await carregarTudo(); 
+    render(); 
+  }
 }
 
 async function excluir(id) {
