@@ -429,8 +429,12 @@ const anoIndicador = document.getElementById("anoIndicador");
 const modal = document.getElementById("modal");
 const mdDesc = document.getElementById("mdDesc");
 const mdValor = document.getElementById("mdValor");
+const salPadrao = document.getElementById("salPadrao");
 
 
+	
+
+	
 /* ===== DADOS ===== */
 let usuarios = JSON.parse(localStorage.getItem("usuarios_prb")) || {
  admin:"admin123",
@@ -1201,6 +1205,14 @@ async function carregarLancamentosSupabaseSeguro() {
   });
   console.log("Dados carregados e filtrados:", lancamentosSupabase);
 }
+
+	function salarioBase(socio){
+  // fallback simples para evitar quebra
+  // o cálculo principal já usa salarioBaseOnline
+  return 0;
+}
+
+	
 async function saldoAnteriorOnline(socio, mes, ano){
   // soma todas as retiradas ANTES deste mês
   const fim = `${ano}-${String(mes+1).padStart(2,"0")}-01`;
@@ -1461,6 +1473,7 @@ if(!entidades.includes(socio)){
 
 </body>
 </html>
+
 
 
 
