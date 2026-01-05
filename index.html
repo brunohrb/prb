@@ -602,7 +602,7 @@ async function render(){
   for (const s of socios) {
     let arr = lancamentosSupabase[s] || [];
 let total = arr
-  .filter(l => !(l.parcelado === true && l.id_parcelamento === null))
+.filter(l => !l.parcelado || l.id_parcelamento !== null)
   .reduce((x, y) => x + y.valor, 0);
     let base = salarioBase(s);
 
@@ -778,8 +778,14 @@ async function add(s) {
   if (!parcelado) {
     const dataLancamento = `${ano.value}-${String(+mes.value + 1).padStart(2, "0")}-01`;
     const { error } = await supabaseClient.from("lancamentos").insert([{
-      socio: s, descricao: desc, valor: valorTotal, data: dataLancamento, criado_por: user.id
-    }]);
+ socio: s,
+ descricao: desc,
+ valor: valorTotal,
+ data: dataLancamento,
+ parcelado: false,
+ criado_por: user.id
+}
+]);
     if (error) { console.error(error); return; }
   } else {
     const parcelas = Number(document.getElementById("n_" + s).value);
@@ -1161,8 +1167,9 @@ async function carregarLancamentosSupabaseSeguro() {
         id: l.id,
         id_parcelamento: l.id_parcelamento || null,
         data: `${String(l.data.substring(8,10))}/${String(mesDb).padStart(2,"0")}`,
-        desc: l.descricao,
-        valor: Number(l.valor)
+        descricao: l.descricao,
+valor: Number(l.valor)
+
       });
     }
   });
@@ -1394,6 +1401,7 @@ if(!entidades.includes(socio)){
 
 </body>
 </html>
+
 
 
 
