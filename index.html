@@ -151,10 +151,25 @@ let dadosCache = {
 };
 
 async function login() {
-  const email = document.getElementById("user").value;
-  const password = document.getElementById("pass").value;
+  const email = document.getElementById("user").value.trim();
+  const password = document.getElementById("pass").value.trim();
+  
+  if (!email || !password) {
+    alert("Por favor, preencha e-mail e senha.");
+    return;
+  }
+
+  // Limpa qualquer sessão antiga antes de tentar logar
+  await supabaseClient.auth.signOut();
+
   const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
-  if (error) { alert("Erro: " + error.message); return; }
+  
+  if (error) { 
+    console.error("Erro de login:", error);
+    alert("Erro ao entrar: " + error.message + "\n\nVerifique se o e-mail e senha estão corretos no painel do Supabase."); 
+    return; 
+  }
+  
   document.getElementById("loginScreen").style.display = "none";
   document.getElementById("app").classList.remove("hidden");
   init();
