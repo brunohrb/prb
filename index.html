@@ -232,7 +232,29 @@ async function render(){
     const saldo = base + prev - total;
     html += `<div class="card"><div class="socio"><span>${s.toUpperCase()}</span></div>
       <div class="small">Salário: ${fmt(base)} | Saldo ant: <b class="${prev>=0?'pos':'neg'}">${fmt(prev)}</b></div>
-      ${!isFechado ? `<input id="d_${s}" placeholder="Descrição"><input id="v_${s}" placeholder="R$ 0,00" oninput="mask(this)"><button class="primary" onclick="add('${s}')">Adicionar</button>` : ""}
+     ${!isFechado ? `
+  <input id="d_${s}" placeholder="Descrição">
+  <input id="v_${s}" placeholder="R$ 0,00 (valor TOTAL se parcelado)" oninput="mask(this)">
+
+  <label class="small">
+    <input type="checkbox" id="p_${s}" onchange="toggleParcelado('${s}')">
+    Parcelado
+  </label>
+
+  <div id="parc_${s}" class="small hidden">
+    <input
+      id="n_${s}"
+      type="number"
+      min="2"
+      value="2"
+      placeholder="Nº parcelas"
+    >
+    <input id="m_${s}" type="month">
+  </div>
+
+  <button class="primary" onclick="add('${s}')">OK</button>
+` : ""}
+
       <div style="margin-top:15px">${arr.map(r=>`<div class="linha"><div>${r.desc}</div><div class="neg">${fmt(r.valor)}</div>
       ${!isFechado ? `<div class="acoes"> <span onclick="abrirEditar('${r.id}')">✏️</span>
   <span onclick="excluir('${r.id}')">🗑️</span></div>` : ""}</div>`).join("")}</div>
@@ -252,12 +274,86 @@ async function render(){
 }
 
 async function add(s) {
-  const desc = document.getElementById("d_"+s).value;
-  const valor = parseMoeda(document.getElementById("v_"+s).value);
-  if(!desc || !valor) return;
-  const { error } = await supabaseClient.from("movimentacoes").insert({ socio: s, desc, valor, ano: +ano.value, mes: +mes.value, data: new Date().toISOString().split('T')[0] });
-  if(error) alert("Erro ao salvar: " + error.message); else { await registrarLog("ADD", `${s}: ${desc} - ${fmt(valor)}`); await carregarTudo(); render(); }
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  if (!user) {
+    alert("Usuário não autenticado");
+    return;
+  }
+
+  const desc = document.getElementById("d_" + s).value;
+  const valorTotal = parseMoeda(document.getElementById("v_" + s).value);
+  const parcelado = document.getElementById("p_" + s)?.checked;
+
+  if (!desc || !valorTotal) {
+    alert("Preencha descrição e valor");
+    return;
+  }
+
+  // 🔹 NÃO PARCELADO
+  if (!parcelado) {
+    const dataLanc = `${ano.value}-${String(+mes.value + 1).padStart(2, "0")}-01`;
+
+    const { error } = await supabaseClient
+      .from("lancamentos")
+      .insert([{
+        socio: s,
+        descricao: desc,
+        valor: valorTotal,
+        data: dataLanc,
+        parcelado: false
+      }]);
+
+    if (error) {
+      alert("Erro ao salvar lançamento");
+      console.error(error);
+      return;
+    }
+  }
+
+  // 🔹 PARCELADO
+  else {
+    const parcelas = Number(document.getElementById("n_" + s).value);
+    const mesIni = document.getElementById("m_" + s).value;
+
+    if (!parcelas || parcelas < 2 || !mesIni) {
+      alert("Informe parcelas e mês inicial");
+      return;
+    }
+
+    const [anoIni, mesIniNum] = mesIni.split("-").map(Number);
+    const valorParcela = +(valorTotal / parcelas).toFixed(2);
+    const idParcelamento = crypto.randomUUID();
+
+    for (let i = 0; i < parcelas; i++) {
+      const dataObj = new Date(anoIni, (mesIniNum - 1) + i, 1);
+      const y = dataObj.getFullYear();
+      const m = String(dataObj.getMonth() + 1).padStart(2, "0");
+
+      await supabaseClient
+        .from("lancamentos")
+        .insert([{
+          socio: s,
+          descricao: `${desc} (${i + 1}/${parcelas})`,
+          valor: valorParcela,
+          data: `${y}-${m}-01`,
+          parcelado: true,
+          id_parcelamento: idParcelamento,
+          parcela_numero: i + 1
+        }]);
+    }
+  }
+
+  // LIMPA OS CAMPOS
+  document.getElementById("d_" + s).value = "";
+  document.getElementById("v_" + s).value = "";
+  if (document.getElementById("p_" + s)) document.getElementById("p_" + s).checked = false;
+  if (document.getElementById("parc_" + s)) document.getElementById("parc_" + s).classList.add("hidden");
+
+  await carregarLancamentosSupabaseSeguro();
+  render();
+  renderIndicadores();
 }
+
 
 async function excluir(id) {
   if(!confirm("Excluir?")) return;
@@ -356,5 +452,6 @@ async function salvarEdicao(){
 </script>
 </body>
 </html>
+
 
 
