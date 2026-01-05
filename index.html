@@ -323,7 +323,38 @@ function abrirAba(a){
 }
 function fecharModal(){ modal.classList.add("hidden"); }
 init();
+
+  function abrirEditar(id){
+  const lanc = dadosCache.lancamentos.find(l => l.id === id);
+  if(!lanc) return alert("Lançamento não encontrado");
+
+  mdDesc.value = lanc.desc;
+  mdValor.value = fmt(lanc.valor);
+  modal.classList.remove("hidden");
+
+  modal.dataset.editId = id;
+}
+
+async function salvarEdicao(){
+  const id = modal.dataset.editId;
+  const desc = mdDesc.value;
+  const valor = parseMoeda(mdValor.value);
+
+  if(!desc || !valor) return alert("Preencha tudo");
+
+  await supabaseClient
+    .from("movimentacoes")
+    .update({ desc, valor })
+    .eq("id", id);
+
+  modal.classList.add("hidden");
+  await carregarTudo();
+  render();
+}
+
+  
 </script>
 </body>
 </html>
+
 
