@@ -1391,7 +1391,7 @@ if(!entidades.includes(socio)){
 	async function salarioBaseOnline(socio, mes, ano) {
   // 1️⃣ tenta buscar no Supabase
   const { data, error } = await supabaseClient
-    .from("salarios")
+.from("salarios_base")
     .select("valor")
     .eq("socio", socio)
     .eq("mes", mes)
@@ -1428,6 +1428,7 @@ if(!entidades.includes(socio)){
 
 </body>
 </html>
+
 
 
 
