@@ -352,10 +352,59 @@ async function add(s) {
 
 
 async function excluir(id) {
-  if(!confirm("Excluir?")) return;
-  await supabaseClient.from("movimentacoes").delete().eq("id", id);
-  await carregarTudo(); render();
+  const lanc = dadosCache.lancamentos.find(l => l.id === id);
+  if (!lanc) {
+    alert("Lançamento não encontrado");
+    return;
+  }
+
+  // verifica se parece parcelado pelo texto (1/3)
+  const match = lanc.desc.match(/\((\d+)\/(\d+)\)$/);
+
+  // NÃO PARCELADO
+  if (!match) {
+    if (!confirm("Excluir este lançamento?")) return;
+
+    await supabaseClient
+      .from("movimentacoes")
+      .delete()
+      .eq("id", id);
+
+    await carregarTudo();
+    render();
+    return;
+  }
+
+  // PARCELADO
+  const totalParcelas = Number(match[2]);
+
+  const excluirTudo = confirm(
+    `Este lançamento faz parte de um parcelamento (${totalParcelas} parcelas).\n\n` +
+    `OK = excluir TODAS as parcelas\n` +
+    `Cancelar = excluir somente esta parcela`
+  );
+
+  if (excluirTudo) {
+    // remove "(x/y)" do final
+    const baseDesc = lanc.desc.replace(/\s*\(\d+\/\d+\)$/, "");
+
+    await supabaseClient
+      .from("movimentacoes")
+      .delete()
+      .ilike("desc", `${baseDesc}%`)
+      .eq("socio", lanc.socio);
+
+  } else {
+    await supabaseClient
+      .from("movimentacoes")
+      .delete()
+      .eq("id", id);
+  }
+
+  await carregarTudo();
+  render();
 }
+
 
 async function alternarFechamento() {
     const m = +mes.value, a = +ano.value;
@@ -461,6 +510,7 @@ function toggleParcelado(s) {
 </script>
 </body>
 </html>
+
 
 
 
