@@ -1,1400 +1,321 @@
-	<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<title>PRB • Pró-Labore</title>
-
-
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
-
+<title>PRB • Pró-Labore</title>
 <style>
-:root{
- --azul:#1f3c88;
- --bg:#f3f5f9;
- --card:#ffffff;
- --texto:#333;
- --borda:#ddd;
-}
-.dark{
- --bg:#0f172a;
- --card:#020617;
- --texto:#e5e7eb;
- --borda:#334155;
-}
+:root{ --azul:#1f3c88; --bg:#f3f5f9; --card:#ffffff; --texto:#333; --borda:#ddd; }
+.dark{ --bg:#0f172a; --card:#020617; --texto:#e5e7eb; --borda:#334155; }
 *{box-sizing:border-box}
-body{
- margin:0;
- background:var(--bg);
- color:var(--texto);
- font-family:Segoe UI,Arial,sans-serif;
-}
+body{ margin:0; background:var(--bg); color:var(--texto); font-family: Inter, Segoe UI, system-ui, -apple-system, Arial, sans-serif; }
 .hidden{display:none!important}
-.container{
- max-width:1200px;
- margin:24px auto;
- background:var(--card);
- padding:28px;
- border-radius:22px;
- box-shadow:0 12px 30px rgba(0,0,0,.08);
-}
-header{
- display:flex;
- justify-content:space-between;
- align-items:center;
- margin-bottom:22px;
-}
+.container{ max-width:1200px; margin:24px auto; background:var(--card); padding:28px; border-radius:22px; box-shadow:0 12px 30px rgba(0,0,0,.08); }
+header{ display:flex; justify-content:space-between; align-items:center; margin-bottom:22px; padding-bottom:10px; border-bottom:1px solid rgba(0,0,0,0.05); }
 .brand{display:flex;align-items:center;gap:14px}
-.logo{
- width:56px;height:56px;border-radius:14px;
- background:linear-gradient(135deg,var(--azul),#4f6bdc);
- color:#fff;
- display:flex;align-items:center;justify-content:center;
- font-weight:700;font-size:22px;
-}
-.grid{
- display:grid;
- grid-template-columns:repeat(3,1fr);
- gap:22px;
-}
-@media(max-width:900px){
- .grid{grid-template-columns:1fr}
-}
-
-.card{
- background:var(--card);
- border:1px solid var(--borda);
- border-radius:20px;
- padding:22px;
-}
+.logo{ width:56px;height:56px;border-radius:14px; background:linear-gradient(135deg,var(--azul),#4f6bdc); color:#fff; display:flex;align-items:center;justify-content:center; font-weight:700;font-size:22px; box-shadow:0 6px 16px rgba(0,0,0,0.25); }
+.grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:22px; }
+@media(max-width:900px){ .grid{grid-template-columns:1fr} }
+.card{ background:var(--card); border:none; border-radius:20px; padding:22px; box-shadow:0 10px 30px rgba(0,0,0,0.08); transition:transform 0.2s ease, box-shadow 0.2s ease; }
+.card:hover{ transform:translateY(-3px); box-shadow:0 16px 40px rgba(0,0,0,0.12); }
 .socio{text-align:center;font-weight:700;margin-bottom:12px}
-.socio span{
- border:2px solid var(--azul);
- border-radius:50px;
- padding:6px 18px;
-}
-
-input,select,button{
- padding:10px;
- font-size:14px;
- border-radius:10px;
- border:1px solid var(--borda);
- width:100%;
- background:transparent;
- color:var(--texto);
-}
-button{border:none;cursor:pointer}
-.primary{background:var(--azul);color:#fff}
+.socio span{ border:2px solid var(--azul); border-radius:50px; padding:6px 18px; }
+input,select,button{ padding:10px; font-size:14px; border-radius:12px; border:none; width:100%; background:rgba(0,0,0,0.02); color:var(--texto); margin-top: 8px; }
+input:focus,select:focus{ outline:none; box-shadow:0 0 0 2px rgba(31,60,136,0.25); background:#fff; }
+button{border:none;cursor:pointer; font-weight:600;}
+.primary{background:var(--azul);color:#fff; box-shadow:0 4px 12px rgba(0,0,0,0.2);}
 .secondary{background:#64748b;color:#fff}
 .danger{background:#c0392b;color:#fff}
-
-.linha{
- display:flex;
- justify-content:space-between;
- align-items:center;
- padding:8px 0;
- border-bottom:1px dashed var(--borda);
- font-size:14px;
-}
+.linha{ display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px dashed var(--borda); font-size:14px; }
 .acoes span{cursor:pointer;margin-left:10px}
-
 .pos{color:#16a34a}
 .neg{color:#dc2626}
 .small{font-size:13px;color:#94a3b8}
-
-.tabs{
- display:flex;
- gap:6px;
-}
-.tabs button{
- padding:8px 14px;
- border-radius:10px;
- background:#eee;
-}
-.tabs .active{
- background:var(--azul);
- color:#fff;
-}
-
-.modal{
- position:fixed;inset:0;
- background:rgba(0,0,0,.45);
- display:flex;
- align-items:center;
- justify-content:center;
- z-index:1000;
-}
-.modal-box{
- background:var(--card);
- width:340px;
- padding:24px;
- border-radius:20px;
-}
+.tabs{ display:flex; gap:6px; background:rgba(0,0,0,0.03); padding:6px; border-radius:14px; }
+.tabs button{ padding:8px 14px; border-radius:10px; background:transparent; color:#64748b; margin-top:0; }
+.tabs .active{ background:var(--azul); color:#fff; box-shadow:0 4px 12px rgba(0,0,0,0.2); }
+.modal{ position:fixed;inset:0; background:rgba(0,0,0,0.45); display:flex; align-items:center; justify-content:center; z-index:1000; }
+.modal-box{ background:var(--card); width:340px; padding:24px; border-radius:20px; }
 .toggle{cursor:pointer;font-size:18px}
-
-/* =========================
-   VISUAL MODERNO – PRB UI
-   (PATCH SEGURO)
-========================= */
-
-body{
- font-family: Inter, Segoe UI, system-ui, -apple-system, Arial, sans-serif;
-}
-
-/* Cards flutuantes */
-.card{
- border:none;
- box-shadow:0 10px 30px rgba(0,0,0,.08);
- transition:transform .2s ease, box-shadow .2s ease;
-}
-.card:hover{
- transform:translateY(-3px);
- box-shadow:0 16px 40px rgba(0,0,0,.12);
-}
-
-/* Header mais clean */
-header{
- padding-bottom:10px;
- border-bottom:1px solid rgba(0,0,0,.05);
-}
-
-/* Logo mais premium */
-.logo{
- box-shadow:0 6px 16px rgba(0,0,0,.25);
-}
-
-/* Abas estilo “pill” */
-.tabs{
- background:rgba(0,0,0,.03);
- padding:6px;
- border-radius:14px;
-}
-.tabs button{
- background:transparent;
- border:none;
- font-weight:600;
- color:#64748b;
-}
-.tabs button.active{
- background:var(--azul);
- color:#fff;
- box-shadow:0 4px 12px rgba(0,0,0,.2);
-}
-
-/* Inputs mais modernos */
-input,select{
- background:rgba(0,0,0,.02);
- border:none;
- border-radius:12px;
-}
-input:focus,select:focus{
- outline:none;
- box-shadow:0 0 0 2px rgba(31,60,136,.25);
- background:#fff;
-}
-
-/* MOBILE */
-@media(max-width:700px){
- header{
-  flex-direction:column;
-  gap:12px;
- }
- .tabs{
-  width:100%;
-  overflow-x:auto;
- }
- .tabs button{
-  white-space:nowrap;
- }
-}
-
-/* 👆 O CSS NOVO TERMINA AQUI */
-	
-	button.primary,
-button.secondary,
-button.danger{
-  background: inherit;
-  color: #fff;
-}
-
-button.primary{ background: var(--azul); }
-button.secondary{ background: #64748b; }
-button.danger{ background: #c0392b; }
-
-
-	/* =========================
-   LOGIN – FULLSCREEN (APP)
-========================= */
-#loginScreen{
-  position: fixed;
-  inset: 0;
-  background: linear-gradient(135deg, #0056b3, #00bfff);
-  z-index: 9999;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.login-box{
-  background: #ffffff;
-  padding: 40px;
-  border-radius: 20px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-  text-align: center;
-  width: 90%;
-  max-width: 350px;
-}
-
-.login-box h1{
-  color: #0056b3;
-  margin-bottom: 10px;
-  font-size: 26px;
-}
-
-.login-box p{
-  color: #666;
-  margin-bottom: 25px;
-  font-size: 15px;
-}
-
-.login-box input{
-  padding: 16px;
-  border: 2px solid #eee;
-  border-radius: 10px;
-  width: 100%;
-  margin-bottom: 18px;
-  text-align: center;
-  font-size: 18px;
-}
-
-.login-box button{
-  background: #0056b3;
-  color: white;
-  border: none;
-  padding: 16px;
-  border-radius: 10px;
-  width: 100%;
-  font-weight: bold;
-  font-size: 18px;
-  cursor: pointer;
-}
-
-
-
-	
+#loginScreen{ position: fixed; inset: 0; background: linear-gradient(135deg, #0056b3, #00bfff); z-index: 9999; display: flex; justify-content: center; align-items: center; }
+.login-box{ background: #ffffff; padding: 40px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); text-align: center; width: 90%; max-width: 350px; }
+.login-box h1{ color: #0056b3; margin-bottom: 10px; font-size: 26px; }
+.login-box p{ color: #666; margin-bottom: 25px; font-size: 15px; }
+.login-box input{ padding: 16px; border: 2px solid #eee; border-radius: 10px; width: 100%; margin-bottom: 18px; text-align: center; font-size: 18px; background: #fff; }
+.login-box button{ background: #0056b3; color: white; border: none; padding: 16px; border-radius: 10px; width: 100%; font-weight: bold; font-size: 18px; cursor: pointer; }
 </style>
-
 </head>
-
 <body>
-
-<!-- LOGIN SCREEN -->
 <div id="loginScreen">
   <div class="login-box">
     <h1>PRB Participação</h1>
     <p>Pró-Labore</p>
-
     <input id="user" type="email" placeholder="Email">
     <input id="pass" type="password" placeholder="Senha">
-
     <button onclick="login()">Entrar Agora</button>
   </div>
 </div>
-
-
-<!-- APP -->
 <div class="container hidden" id="app">
 <header>
  <div class="brand">
   <div class="logo">PRB</div>
-  <select id="mes"></select>
-  <select id="ano"></select>
+  <select id="mes" style="width:auto"></select>
+  <select id="ano" style="width:auto"></select>
  </div>
  <div class="tabs">
   <button id="tabLanc" class="active" onclick="abrirAba('lanc')">Lançamentos</button>
   <button id="tabInd" onclick="abrirAba('ind')">Indicadores</button>
   <button id="tabConf" onclick="abrirAba('conf')">Configurações</button>
-  <span class="toggle" onclick="toggleTema()">🌙</span>
-<button id="tabLog" onclick="abrirAba('log')">Logs</button>
-
-	 </div>
-
+  <span class="toggle" onclick="toggleTema()" style="padding:8px">🌙</span>
+  <button id="tabLog" onclick="abrirAba('log')">Logs</button>
+ </div>
 </header>
-
-<!-- LANÇAMENTOS -->
 <div id="abaLanc">
- <div id="statusMes" class="small"></div>
+ <div id="statusMes" class="small" style="margin-bottom:10px"></div>
  <div class="grid" id="cards"></div>
- <button class="secondary" onclick="alternarFechamento()">Fechar / Reabrir mês</button>
+ <button class="secondary" onclick="alternarFechamento()" style="margin-top:20px">Fechar / Reabrir mês</button>
 </div>
-
-<!-- INDICADORES -->
 <div id="abaInd" class="hidden">
  <h3>Indicadores por ano</h3>
- <select id="anoIndicador"></select>
+ <select id="anoIndicador" style="width:200px; margin-bottom:20px"></select>
  <div class="grid" id="indicadores"></div>
 </div>
-
-<!-- LOGS -->
 <div id="abaLog" class="hidden">
  <h3>Log de atividades</h3>
-
- <div style="margin-bottom:10px" class="small">
-  Mostra todas as ações realizadas no sistema
- </div>
-
- <div class="card">
-  <div id="listaLogs"></div>
- </div>
+ <div class="card"><div id="listaLogs"></div></div>
 </div>
-
-
-<!-- CONFIG -->
 <div id="abaConf" class="hidden">
  <h3>Configurações</h3>
-
- <label>Salário padrão (competência atual)</label>
- <input id="salPadrao" oninput="mask(this)">
-
-
- <div class="grid">
-  <input id="sal_paulo" placeholder="Paulo (opcional)" oninput="mask(this)">
-  <input id="sal_rafael" placeholder="Rafael (opcional)" oninput="mask(this)">
-  <input id="sal_bruno" placeholder="Bruno (opcional)" oninput="mask(this)">
+ <label class="small">Salário padrão (competência atual)</label>
+ <input id="salPadrao" oninput="mask(this)" placeholder="R$ 0,00">
+ <div class="grid" style="margin-top:10px">
+  <div><label class="small">Paulo</label><input id="sal_paulo" placeholder="Opcional" oninput="mask(this)"></div>
+  <div><label class="small">Rafael</label><input id="sal_rafael" placeholder="Opcional" oninput="mask(this)"></div>
+  <div><label class="small">Bruno</label><input id="sal_bruno" placeholder="Opcional" oninput="mask(this)"></div>
  </div>
-
- <button class="primary" onclick="salvarSalarios()">Salvar salários</button>
- <hr>
-<h4>Alterar minha senha</h4>
-<input id="novaSenha" type="password" placeholder="Nova senha">
-<button class="primary" onclick="alterarSenha()">Alterar senha</button>
-
-
-<button class="secondary" onclick="gerarBackupExcel()">
-  📤 Exportar Excel
-</button>
-
-	<hr>
-
-<button class="danger" onclick="abrirRestoreExcel()">
-  ♻️ Restaurar backup Excel
-</button>
-
-<input
-  type="file"
-  id="inputRestoreExcel"
-  accept=".xlsx"
-  style="display:none"
-  onchange="processarRestoreExcel(event)"
->
-
-	
+ <button class="primary" onclick="salvarSalarios()" style="margin-top:20px">Salvar salários</button>
+ <hr style="margin:30px 0; opacity:0.1">
+ <h4>Alterar minha senha</h4>
+ <input id="novaSenha" type="password" placeholder="Nova senha">
+ <button class="primary" onclick="alterarSenha()">Alterar senha</button>
+ <div style="margin-top:20px; display:flex; gap:10px">
+  <button class="secondary" onclick="gerarBackupExcel()">📤 Exportar Excel</button>
+  <button class="danger" onclick="document.getElementById('inputRestoreExcel').click()">♻️ Restaurar Excel</button>
+ </div>
+ <input type="file" id="inputRestoreExcel" accept=".xlsx" style="display:none" onchange="processarRestoreExcel(event)">
 </div>
-
-<!-- MODAL -->
+</div>
 <div class="modal hidden" id="modal">
  <div class="modal-box">
   <h3>Editar lançamento</h3>
-  <input id="mdDesc">
-  <input id="mdValor" oninput="mask(this)">
-  <button class="primary" onclick="salvarEdicao()">Salvar</button>
-  <button class="secondary" onclick="fecharModal()">Cancelar</button>
+  <input id="mdDesc" placeholder="Descrição">
+  <input id="mdValor" oninput="mask(this)" placeholder="R$ 0,00">
+  <div style="display:flex; gap:10px; margin-top:20px">
+    <button class="primary" onclick="salvarEdicao()">Salvar</button>
+    <button class="secondary" onclick="fecharModal()">Cancelar</button>
+  </div>
  </div>
 </div>
-
-
-
-
 <script>
 const SUPABASE_URL = "https://xuwwgprchhfshrqdhuqn.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_HnqNNHIYrLbexVdrr-9DVA_gmprLLqe";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh1d3dncHJjaGhmc2hycWRodXFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTQ0OTU4NzcsImV4cCI6MjAzMDA3MTg3N30.HnqNNHIYrLbexVdrr-9DVA_gmprLLqeJbA2e6p6LgYQ";
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-const supabaseClient = supabase.createClient(
-  SUPABASE_URL,
-  SUPABASE_ANON_KEY
-);
-
-	// ===== ELEMENTOS DOM (OBRIGATÓRIO) =====
 const cards = document.getElementById("cards");
 const statusMes = document.getElementById("statusMes");
-
 const mes = document.getElementById("mes");
 const ano = document.getElementById("ano");
-
 const indicadores = document.getElementById("indicadores");
 const anoIndicador = document.getElementById("anoIndicador");
-
 const modal = document.getElementById("modal");
 const mdDesc = document.getElementById("mdDesc");
 const mdValor = document.getElementById("mdValor");
 
-
-/* ===== DADOS ===== */
-let usuarios = JSON.parse(localStorage.getItem("usuarios_prb")) || {
- admin:"admin123",
- paulo:"1234",
- rafael:"1234",
- bruno:"1234"
-};
-
 const socios=["paulo","rafael","bruno"];
-	const gruposExtras = ["obras","familia"];
-	const entidades = [...socios, ...gruposExtras];
-
-
+const gruposExtras = ["obras","familia"];
+const entidades = [...socios, ...gruposExtras];
 const meses=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
 const baseInicial={mes:11,ano:2025};
 let edicao=null;
-
 let lancamentosSupabase = {};
-
-
-/* ===== LOGIN ===== */
-let usuarioLogado = localStorage.getItem("usuario_logado") || null;
+let estadoFechamento = {};
 
 async function login() {
   const email = document.getElementById("user").value;
   const password = document.getElementById("pass").value;
-
-  if (!email || !password) {
-    alert("Informe email e senha");
-    return;
-  }
-
-  const { data, error } = await supabaseClient.auth.signInWithPassword({
-    email,
-    password
-  });
-
-  if (error) {
-    alert("Erro no login: " + error.message);
-    return;
-  }
-
-  usuarioLogado = data.user.id;
-  localStorage.setItem("usuario_logado", usuarioLogado);
-
-document.getElementById("loginScreen").style.display = "none";
+  const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+  if (error) { alert("Erro: " + error.message); return; }
+  document.getElementById("loginScreen").style.display = "none";
   document.getElementById("app").classList.remove("hidden");
-
   init();
 }
 
-/* ===== INIT ===== */
-function init(){
-  mes.innerHTML="";
-  ano.innerHTML="";
-  anoIndicador.innerHTML="";
-
-  meses.forEach((m,i)=>{
-    mes.innerHTML += `<option value="${i}">${m}</option>`;
-  });
-
+async function init(){
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (!session) return;
+  document.getElementById("loginScreen").style.display = "none";
+  document.getElementById("app").classList.remove("hidden");
+  mes.innerHTML = meses.map((m,i)=>`<option value="${i}">${m}</option>`).join("");
   let y = new Date().getFullYear();
-  for(let a = 2025; a <= y + 3; a++){
-    ano.innerHTML += `<option>${a}</option>`;
-    anoIndicador.innerHTML += `<option>${a}</option>`;
-  }
-
+  let anosHtml = "";
+  for(let a = 2025; a <= y + 3; a++) anosHtml += `<option>${a}</option>`;
+  ano.innerHTML = anosHtml;
+  anoIndicador.innerHTML = anosHtml;
   mes.value = new Date().getMonth();
   ano.value = y;
   anoIndicador.value = y;
-
-  mes.onchange = ano.onchange = () => {
-    carregarLancamentosSupabaseSeguro().then(render);
-  };
-
+  mes.onchange = ano.onchange = async () => { await carregarLancamentos(); render(); };
   anoIndicador.onchange = renderIndicadores;
-
   aplicarTema();
-
-  // ⬇️ AQUI ESTÁ A CHAVE
-  carregarLancamentosSupabaseSeguro().then(() => {
-    render();
-    renderIndicadores();
-  });
+  await carregarLancamentos();
+  render();
 }
 
-
-/* ===== ABAS ===== */
-function abrirAba(a){
-  const abas = {
-    lanc: document.getElementById("abaLanc"),
-    ind:  document.getElementById("abaInd"),
-    conf: document.getElementById("abaConf"),
-    log:  document.getElementById("abaLog")
-  };
-
-  const tabs = {
-    lanc: document.getElementById("tabLanc"),
-    ind:  document.getElementById("tabInd"),
-    conf: document.getElementById("tabConf"),
-    log:  document.getElementById("tabLog")
-  };
-
-  // esconde todas
-  Object.values(abas).forEach(el => el.classList.add("hidden"));
-  Object.values(tabs).forEach(el => el.classList.remove("active"));
-
-  // mostra só a clicada
-  abas[a].classList.remove("hidden");
-  tabs[a].classList.add("active");
-
-  // atualizações específicas
-  if(a === "ind") renderIndicadores();
-  if(a === "log") renderLogs();
+async function carregarLancamentos() {
+  const m = +mes.value, a = +ano.value;
+  const { data, error } = await supabaseClient.from("lancamentos").select("*").eq("ano", a).eq("mes", m);
+  if (error) return;
+  lancamentosSupabase = {};
+  entidades.forEach(e => lancamentosSupabase[e] = []);
+  data.forEach(l => { if(lancamentosSupabase[l.socio]) lancamentosSupabase[l.socio].push(l); });
 }
 
-
-/* ===== FECHAMENTO ===== */
-function chaveFechamento(){return "fechado_"+mes.value+"-"+ano.value}
-function mesFechado(){return localStorage.getItem(chaveFechamento())==="1"}
-function alternarFechamento(){
- if(mesFechado()) localStorage.removeItem(chaveFechamento());
- else localStorage.setItem(chaveFechamento(),"1");
- render();
+async function mesFechado() {
+    const m = +mes.value, a = +ano.value;
+    const { data } = await supabaseClient.from('fechamentos').select('fechado').eq('ano', a).eq('mes', m).single();
+    estadoFechamento[`${a}-${m}`] = data ? data.fechado : false;
+    return estadoFechamento[`${a}-${m}`];
 }
 
-/* ===== SALÁRIO POR COMPETÊNCIA ===== */
-function chaveSal(s){return "sal_"+mes.value+"-"+ano.value+"_"+s}
-function salvarSalarios(){
- localStorage.setItem(chaveSal("padrao"),parseMoeda(salPadrao.value));
- socios.forEach(s=>{
-  let v=document.getElementById("sal_"+s).value;
-  if(v) localStorage.setItem(chaveSal(s),parseMoeda(v));
- });
- alert("Salários salvos para esta competência");
-}
-function salarioBase(s){
- let m=+mes.value,a=+ano.value;
- while(a>=baseInicial.ano){
-  let ks="sal_"+m+"-"+a+"_"+s;
-  if(localStorage.getItem(ks)) return +localStorage.getItem(ks);
-  let kp="sal_"+m+"-"+a+"_padrao";
-  if(localStorage.getItem(kp)) return +localStorage.getItem(kp);
-  m--; if(m<0){m=11;a--}
- }
- return 0;
+async function alternarFechamento() {
+    const m = +mes.value, a = +ano.value;
+    const fechadoAtual = await mesFechado();
+    const { error } = await supabaseClient.from('fechamentos').upsert({ ano: a, mes: m, fechado: !fechadoAtual }, { onConflict: 'ano, mes, user_id' });
+    if (error) alert("Erro ao alterar status.");
+    else { await registrarLog("FECHAMENTO", `Mês ${m+1}/${a} ${!fechadoAtual ? 'FECHADO' : 'REABERTO'}`); render(); }
 }
 
-/* ===== SALDO ===== */
-function chaveSaldo(m,a,s){return "saldo_"+m+"-"+a+"_"+s}
-function saldoAnterior(m,a,s){
- if(a<baseInicial.ano || (a===baseInicial.ano && m<baseInicial.mes)) return 0;
- let pm=m-1,pa=a;
- if(pm<0){pm=11;pa--}
- return Number(localStorage.getItem(chaveSaldo(pm,pa,s)))||0;
-}
-
-
-
-
-
-/* ===== RENDER ===== */
-async function render(){
-  cards.innerHTML="";
-  let m = +mes.value, a = +ano.value;
-  statusMes.innerHTML = mesFechado() ? "🔒 Mês fechado" : "🔓 Mês aberto";
-
-  /* ===== CARDS DOS SÓCIOS (COMPLETO, COMO JÁ ERA) ===== */
-  for (const s of socios) {
-    let arr = lancamentosSupabase[s] || [];
-let total = arr
-  .filter(l => !(l.parcelado === true && l.id_parcelamento === null))
-  .reduce((x, y) => x + y.valor, 0);
-    let base = salarioBase(s);
-
-    let prev = await calcularSaldoAnteriorOnline(s, m, a);
-    let saldo = base + prev - total;
-
-    cards.innerHTML += `
-    <div class="card">
-      <div class="socio"><span>${s.toUpperCase()}</span></div>
-      <div class="small">Salário: ${fmt(base)}</div>
-      <div class="small">Saldo anterior:
-        <b class="${prev>=0?'pos':'neg'}">${fmt(prev)}</b>
-      </div>
-
-${(!mesFechado() && podeLancar())?`
-  <input id="d_${s}" placeholder="Descrição">
-  <input id="v_${s}" placeholder="R$ 0,00 (valor TOTAL se parcelado)" oninput="mask(this)">
-
-  <label class="small">
-    <input type="checkbox" id="p_${s}" onchange="toggleParcelado('${s}')">
-    Parcelado
-  </label>
-
-  <div id="parc_${s}" class="small hidden">
-    <input
-      id="n_${s}"
-      type="number"
-      min="2"
-      step="1"
-      value="2"
-      placeholder="Nº parcelas (mín. 2)"
-      oninput="this.value = Math.max(2, Math.abs(parseInt(this.value) || 2))"
-    >
-    <input id="m_${s}" type="month">
-  </div>
-
-  <button class="primary" onclick="add('${s}')">OK</button>
-`:`<div class="small">Lançamentos bloqueados</div>`}
-
-      ${arr.map((r,i)=>`
-        <div class="linha">
-          <div>${r.data} • ${r.desc}</div>
-          <div class="${r.valor<0?'pos':'neg'}">${fmt(r.valor)}</div>
-          ${(!mesFechado() && podeLancar())?`
-            <div class="acoes">
-              <span onclick="editar('${s}',${i})">✏️</span>
-              <span onclick="excluir('${s}',${i})">🗑️</span>
-            </div>`:""}
-        </div>
-      `).join("")}
-
-      <div class="small">
-        Total mês: ${fmt(total)}<br>
-        Saldo final:
-        <b class="${saldo>=0?'pos':'neg'}">${fmt(saldo)}</b>
-      </div>
-    </div>`;
-  }
-
- /* ===== CARDS OBRAS / FAMÍLIA (COM INPUTS – SEM SALVAR AINDA) ===== */
-for (const g of gruposExtras) {
-
-  let arr = lancamentosSupabase[g] || [];
-  let total = arr.reduce((x,y)=>x+y.valor,0);
-
-  cards.innerHTML += `
-    <div class="card">
-      <div class="socio"><span>${g.toUpperCase()}</span></div>
-
-      <input id="d_${g}" placeholder="Descrição">
-      <input id="v_${g}" placeholder="R$ 0,00" oninput="mask(this)">
-
-    <button class="primary" onclick="addGrupo('${g}')">
-  OK
-</button>
-
-
- ${arr.map((r,i)=>`
-  <div class="linha">
-    <div>${r.data} • ${r.desc}</div>
-
-    <div style="display:flex;align-items:center;gap:10px">
-      <div class="neg">${fmt(r.valor)}</div>
-
-      ${(!mesFechado() && podeLancar()) ? `
-        <div class="acoes">
-          <span onclick="editar('${g}',${i})">✏️</span>
-          <span onclick="excluir('${g}',${i})">🗑️</span>
-        </div>
-      ` : ""}
-    </div>
-  </div>
-`).join("")}
-
-
-      <div class="small">
-        Total do mês:<br>
-        <b class="neg">${fmt(total)}</b>
-      </div>
-    </div>
-  `;
-}
-
-}
-
-
-/* ===== INDICADORES ===== */
-async function renderIndicadores(){
-  indicadores.innerHTML = "";
-
-  const anoSel = +anoIndicador.value;
-
-  let totalGeral = 0;
-
-for (const s of entidades) {
-
-    const inicio = `${anoSel}-01-01`;
-    const fim = `${anoSel}-12-31`;
-
-    const { data, error } = await supabaseClient
-      .from("lancamentos")
-      .select("valor")
-      .eq("socio", s)
-      .gte("data", inicio)
-      .lte("data", fim);
-
-    if(error){
-      console.error("Erro indicadores:", error);
-      continue;
+async function salarioBase(s, m, a) {
+    let curM = m, curA = a;
+    while (curA >= baseInicial.ano) {
+        const { data: ind } = await supabaseClient.from('salarios').select('valor').eq('ano', curA).eq('mes', curM).eq('tipo', 'individual').eq('socio', s).single();
+        if (ind) return ind.valor;
+        const { data: pad } = await supabaseClient.from('salarios').select('valor').eq('ano', curA).eq('mes', curM).eq('tipo', 'padrao').single();
+        if (pad) return pad.valor;
+        curM--; if (curM < 0) { curM = 11; curA--; }
     }
-
-const soma = data.reduce(
-  (acc, l) => acc + Math.abs(Number(l.valor)),
-  0
-);
-
-    totalGeral += soma;
-
-    indicadores.innerHTML += `
-      <div class="card">
-        <div class="socio"><span>${s.toUpperCase()}</span></div>
-        <b>Total no ano</b><br>
-        ${fmt(soma)}
-      </div>
-    `;
-  }
-
-  indicadores.innerHTML += `
-    <div class="card">
-      <div class="socio"><span>TOTAL</span></div>
-<b>Total geral</b><br>
-      ${fmt(totalGeral)}
-    </div>
-  `;
+    return 0;
 }
 
+async function calcularSaldoAnterior(s, m, a) {
+    let pm = m - 1, pa = a;
+    if (pm < 0) { pm = 11; pa--; }
+    if (pa < baseInicial.ano || (pa === baseInicial.ano && pm < baseInicial.mes)) return 0;
+    const base = await salarioBase(s, pm, pa);
+    const { data } = await supabaseClient.from("lancamentos").select("valor").eq("socio", s).eq("ano", pa).eq("mes", pm);
+    const gastos = data ? data.reduce((acc, l) => acc + l.valor, 0) : 0;
+    const saldoAnteriorValor = await calcularSaldoAnterior(s, pm, pa);
+    return base + saldoAnteriorValor - gastos;
+}
 
-/* ===== CRUD ===== */
-function podeLancar(){
-  return !mesFechado();
+async function render(){
+  cards.innerHTML = "Carregando...";
+  const m = +mes.value, a = +ano.value;
+  const isFechado = await mesFechado();
+  statusMes.innerHTML = isFechado ? "🔒 Mês fechado" : "🔓 Mês aberto";
+  let html = "";
+  for (const s of socios) {
+    const arr = lancamentosSupabase[s] || [];
+    const total = arr.reduce((x, y) => x + y.valor, 0);
+    const base = await salarioBase(s, m, a);
+    const prev = await calcularSaldoAnterior(s, m, a);
+    const saldo = base + prev - total;
+    html += `<div class="card"><div class="socio"><span>${s.toUpperCase()}</span></div>
+      <div class="small">Salário: ${fmt(base)} | Saldo ant: <b class="${prev>=0?'pos':'neg'}">${fmt(prev)}</b></div>
+      ${!isFechado ? `<input id="d_${s}" placeholder="Descrição"><input id="v_${s}" placeholder="R$ 0,00" oninput="mask(this)"><button class="primary" onclick="add('${s}')">Adicionar</button>` : ""}
+      <div style="margin-top:15px">${arr.map((r,i)=>`<div class="linha"><div>${r.desc}</div><div class="neg">${fmt(r.valor)}</div>
+      ${!isFechado ? `<div class="acoes"><span onclick="excluir('${r.id}')">🗑️</span></div>` : ""}</div>`).join("")}</div>
+      <div class="small" style="margin-top:10px">Total: ${fmt(total)} | Saldo: <b class="${saldo>=0?'pos':'neg'}">${fmt(saldo)}</b></div></div>`;
+  }
+  for (const g of gruposExtras) {
+    const arr = lancamentosSupabase[g] || [];
+    const total = arr.reduce((x,y)=>x+y.valor,0);
+    html += `<div class="card"><div class="socio"><span>${g.toUpperCase()}</span></div>
+      ${!isFechado ? `<input id="d_${g}" placeholder="Descrição"><input id="v_${g}" placeholder="R$ 0,00" oninput="mask(this)"><button class="primary" onclick="add('${g}')">Adicionar</button>` : ""}
+      <div style="margin-top:15px">${arr.map((r,i)=>`<div class="linha"><div>${r.desc}</div><div class="neg">${fmt(r.valor)}</div>
+      ${!isFechado ? `<div class="acoes"><span onclick="excluir('${r.id}')">🗑️</span></div>` : ""}</div>`).join("")}</div>
+      <div class="small" style="margin-top:10px">Total: <b class="neg">${fmt(total)}</b></div></div>`;
+  }
+  cards.innerHTML = html;
 }
 
 async function add(s) {
-  const { data: { user } } = await supabaseClient.auth.getUser();
-  if (!user) { alert("Usuário não autenticado"); return; }
+  const desc = document.getElementById("d_"+s).value;
+  const valor = parseMoeda(document.getElementById("v_"+s).value);
+  if(!desc || !valor) return;
+  const { error } = await supabaseClient.from("lancamentos").insert({ socio: s, desc, valor, ano: +ano.value, mes: +mes.value, data: new Date().toISOString().split('T')[0] });
+  if(error) alert("Erro ao salvar"); else { await registrarLog("ADD", `${s}: ${desc} - ${fmt(valor)}`); await carregarLancamentos(); render(); }
+}
 
-  const desc = document.getElementById("d_" + s).value;
-  const valorTotal = parseMoeda(document.getElementById("v_" + s).value);
-  const parcelado = document.getElementById("p_" + s)?.checked;
+async function excluir(id) {
+  if(!confirm("Excluir?")) return;
+  await supabaseClient.from("lancamentos").delete().eq("id", id);
+  await carregarLancamentos(); render();
+}
 
-  if (!desc || !valorTotal) { alert("Preencha descrição e valor"); return; }
-
-  if (!parcelado) {
-    const dataLancamento = `${ano.value}-${String(+mes.value + 1).padStart(2, "0")}-01`;
-    const { error } = await supabaseClient.from("lancamentos").insert([{
-      socio: s, descricao: desc, valor: valorTotal, data: dataLancamento, criado_por: user.id
-    }]);
-    if (error) { console.error(error); return; }
-  } else {
-    const parcelas = Number(document.getElementById("n_" + s).value);
-    const mesIni = document.getElementById("m_" + s).value;
-    if (!parcelas || parcelas < 2 || !mesIni) { alert("Informe parcelas e mês inicial"); return; }
-
-    const [anoIni, mesIniNum] = mesIni.split("-").map(Number);
-    const valorParcela = +(valorTotal / parcelas).toFixed(2);
-    const idParcelamento = crypto.randomUUID();
-
-    for (let i = 0; i < parcelas; i++) {
-      const dataObjeto = new Date(anoIni, (mesIniNum - 1) + i, 1);
-      const y = dataObjeto.getFullYear();
-      const m = String(dataObjeto.getMonth() + 1).padStart(2, "0");
-      const dataFormatada = `${y}-${m}-01`;
-
-      await supabaseClient.from("lancamentos").insert([{
-        socio: s, descricao: `${desc} (${i + 1}/${parcelas})`, valor: valorParcela,
-        data: dataFormatada, parcelado: true, id_parcelamento: idParcelamento,
-        parcela_numero: i + 1, criado_por: user.id
-      }]);
-    }
+async function salvarSalarios() {
+  const m = +mes.value, a = +ano.value;
+  const p = parseMoeda(document.getElementById("salPadrao").value);
+  if(p > 0) await supabaseClient.from('salarios').upsert({ ano: a, mes: m, tipo: 'padrao', valor: p }, { onConflict: 'ano, mes, socio, tipo' });
+  for(const s of socios) {
+    const v = parseMoeda(document.getElementById("sal_"+s).value);
+    if(v > 0) await supabaseClient.from('salarios').upsert({ ano: a, mes: m, tipo: 'individual', socio: s, valor: v }, { onConflict: 'ano, mes, socio, tipo' });
   }
-
-  document.getElementById("d_" + s).value = "";
-  document.getElementById("v_" + s).value = "";
-  if(document.getElementById("p_" + s)) document.getElementById("p_" + s).checked = false;
-  if(document.getElementById("parc_" + s)) document.getElementById("parc_" + s).classList.add("hidden");
-
-  await carregarLancamentosSupabaseSeguro();
-  render();
-  renderIndicadores();
+  alert("Salários salvos!");
 }
-	// ===== SALVAR OBRAS / FAMÍLIA =====
-async function addGrupo(grupo){
 
-  const desc = document.getElementById("d_"+grupo).value;
-  const valor = parseMoeda(document.getElementById("v_"+grupo).value);
+async function registrarLog(tipo, msg) {
+  await supabaseClient.from("logs").insert({ tipo, mensagem: msg, usuario: (await supabaseClient.auth.getUser()).data.user.email });
+}
 
-  if(!desc || !valor){
-    alert("Preencha descrição e valor");
-    return;
+async function renderLogs() {
+  const { data } = await supabaseClient.from("logs").select("*").order("created_at", { ascending: false }).limit(50);
+  document.getElementById("listaLogs").innerHTML = data ? data.map(l => `<div class="small"><b>${new Date(l.created_at).toLocaleString()}</b>: ${l.mensagem}</div>`).join("") : "Sem logs";
+}
+
+async function renderIndicadores() {
+  const a = +anoIndicador.value;
+  let html = "";
+  for(const s of entidades) {
+    const { data } = await supabaseClient.from("lancamentos").select("valor").eq("socio", s).eq("ano", a);
+    const total = data ? data.reduce((acc, l) => acc + l.valor, 0) : 0;
+    html += `<div class="card"><div class="socio"><span>${s.toUpperCase()}</span></div><b>Total: ${fmt(total)}</b></div>`;
   }
-
-  const { data: { user } } = await supabaseClient.auth.getUser();
-  if(!user){
-    alert("Usuário não autenticado");
-    return;
-  }
-
-  const { error } = await supabaseClient
-    .from("lancamentos")
-    .insert([{
-      socio: grupo,
-      descricao: desc,
-      valor: valor,
-data: `${ano.value}-${String(+mes.value + 1).padStart(2,"0")}-01`,
-      criado_por: user.id
-    }]);
-
-  if(error){
-  alert("Erro Supabase:\n" + error.message);
-  console.error("ERRO SUPABASE:", error);
-  return;
+  indicadores.innerHTML = html;
 }
 
-  await registrarLog(
-    "ADICIONOU",
-    `${grupo.toUpperCase()} • ${desc} • ${fmt(valor)}`
-  );
-
-  document.getElementById("d_"+grupo).value = "";
-  document.getElementById("v_"+grupo).value = "";
-
-  await carregarLancamentosSupabaseSeguro();
-  render();
-  renderIndicadores();
+function fmt(v){ return new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(v||0); }
+function parseMoeda(v){ return Number(v.replace(/\D/g,''))/100; }
+function mask(i){
+  let v = i.value.replace(/\D/g,'');
+  v = (Number(v)/100).toLocaleString('pt-BR',{minimumFractionDigits:2});
+  i.value = "R$ " + v;
 }
-
-
-function editar(s, i){
-  const item = lancamentosSupabase[s][i];
-
-  if(!item){
-    alert("Lançamento não encontrado");
-    return;
-  }
-
-  edicao = {
-    socio: s,
-    index: i,
-    id: item.id,
-    descAntes: item.desc,
-    valorAntes: item.valor
-  };
-
-  mdDesc.value = item.desc;
-  mdValor.value = fmt(item.valor);
-
-  modal.classList.remove("hidden");
+function toggleTema(){ document.body.classList.toggle("dark"); localStorage.setItem("tema", document.body.classList.contains("dark")?"dark":"light"); }
+function aplicarTema(){ if(localStorage.getItem("tema")==="dark") document.body.classList.add("dark"); }
+function abrirAba(a){
+  ["abaLanc","abaInd","abaConf","abaLog"].forEach(id => document.getElementById(id).classList.add("hidden"));
+  ["tabLanc","tabInd","tabConf","tabLog"].forEach(id => document.getElementById(id).classList.remove("active"));
+  document.getElementById("aba"+a.charAt(0).toUpperCase()+a.slice(1)).classList.remove("hidden");
+  document.getElementById("tab"+a.charAt(0).toUpperCase()+a.slice(1)).classList.add("active");
+  if(a==='log') renderLogs();
+  if(a==='ind') renderIndicadores();
 }
+function fecharModal(){ modal.classList.add("hidden"); }
 
-async function salvarEdicao(){
-  const novaDesc = mdDesc.value;
-  const novoValor = parseMoeda(mdValor.value);
-
-  if(!novaDesc || !novoValor){
-    alert("Preencha descrição e valor");
-    return;
-  }
-
-  // 1️⃣ Atualiza no Supabase
-  const { error } = await supabaseClient
-    .from("lancamentos")
-    .update({
-      descricao: novaDesc,
-      valor: novoValor
-    })
-    .eq("id", edicao.id);
-
-  if(error){
-    alert("Erro ao atualizar lançamento");
-    console.error(error);
-    return;
-  }
-
-  // 2️⃣ REGISTRA LOG DE EDIÇÃO (ANTES → DEPOIS)
-  await registrarLog(
-    "EDITOU",
-    `${edicao.socio} • ${edicao.descAntes} (${fmt(edicao.valorAntes)}) → ${novaDesc} (${fmt(novoValor)})`
-  );
-
-  fecharModal();
-
-  // 3️⃣ Recarrega tudo
-  await carregarLancamentosSupabaseSeguro();
-  render();
-  renderIndicadores();
-}
-
-async function excluir(s, i){
-  const item = lancamentosSupabase[s][i];
-  if(!item) return;
-
-  if(!confirm("Excluir lançamento?")) return;
-
-  await registrarLog(
-    "EXCLUIU",
-    `${s} • ${fmt(item.valor)}`
-  );
-
-  let error;
-
-  if(item.id_parcelamento){
-    ({ error } = await supabaseClient
-      .from("lancamentos")
-      .delete()
-      .eq("id_parcelamento", item.id_parcelamento));
-  } else {
-    ({ error } = await supabaseClient
-      .from("lancamentos")
-      .delete()
-      .eq("id", item.id));
-  }
-
-  if(error){
-    alert("Erro ao excluir no servidor");
-    console.error(error);
-    return;
-  }
-
-  await carregarLancamentosSupabaseSeguro();
-  render();
-  renderIndicadores();
-}
-
-
-/* ===== MODAL ===== */
-function fecharModal(){modal.classList.add("hidden")}
-
-
-window.gerarBackupExcel = async function () {
-  console.log("▶ Backup Excel iniciado");
-
-  try {
-    if (typeof XLSX === "undefined") {
-      alert("Biblioteca XLSX não carregada");
-      return;
-    }
-
-    const { data: { user } } = await supabaseClient.auth.getUser();
-    if (!user) {
-      alert("Usuário não autenticado");
-      return;
-    }
-
-    const { data, error } = await supabaseClient
-      .from("lancamentos")
-.select("id, socio, data, descricao, valor, parcelado, id_parcelamento")
-      .order("data", { ascending: true });
-
-    if (error) {
-      console.error(error);
-      alert("Erro ao buscar dados");
-      return;
-    }
-
-    const dadosExcel = data.map(l => ({
-      ID: l.id,
-      Socio: l.socio,
-Data: new Date(l.data).toISOString().slice(0,10),
-      Descricao: l.descricao,
-      Valor: l.valor
-    }));
-
-    const wb = XLSX.utils.book_new();
-    const ws = XLSX.utils.json_to_sheet(dadosExcel);
-    XLSX.utils.book_append_sheet(wb, ws, "Lancamentos");
-
-    const nome = `PRB_Backup_${new Date().toISOString().slice(0,10)}.xlsx`;
-    XLSX.writeFile(wb, nome);
-
-    alert("Backup Excel gerado com sucesso!");
-
-  } catch (err) {
-    console.error("Erro no backup Excel:", err);
-    alert("Erro ao gerar backup (veja o console)");
-  }
-};
-
-
-/* ===== TEMA ===== */
-function toggleTema(){
- document.body.classList.toggle("dark");
- localStorage.setItem("tema",document.body.classList.contains("dark")?"dark":"light");
-}
-function aplicarTema(){
- if(localStorage.getItem("tema")==="dark") document.body.classList.add("dark");
-}
-
-/* ===== UTIL ===== */
-function parseMoeda(v){
- let neg=v.includes("-");
- let n=Number(v.replace(/[^\d]/g,""))/100||0;
- return neg?-n:n;
-}
-function fmt(v){return v.toLocaleString("pt-BR",{style:"currency",currency:"BRL"})}
-function mask(el){el.value=fmt(parseMoeda(el.value))}
-
-async function registrarLog(acao, detalhes){
-  const user = (await supabaseClient.auth.getUser()).data.user;
-
-  if(!user) return;
-
-  const { error } = await supabaseClient
-    .from("logs")
-    .insert([{
-      usuario: user.id,
-      usuario_nome: user.email,
-      acao,
-      detalhes
-    }]);
-
-  if(error){
-    console.error("Erro ao salvar log:", error);
-  }
-}
-
-async function alterarSenha(){
-  const nova = document.getElementById("novaSenha").value;
-
-  if(!nova || nova.length < 6){
-    alert("A nova senha deve ter pelo menos 6 caracteres");
-    return;
-  }
-
-  const { error } = await supabaseClient.auth.updateUser({
-    password: nova
-  });
-
-  if(error){
-    alert("Erro ao alterar senha: " + error.message);
-    console.error(error);
-    return;
-  }
-
-  await registrarLog(
-    "ALTEROU SENHA",
-    "Usuário alterou a própria senha"
-  );
-
-  alert("Senha alterada com sucesso!");
-  document.getElementById("novaSenha").value = "";
-}
-
-
-async function renderLogs(){
-  const lista = document.getElementById("listaLogs");
-  lista.innerHTML = "";
-
-  const { data, error } = await supabaseClient
-    .from("logs")
-    .select("*")
-    .order("criado_em", { ascending: false })
-    .limit(100);
-
-  if(error){
-    lista.innerHTML = "<div class='small'>Erro ao carregar logs.</div>";
-    console.error(error);
-    return;
-  }
-
-  if(data.length === 0){
-    lista.innerHTML = "<div class='small'>Nenhuma ação registrada.</div>";
-    return;
-  }
-
-  data.forEach(l => {
-    lista.innerHTML += `
-      <div class="linha">
-        <div>
-          <b>${l.usuario_nome || l.usuario}</b> • ${l.acao}<br>
-          <span class="small">${l.detalhes}</span>
-        </div>
-        <div class="small">
-          ${new Date(l.criado_em).toLocaleString("pt-BR")}
-        </div>
-      </div>
-    `;
-  });
-}
-
-
-
-async function salvarLancamentoSupabase(lancamento){
-  const { error } = await supabaseClient
-    .from("lancamentos")
-    .insert([lancamento]);
-
-  if(error){
-    console.error("Erro Supabase:", error);
-    alert("Erro ao salvar no servidor");
-    return false;
-  }
-  return true;
-}
-
-async function carregarLancamentosSupabaseSeguro() {
-  let m = +mes.value;
-  let a = +ano.value;
-
-  // Filtro no Banco (Primeira camada)
-  const inicio = `${a}-${String(m + 1).padStart(2, "0")}-01`;
-  const ultimoDia = new Date(a, m + 1, 0).getDate();
-  const fim = `${a}-${String(m + 1).padStart(2, "0")}-${ultimoDia}`;
-
-  const { data, error } = await supabaseClient
-    .from("lancamentos")
-    .select("*")
-    .gte("data", inicio)
-    .lte("data", fim);
-
-  if (error) { console.error(error); return; }
-
-  lancamentosSupabase = {};
-  entidades.forEach(e => lancamentosSupabase[e] = []);
-
-  data.forEach(l => {
-    if (l.parcelado === true && l.id_parcelamento === null) return;
-
-    // FILTRAGEM REDUNDANTE NO CLIENTE (Segunda camada)
-    // Extrai o ano e mês da data vinda do banco (YYYY-MM-DD...)
-    const dataDb = l.data.substring(0, 10);
-    const [anoDb, mesDb] = dataDb.split("-").map(Number);
-
-    // SÓ ADICIONA SE O ANO E MÊS FOREM EXATAMENTE OS SELECIONADOS
-    if (anoDb === a && mesDb === (m + 1)) {
-      lancamentosSupabase[l.socio].push({
-        id: l.id,
-        id_parcelamento: l.id_parcelamento || null,
-        data: `${String(l.data.substring(8,10))}/${String(mesDb).padStart(2,"0")}`,
-        desc: l.descricao,
-        valor: Number(l.valor)
-      });
-    }
-  });
-  console.log("Dados carregados e filtrados:", lancamentosSupabase);
-}
-async function saldoAnteriorOnline(socio, mes, ano){
-  // soma todas as retiradas ANTES deste mês
-  const fim = `${ano}-${String(mes+1).padStart(2,"0")}-01`;
-
-  const { data, error } = await supabaseClient
-    .from("lancamentos")
-    .select("valor")
-    .eq("socio", socio)
-    .lt("data", fim);
-
-  if(error){
-    console.error("Erro saldo anterior:", error);
-    return 0;
-  }
-
-  const totalRetirado = data.reduce((soma, l) => soma + Number(l.valor), 0);
-
-  // salário mensal * número de meses trabalhados
-  // por enquanto usamos salárioBase
-  const salarioMes = salarioBase(socio);
-
-  // conta quantos meses já passaram desde o início
-  const mesesTrabalhados =
-    (ano - baseInicial.ano) * 12 + (mes - baseInicial.mes);
-
-  const salarioAcumulado = salarioMes * mesesTrabalhados;
-
-  return salarioAcumulado - totalRetirado;
-}
-
-async function calcularSaldoAnteriorOnline(socio, mes, ano){
-  // limite = primeiro dia do mês atual
-  const limite = `${ano}-${String(mes+1).padStart(2,"0")}-01`;
-
-  // 1️⃣ soma TODAS as retiradas até o mês anterior
-  const { data, error } = await supabaseClient
-    .from("lancamentos")
-    .select("valor")
-    .eq("socio", socio)
-    .lt("data", limite);
-
-  if (error) {
-    console.error("Erro saldo anterior:", error);
-    return 0;
-  }
-
-  const totalRetirado = data.reduce(
-    (soma, l) => soma + Number(l.valor),
-    0
-  );
-
-  // 2️⃣ salário mensal fixo
-  const salarioMensal = salarioBase(socio);
-
-  // 3️⃣ cálculo CORRETO de meses decorridos (mês absoluto)
-  const mesAtualAbs = ano * 12 + mes;
-  const mesInicialAbs = baseInicial.ano * 12 + baseInicial.mes;
-
-  const mesesDecorridos = mesAtualAbs - mesInicialAbs;
-
-  const totalSalarios = salarioMensal * mesesDecorridos;
-
-  return totalSalarios - totalRetirado;
-}
-
-
-
-	async function testeLog(){
-  const { error } = await supabaseClient
-    .from("logs")
-    .insert([{
-      usuario: usuarioLogado,
-      acao: "TESTE",
-      detalhes: "Log manual de teste"
-    }]);
-
-  if(error){
-    alert("Erro log: " + error.message);
-    console.error(error);
-  } else {
-    alert("LOG INSERIDO COM SUCESSO");
-  }
-}
-
-
-	function abrirRestoreExcel(){
-  if(!confirm("ATENÇÃO: isso irá importar dados do Excel para o sistema.\n\nDeseja continuar?")){
-    return;
-  }
-  document.getElementById("inputRestoreExcel").click();
-}
-
-	async function processarRestoreExcel(event){
-  const file = event.target.files[0];
-  if(!file) return;
-
-  const reader = new FileReader();
-
-  reader.onload = async function(e){
-    try {
-      const data = new Uint8Array(e.target.result);
-      const workbook = XLSX.read(data, { type: "array" });
-
-      const sheetName = "Lancamentos";
-      if(!workbook.Sheets[sheetName]){
-        alert("A planilha precisa ter uma aba chamada 'Lancamentos'");
-        return;
-      }
-
-      const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
-
-      if(rows.length === 0){
-        alert("A planilha não possui lançamentos");
-        return;
-      }
-
-      // valida colunas mínimas
-      const colunasObrigatorias = ["Socio", "Data", "Descricao", "Valor"];
-      const colunasArquivo = Object.keys(rows[0]);
-
-      const faltando = colunasObrigatorias.filter(
-        c => !colunasArquivo.includes(c)
-      );
-
-      if(faltando.length){
-        alert("Colunas ausentes: " + faltando.join(", "));
-        return;
-      }
-
-      if(!confirm(`Foram encontrados ${rows.length} lançamentos.\n\nDeseja importar agora?`)){
-        return;
-      }
-
-      await importarLancamentosExcel(rows);
-
-    } catch(err){
-      console.error(err);
-      alert("Erro ao ler o arquivo Excel");
-    }
-  };
-
-  reader.readAsArrayBuffer(file);
-}
-
-	async function importarLancamentosExcel(rows){
-  let inseridos = 0;
-  let erros = 0;
-
-  for(const r of rows){
-
-    const socio = String(r.Socio).trim().toLowerCase();
-
-if(!entidades.includes(socio)){
-      console.warn("Sócio inválido:", r.Socio);
-      erros++;
-      continue;
-    }
-
-    const dataISO = String(r.Data).trim();
-
-    if(!/^\d{4}-\d{2}-\d{2}$/.test(dataISO)){
-      console.warn("Data inválida:", r.Data);
-      erros++;
-      continue;
-    }
-
-    const lancamento = {
-      socio,
-      descricao: String(r.Descricao).trim(),
-      valor: Number(r.Valor),
-      data: dataISO
-    };
-
-    const { error } = await supabaseClient
-      .from("lancamentos")
-      .insert([lancamento]);
-
-    if(error){
-      console.error("Erro ao importar:", error, lancamento);
-      erros++;
-      continue;
-    }
-
-    inseridos++;
-  }
-
-  alert(
-    `Importação finalizada.\n\n` +
-    `Inseridos: ${inseridos}\n` +
-    `Ignorados: ${erros}`
-  );
-
-  await registrarLog(
-    "RESTAURACAO",
-    `Importados ${inseridos} lançamentos via Excel`
-  );
-
-  await carregarLancamentosSupabaseSeguro();
-  render();
-  renderIndicadores();
-}
-
-
-	function toggleParcelado(s) {
-  const chk = document.getElementById("p_" + s);
-  const box = document.getElementById("parc_" + s);
-  if (chk && box) {
-    box.classList.toggle("hidden", !chk.checked);
-  }
-}
-
-
-	function somarMes(ano, mes, qtd) {
-  const d = new Date(ano, mes + qtd, 1);
-  return {
-    ano: d.getFullYear(),
-    mes: d.getMonth()
-  };
-}
-
-	
-	
+init();
 </script>
-
 </body>
 </html>
-
-
-
-
