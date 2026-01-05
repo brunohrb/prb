@@ -604,7 +604,7 @@ async function render(){
 let total = arr
   .filter(l => !(l.parcelado === true && l.id_parcelamento === null))
   .reduce((x, y) => x + y.valor, 0);
-    let base = salarioBase(s);
+let base = await salarioBaseOnline(s, m, a);
 
     let prev = await calcularSaldoAnteriorOnline(s, m, a);
     let saldo = base + prev - total;
@@ -1388,12 +1388,47 @@ if(!entidades.includes(socio)){
   };
 }
 
-	
+	async function salarioBaseOnline(socio, mes, ano) {
+  // 1️⃣ tenta buscar no Supabase
+  const { data, error } = await supabaseClient
+    .from("salarios")
+    .select("valor")
+    .eq("socio", socio)
+    .eq("mes", mes)
+    .eq("ano", ano)
+    .limit(1);
+
+  if (!error && data && data.length > 0) {
+    return Number(data[0].valor);
+  }
+
+  // 2️⃣ fallback: localStorage (segurança)
+  let m = mes, a = ano;
+  while (a >= baseInicial.ano) {
+    const ks = `sal_${m}-${a}_${socio}`;
+    if (localStorage.getItem(ks)) {
+      return Number(localStorage.getItem(ks));
+    }
+    const kp = `sal_${m}-${a}_padrao`;
+    if (localStorage.getItem(kp)) {
+      return Number(localStorage.getItem(kp));
+    }
+    m--;
+    if (m < 0) {
+      m = 11;
+      a--;
+    }
+  }
+
+  return 0;
+}
+
 	
 </script>
 
 </body>
 </html>
+
 
 
 
