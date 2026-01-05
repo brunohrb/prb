@@ -294,14 +294,16 @@ async function add(s) {
     const dataLanc = `${ano.value}-${String(+mes.value + 1).padStart(2, "0")}-01`;
 
     const { error } = await supabaseClient
-      .from("lancamentos")
-      .insert([{
-        socio: s,
-        descricao: desc,
-        valor: valorTotal,
-        data: dataLanc,
-        parcelado: false
-      }]);
+.from("movimentacoes")
+.insert([{
+  socio: s,
+  desc: desc,
+  valor: valorTotal,
+  ano: +ano.value,
+  mes: +mes.value,
+  parcelado: false
+}]);
+
 
     if (error) {
       alert("Erro ao salvar lançamento");
@@ -330,16 +332,18 @@ async function add(s) {
       const m = String(dataObj.getMonth() + 1).padStart(2, "0");
 
       await supabaseClient
-        .from("lancamentos")
-        .insert([{
-          socio: s,
-          descricao: `${desc} (${i + 1}/${parcelas})`,
-          valor: valorParcela,
-          data: `${y}-${m}-01`,
-          parcelado: true,
-          id_parcelamento: idParcelamento,
-          parcela_numero: i + 1
-        }]);
+.from("movimentacoes")
+.insert([{
+  socio: s,
+  desc: `${desc} (${i + 1}/${parcelas})`,
+  valor: valorParcela,
+  ano: y,
+  mes: dataObj.getMonth(),
+  parcelado: true,
+  id_parcelamento: idParcelamento,
+  parcela_numero: i + 1
+}]);
+
     }
   }
 
@@ -349,7 +353,7 @@ async function add(s) {
   if (document.getElementById("p_" + s)) document.getElementById("p_" + s).checked = false;
   if (document.getElementById("parc_" + s)) document.getElementById("parc_" + s).classList.add("hidden");
 
-  await carregarLancamentosSupabaseSeguro();
+  
   render();
   renderIndicadores();
 }
@@ -465,6 +469,7 @@ function toggleParcelado(s) {
 </script>
 </body>
 </html>
+
 
 
 
