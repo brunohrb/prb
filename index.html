@@ -559,36 +559,69 @@ function alternarFechamento(){
 
 /* ===== SALÁRIO POR COMPETÊNCIA ===== */
 function chaveSal(s){return "sal_"+mes.value+"-"+ano.value+"_"+s}
-function salvarSalarios(){
- localStorage.setItem(chaveSal("padrao"),parseMoeda(salPadrao.value));
- socios.forEach(s=>{
-  let v=document.getElementById("sal_"+s).value;
-  if(v) localStorage.setItem(chaveSal(s),parseMoeda(v));
- });
- alert("Salários salvos para esta competência");
-}
-function salarioBase(s){
- let m=+mes.value,a=+ano.value;
- while(a>=baseInicial.ano){
-  let ks="sal_"+m+"-"+a+"_"+s;
-  if(localStorage.getItem(ks)) return +localStorage.getItem(ks);
-  let kp="sal_"+m+"-"+a+"_padrao";
-  if(localStorage.getItem(kp)) return +localStorage.getItem(kp);
-  m--; if(m<0){m=11;a--}
- }
- return 0;
-}
+async function salvarSalarios(){
 
-/* ===== SALDO ===== */
-function chaveSaldo(m,a,s){return "saldo_"+m+"-"+a+"_"+s}
-function saldoAnterior(m,a,s){
- if(a<baseInicial.ano || (a===baseInicial.ano && m<baseInicial.mes)) return 0;
- let pm=m-1,pa=a;
- if(pm<0){pm=11;pa--}
- return Number(localStorage.getItem(chaveSaldo(pm,pa,s)))||0;
+  const m = Number(mes.value);
+  const a = Number(ano.value);
+
+  const salarios = [];
+
+  // salário padrão
+  if (salPadrao.value) {
+    const valorPadrao = parseMoeda(salPadrao.value);
+
+    salarios.push({
+      socio: "padrao",
+      mes: m,
+      ano: a,
+      valor: valorPadrao
+    });
+
+    localStorage.setItem(`sal_${m}-${a}_padrao`, valorPadrao);
+  }
+
+  // salários dos sócios
+  for (const s of socios) {
+    const campo = document.getElementById("sal_" + s);
+    if (!campo || !campo.value) continue;
+
+    const valor = parseMoeda(campo.value);
+
+    salarios.push({
+      socio: s,
+      mes: m,
+      ano: a,
+      valor: valor
+    });
+
+    localStorage.setItem(`sal_${m}-${a}_${s}`, valor);
+  }
+
+  if (salarios.length === 0) {
+    alert("Nenhum salário informado");
+    return;
+  }
+
+  // 🔁 UPSERT (insere ou atualiza)
+  const { error } = await supabaseClient
+    .from("salarios_base")
+    .upsert(salarios, {
+      onConflict: "socio,mes,ano"
+    });
+
+  if (error) {
+    alert("Erro ao salvar salários no servidor");
+    console.error(error);
+    return;
+  }
+
+  alert("Salários salvos com sucesso!");
+
+  // recarrega tudo
+  await carregarLancamentosSupabaseSeguro();
+  render();
+  renderIndicadores();
 }
-
-
 
 
 
@@ -1428,6 +1461,7 @@ if(!entidades.includes(socio)){
 
 </body>
 </html>
+
 
 
 
