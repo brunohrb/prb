@@ -1206,13 +1206,7 @@ async function carregarLancamentosSupabaseSeguro() {
   console.log("Dados carregados e filtrados:", lancamentosSupabase);
 }
 
-	function salarioBase(socio){
-  // fallback simples para evitar quebra
-  // o cálculo principal já usa salarioBaseOnline
-  return 0;
-}
-
-	
+		
 async function saldoAnteriorOnline(socio, mes, ano){
   // soma todas as retiradas ANTES deste mês
   const fim = `${ano}-${String(mes+1).padStart(2,"0")}-01`;
@@ -1232,7 +1226,7 @@ async function saldoAnteriorOnline(socio, mes, ano){
 
   // salário mensal * número de meses trabalhados
   // por enquanto usamos salárioBase
-  const salarioMes = salarioBase(socio);
+const salarioMes = await salarioBaseOnline(socio, mes, ano);
 
   // conta quantos meses já passaram desde o início
   const mesesTrabalhados =
@@ -1265,7 +1259,7 @@ async function calcularSaldoAnteriorOnline(socio, mes, ano){
   );
 
   // 2️⃣ salário mensal fixo
-  const salarioMensal = salarioBase(socio);
+const salarioMensal = await salarioBaseOnline(socio, mes, ano);
 
   // 3️⃣ cálculo CORRETO de meses decorridos (mês absoluto)
   const mesAtualAbs = ano * 12 + mes;
@@ -1473,6 +1467,7 @@ if(!entidades.includes(socio)){
 
 </body>
 </html>
+
 
 
 
