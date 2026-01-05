@@ -448,10 +448,24 @@ async function salvarEdicao(){
   render();
 }
 
+function toggleParcelado(s) {
+  const chk = document.getElementById("p_" + s);
+  const box = document.getElementById("parc_" + s);
+  if (!chk || !box) return;
+
+  if (chk.checked) {
+    box.classList.remove("hidden");
+  } else {
+    box.classList.add("hidden");
+  }
+}
+
+  
   
 </script>
 </body>
 </html>
+
 
 
 
