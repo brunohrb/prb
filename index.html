@@ -129,6 +129,22 @@ const SUPABASE_ANON_KEY = "sb_publishable_HnqNNHIYrLbexVdrr-9DVA_gmprLLqe";
 // ==========================================
 
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  supabaseClient.auth.onAuthStateChange((event, session) => {
+  console.log("Auth event:", event);
+
+  if (event === "SIGNED_OUT") {
+    document.getElementById("app").classList.add("hidden");
+    document.getElementById("loginScreen").style.display = "flex";
+    dadosCache = { lancamentos: [], salarios: [], fechamentos: [] };
+  }
+
+  if (event === "SIGNED_IN") {
+    document.getElementById("loginScreen").style.display = "none";
+    document.getElementById("app").classList.remove("hidden");
+    init();
+  }
+});
+
 
 const cards = document.getElementById("cards");
 const statusMes = document.getElementById("statusMes");
@@ -622,6 +638,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 </script>
 </body>
 </html>
+
 
 
 
