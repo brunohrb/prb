@@ -70,6 +70,8 @@ button{border:none;cursor:pointer; font-weight:600;}
   <button id="tabConf" onclick="abrirAba('conf')">Configurações</button>
   <span class="toggle" onclick="toggleTema()" style="padding:8px">🌙</span>
   <button id="tabLog" onclick="abrirAba('log')">Logs</button>
+   <button class="secondary" onclick="logout()">Sair</button>
+
  </div>
 </header>
 <div id="abaLanc">
@@ -591,11 +593,16 @@ function toggleParcelado(s) {
   }
 }
 
-  
+ async function logout() {
+  await supabaseClient.auth.signOut();
+  location.reload();
+}
+ 
   
 </script>
 </body>
 </html>
+
 
 
 
