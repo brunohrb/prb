@@ -165,6 +165,19 @@ async function login() {
 async function init(){
   const { data: { session } } = await supabaseClient.auth.getSession();
   if (!session) return;
+  // verifica se o usuário logado existe na tabela usuarios
+const { data: usuarioSistema } = await supabaseClient
+  .from("usuarios")
+  .select("*")
+  .eq("id", session.user.id)
+  .single();
+
+if (!usuarioSistema) {
+  alert("Usuário não autorizado neste sistema.");
+  await supabaseClient.auth.signOut();
+  return;
+}
+
   document.getElementById("loginScreen").style.display = "none";
   document.getElementById("app").classList.remove("hidden");
   mes.innerHTML = meses.map((m,i)=>`<option value="${i}">${m}</option>`).join("");
@@ -583,6 +596,7 @@ function toggleParcelado(s) {
 </script>
 </body>
 </html>
+
 
 
 
