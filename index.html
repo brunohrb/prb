@@ -559,7 +559,6 @@ function abrirAba(a){
   if(a==='log') renderLogs(); if(a==='ind') renderIndicadores();
 }
 function fecharModal(){ modal.classList.add("hidden"); }
-init();
 
   function abrirEditar(id){
   const lanc = dadosCache.lancamentos.find(l => l.id === id);
@@ -605,11 +604,25 @@ function toggleParcelado(s) {
   await supabaseClient.auth.signOut();
   location.reload();
 }
- 
+
+document.addEventListener("DOMContentLoaded", async () => {
+  const { data: { session } } = await supabaseClient.auth.getSession();
+
+  if (session) {
+    document.getElementById("loginScreen").style.display = "none";
+    document.getElementById("app").classList.remove("hidden");
+    init();
+  } else {
+    document.getElementById("loginScreen").style.display = "flex";
+    document.getElementById("app").classList.add("hidden");
+  }
+});
+  
   
 </script>
 </body>
 </html>
+
 
 
 
