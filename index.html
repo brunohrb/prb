@@ -443,7 +443,7 @@ async function registrarLog(tipo, msg) {
 }
 
 async function renderLogs() {
-  const { data } = await supabaseClient.from("logs").select("*").order("created_at", { ascending: false }).limit(50);
+  const { data } = await supabaseClient.from("logs").select("*").order("criado_em", { ascending: false }).limit(50);
   document.getElementById("listaLogs").innerHTML = data ? data.map(l => `<div class="small"><b>${new Date(l.created_at).toLocaleString()}</b>: ${l.mensagem}</div>`).join("") : "Sem logs";
 }
 
@@ -544,6 +544,7 @@ function toggleParcelado(s) {
 </script>
 </body>
 </html>
+
 
 
 
