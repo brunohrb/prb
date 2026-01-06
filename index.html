@@ -255,7 +255,10 @@ async function render(){
   <button class="primary" onclick="add('${s}')">OK</button>
 ` : ""}
 
-      <div style="margin-top:15px">${arr.map(r=>`<div class="linha"><div>${r.desc}</div><div class="neg">${fmt(r.valor)}</div>
+      <div style="margin-top:15px">${arr.map(r=>`<div class="linha"><div>${r.desc}</div><div class="${r.valor < 0 ? 'pos' : 'neg'}">
+  ${fmt(r.valor)}
+</div>
+
       ${!isFechado ? `<div class="acoes"> <span onclick="abrirEditar('${r.id}')">✏️</span>
   <span onclick="excluir('${r.id}')">🗑️</span></div>` : ""}</div>`).join("")}</div>
       <div class="small" style="margin-top:10px">Total: ${fmt(total)} | Saldo: <b class="${saldo>=0?'pos':'neg'}">${fmt(saldo)}</b></div></div>`;
@@ -265,7 +268,10 @@ async function render(){
     const total = arr.reduce((x,y)=>x+y.valor,0);
     html += `<div class="card"><div class="socio"><span>${g.toUpperCase()}</span></div>
       ${!isFechado ? `<input id="d_${g}" placeholder="Descrição"><input id="v_${g}" placeholder="R$ 0,00" oninput="mask(this)"><button class="primary" onclick="add('${g}')">Adicionar</button>` : ""}
-      <div style="margin-top:15px">${arr.map(r=>`<div class="linha"><div>${r.desc}</div><div class="neg">${fmt(r.valor)}</div>
+      <div style="margin-top:15px">${arr.map(r=>`<div class="linha"><div>${r.desc}</div><div class="${r.valor < 0 ? 'pos' : 'neg'}">
+  ${fmt(r.valor)}
+</div>
+
       ${!isFechado ? `<div class="acoes"> <span onclick="abrirEditar('${r.id}')">✏️</span>
   <span onclick="excluir('${r.id}')">🗑️</span></div>` : ""}</div>`).join("")}</div>
       <div class="small" style="margin-top:10px">Total: <b class="neg">${fmt(total)}</b></div></div>`;
@@ -534,6 +540,7 @@ function toggleParcelado(s) {
 </script>
 </body>
 </html>
+
 
 
 
