@@ -278,10 +278,11 @@ async function add(s) {
   const valorTotal = parseMoeda(document.getElementById("v_" + s).value);
   const parcelado = document.getElementById("p_" + s)?.checked;
 
-  if (!desc || !valorTotal) {
-    alert("Preencha descrição e valor");
-    return;
-  }
+ if (!desc || valorTotal === 0) {
+  alert("Preencha descrição e valor (diferente de zero)");
+  return;
+}
+
 
   // NÃO PARCELADO
   if (!parcelado) {
@@ -449,10 +450,22 @@ async function renderIndicadores() {
 function fmt(v){ return new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(v||0); }
 function parseMoeda(v){ return Number(v.replace(/\D/g,''))/100; }
 function mask(i){
-  let v = i.value.replace(/\D/g,'');
-  v = (Number(v)/100).toLocaleString('pt-BR',{minimumFractionDigits:2});
-  i.value = "R$ " + v;
+  let v = i.value.replace(/[^\d-]/g,'');
+
+  // garante só um sinal negativo no início
+  if (v.indexOf('-') > 0) {
+    v = v.replace(/-/g,'');
+  }
+
+  const negativo = v.startsWith('-');
+  v = v.replace('-','');
+
+  let num = Number(v) / 100;
+  if (negativo) num = -num;
+
+  i.value = "R$ " + num.toLocaleString('pt-BR',{minimumFractionDigits:2});
 }
+
 function toggleTema(){ document.body.classList.toggle("dark"); localStorage.setItem("tema", document.body.classList.contains("dark")?"dark":"light"); }
 function aplicarTema(){ if(localStorage.getItem("tema")==="dark") document.body.classList.add("dark"); }
 function abrirAba(a){
@@ -510,6 +523,7 @@ function toggleParcelado(s) {
 </script>
 </body>
 </html>
+
 
 
 
