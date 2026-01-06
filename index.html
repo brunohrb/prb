@@ -448,7 +448,18 @@ async function renderIndicadores() {
 }
 
 function fmt(v){ return new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(v||0); }
-function parseMoeda(v){ return Number(v.replace(/\D/g,''))/100; }
+function parseMoeda(v){
+  if (!v) return 0;
+
+  // detecta se é negativo
+  const negativo = v.includes('-');
+
+  // remove tudo que não for número
+  const num = Number(v.replace(/\D/g,'')) / 100;
+
+  return negativo ? -num : num;
+}
+
 function mask(i){
   let v = i.value.replace(/[^\d-]/g,'');
 
@@ -523,6 +534,7 @@ function toggleParcelado(s) {
 </script>
 </body>
 </html>
+
 
 
 
