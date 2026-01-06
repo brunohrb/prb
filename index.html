@@ -351,6 +351,10 @@ async function add(s) {
   document.getElementById("v_" + s).value = "";
   if (document.getElementById("p_" + s)) document.getElementById("p_" + s).checked = false;
   if (document.getElementById("parc_" + s)) document.getElementById("parc_" + s).classList.add("hidden");
+await registrarLog(
+  "ADD",
+  `${s.toUpperCase()} | ${desc} | ${fmt(valorTotal)}`
+);
 
   await carregarTudo();
   render();
@@ -540,6 +544,7 @@ function toggleParcelado(s) {
 </script>
 </body>
 </html>
+
 
 
 
