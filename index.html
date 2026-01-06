@@ -384,10 +384,11 @@ const usuarioEmail = user ? user.email : 'desconhecido';
       .delete()
       .eq("id", id);
 
-  await registrarLog(
+ await registrarLog(
   "EXCLUIU",
-  `${lanc.socio.toUpperCase()} | ${lanc.desc} | ${fmt(lanc.valor)}`
+  `${usuarioEmail} → ${lanc.socio.toUpperCase()} | ${lanc.desc} | ${fmt(lanc.valor)}`
 );
+
   
     
     await carregarTudo();
@@ -414,11 +415,10 @@ const usuarioEmail = user ? user.email : 'desconhecido';
       .ilike("desc", `${baseDesc}%`)
       .eq("socio", lanc.socio);
 
-    await registrarLog(
+ await registrarLog(
   "EXCLUIU PARCELAMENTO",
-  `${lanc.socio.toUpperCase()} | ${baseDesc}`
+  `${usuarioEmail} → ${lanc.socio.toUpperCase()} | ${baseDesc}`
 );
-
     
   } else {
     await supabaseClient
@@ -583,6 +583,7 @@ function toggleParcelado(s) {
 </script>
 </body>
 </html>
+
 
 
 
