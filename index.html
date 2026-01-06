@@ -351,10 +351,13 @@ async function add(s) {
   document.getElementById("v_" + s).value = "";
   if (document.getElementById("p_" + s)) document.getElementById("p_" + s).checked = false;
   if (document.getElementById("parc_" + s)) document.getElementById("parc_" + s).classList.add("hidden");
+const { data: { user } } = await supabaseClient.auth.getUser();
+
 await registrarLog(
   "ADD",
-  `${s.toUpperCase()} | ${desc} | ${fmt(valorTotal)}`
+  `${user.email} → ${s.toUpperCase()} | ${desc} | ${fmt(valorTotal)}`
 );
+
 
   await carregarTudo();
   render();
@@ -381,6 +384,12 @@ async function excluir(id) {
       .delete()
       .eq("id", id);
 
+  await registrarLog(
+  "EXCLUIU",
+  `${lanc.socio.toUpperCase()} | ${lanc.desc} | ${fmt(lanc.valor)}`
+);
+  
+    
     await carregarTudo();
     render();
     return;
@@ -405,6 +414,12 @@ async function excluir(id) {
       .ilike("desc", `${baseDesc}%`)
       .eq("socio", lanc.socio);
 
+    await registrarLog(
+  "EXCLUIU PARCELAMENTO",
+  `${lanc.socio.toUpperCase()} | ${baseDesc}`
+);
+
+    
   } else {
     await supabaseClient
       .from("movimentacoes")
@@ -568,6 +583,7 @@ function toggleParcelado(s) {
 </script>
 </body>
 </html>
+
 
 
 
