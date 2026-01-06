@@ -166,19 +166,27 @@ async function login() {
 
 async function init(){
   const { data: { session } } = await supabaseClient.auth.getSession();
-  if (!session) return;
-  // verifica se o usuário logado existe na tabela usuarios
-const { data: usuarioSistema } = await supabaseClient
-  .from("usuarios")
-  .select("*")
-  .eq("id", session.user.id)
-  .single();
 
-if (!usuarioSistema) {
-  alert("Usuário não autorizado neste sistema.");
-  await supabaseClient.auth.signOut();
-  return;
-}
+  if (!session) {
+    document.getElementById("loginScreen").style.display = "flex";
+    document.getElementById("app").classList.add("hidden");
+    return;
+  }
+
+  // força validação no banco
+  const { data: usuarioSistema, error } = await supabaseClient
+    .from("usuarios")
+    .select("*")
+    .eq("id", session.user.id)
+    .single();
+
+  if (error || !usuarioSistema) {
+    alert("Usuário não autorizado.");
+    await supabaseClient.auth.signOut();
+    localStorage.clear();
+    location.reload();
+    return;
+  }
 
   document.getElementById("loginScreen").style.display = "none";
   document.getElementById("app").classList.remove("hidden");
@@ -602,6 +610,7 @@ function toggleParcelado(s) {
 </script>
 </body>
 </html>
+
 
 
 
