@@ -483,7 +483,11 @@ async function alternarFechamento() {
 async function salvarSalarios() {
   const m = +mes.value, a = +ano.value;
   const p = parseMoeda(document.getElementById("salPadrao").value);
-  if(p > 0) await supabaseClient.from('salarios').upsert({ ano: a, mes: m, tipo: 'padrao', valor: p }, { onConflict: 'ano, mes, socio, tipo' });
+  if(p > 0) await supabaseClient.from('salarios').upsert(
+  { ano: a, mes: m, tipo: 'padrao', valor: p },
+  { onConflict: 'ano, mes, tipo' }
+);
+
   for(const s of socios) {
     const v = parseMoeda(document.getElementById("sal_"+s).value);
     if(v > 0) await supabaseClient.from('salarios').upsert({ ano: a, mes: m, tipo: 'individual', socio: s, valor: v }, { onConflict: 'ano, mes, socio, tipo' });
@@ -638,6 +642,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 </script>
 </body>
 </html>
+
 
 
 
