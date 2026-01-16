@@ -700,8 +700,56 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.getElementById("app").classList.add("hidden");
   }
 });
-  
+
+  async function gerarBackupExcel() {
+  const wb = XLSX.utils.book_new();
+
+  const wsLanc = XLSX.utils.json_to_sheet(
+    dadosCache.lancamentos.map(l => ({
+      ID: l.id,
+      Socio: l.socio,
+      Descricao: l.desc,
+      Valor: l.valor,
+      Mes: l.mes + 1,
+      Ano: l.ano
+    }))
+  );
+  XLSX.utils.book_append_sheet(wb, wsLanc, "Movimentacoes");
+
+  const wsSal = XLSX.utils.json_to_sheet(
+    dadosCache.salarios.map(s => ({
+      Tipo: s.tipo,
+      Socio: s.socio || "PADRAO",
+      Valor: s.valor,
+      Mes: s.mes + 1,
+      Ano: s.ano
+    }))
+  );
+  XLSX.utils.book_append_sheet(wb, wsSal, "Salarios");
+
+  const wsFec = XLSX.utils.json_to_sheet(
+    dadosCache.fechamentos.map(f => ({
+      Mes: f.mes + 1,
+      Ano: f.ano,
+      Fechado: f.fechado ? "SIM" : "NAO"
+    }))
+  );
+  XLSX.utils.book_append_sheet(wb, wsFec, "Fechamentos");
+
+  const wsInfo = XLSX.utils.aoa_to_sheet([
+    ["Backup do Pro-Labore"],
+    ["Gerado em:", new Date().toLocaleString()],
+    [""],
+    ["Nao alterar nomes das abas"],
+    ["Nao alterar nomes das colunas"],
+    ["Arquivo usado para restauracao"]
+  ]);
+  XLSX.utils.book_append_sheet(wb, wsInfo, "LEIA-ME");
+
+  XLSX.writeFile(wb, "backup_pro_labore.xlsx");
+}
   
 </script>
 </body>
 </html>
+
