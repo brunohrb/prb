@@ -39,6 +39,8 @@ button{border:none;cursor:pointer; font-weight:600;}
 .modal{ position:fixed;inset:0; background:rgba(0,0,0,0.45); display:flex; align-items:center; justify-content:center; z-index:1000; }
 .modal-box{ background:var(--card); width:340px; padding:24px; border-radius:20px; }
 .toggle{cursor:pointer;font-size:18px}
+.div-area{background:rgba(31,60,136,0.05);padding:10px;border-radius:8px;margin:8px 0;display:none}
+.div-area.show{display:block}
 #loginScreen{ position: fixed; inset: 0; background: linear-gradient(135deg, #0056b3, #00bfff); z-index: 9999; display: flex; justify-content: center; align-items: center; }
 .login-box{ background: #ffffff; padding: 40px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); text-align: center; width: 90%; max-width: 350px; }
 .login-box h1{ color: #0056b3; margin-bottom: 10px; font-size: 26px; }
@@ -291,6 +293,20 @@ async function render(){
     <input id="m_${s}" type="month">
   </div>
 
+  <label class="small">
+<input type="checkbox" id="div_${s}" onclick="toggleDivisao('${s}')">
+    Dividir despesa
+  </label>
+
+<div id="divarea_${s}" class="div-area">
+    <select id="divpara_${s}">
+      <option value="">Dividir com...</option>
+      ${entidades.filter(e => e !== s).map(e => `<option value="${e}">${e.toUpperCase()}</option>`).join('')}
+    </select>
+    <input id="divval_${s}" placeholder="Valor a dividir" oninput="mask(this)">
+    <input id="divdesc_${s}" placeholder="Descrição da divisão">
+  </div>
+
   <button class="primary" onclick="add('${s}')">OK</button>
 ` : ""}
 
@@ -329,8 +345,20 @@ async function add(s) {
 }
 
 
+  // VERIFICA SE TEM DIVISÃO
+  const temDivisao = document.getElementById("div_" + s)?.checked;
+  const divPara = temDivisao ? document.getElementById("divpara_" + s).value : "";
+  const divValor = temDivisao ? parseMoeda(document.getElementById("divval_" + s).value) : 0;
+  const divDesc = temDivisao ? document.getElementById("divdesc_" + s).value.trim() : "";
+
+  if (temDivisao && (!divPara || !divValor || !divDesc)) {
+    alert("Preencha todos os campos da divisão");
+    return;
+  }
+
   // NÃO PARCELADO
   if (!parcelado) {
+    // 1. LANÇAMENTO PRINCIPAL (saída total)
     const { error } = await supabaseClient
       .from("movimentacoes")
       .insert([{
@@ -345,6 +373,27 @@ async function add(s) {
       alert("Erro ao salvar lançamento");
       console.error(error);
       return;
+    }
+
+    // 2. SE TEM DIVISÃO, CRIA OS LANÇAMENTOS
+    if (temDivisao) {
+      // 2a. ENTRADA para o sócio que pagou (reembolso)
+      await supabaseClient.from("movimentacoes").insert([{
+        socio: s,
+        desc: `Reembolso: ${divDesc}`,
+        valor: -divValor,
+        ano: +ano.value,
+        mes: +mes.value
+      }]);
+
+      // 2b. SAÍDA para quem dividiu
+      await supabaseClient.from("movimentacoes").insert([{
+        socio: divPara,
+        desc: divDesc,
+        valor: divValor,
+        ano: +ano.value,
+        mes: +mes.value
+      }]);
     }
   }
 
@@ -390,6 +439,8 @@ async function add(s) {
   document.getElementById("v_" + s).value = "";
   if (document.getElementById("p_" + s)) document.getElementById("p_" + s).checked = false;
   if (document.getElementById("parc_" + s)) document.getElementById("parc_" + s).classList.add("hidden");
+  if (document.getElementById("div_" + s)) document.getElementById("div_" + s).checked = false;
+  if (document.getElementById("divarea_" + s)) document.getElementById("divarea_" + s).classList.remove("show");
 const { data: { user } } = await supabaseClient.auth.getUser();
 
 await registrarLog(
@@ -620,6 +671,18 @@ function toggleParcelado(s) {
   }
 }
 
+function toggleDivisao(s) {
+  const chk = document.getElementById("div_" + s);
+  const box = document.getElementById("divarea_" + s);
+  if (!chk || !box) return;
+
+  if (chk.checked) {
+    box.classList.add("show");
+  } else {
+    box.classList.remove("show");
+  }
+}
+
  async function logout() {
   await supabaseClient.auth.signOut();
   location.reload();
@@ -642,28 +705,3 @@ document.addEventListener("DOMContentLoaded", async () => {
 </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
