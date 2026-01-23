@@ -620,8 +620,8 @@ async function add(s) {
   const valorTotal = parseMoeda(document.getElementById("v_" + s).value);
   const parcelado = document.getElementById("p_" + s)?.checked;
 
- if (!desc || valorTotal === 0) {
-  alert("Preencha descrição e valor (diferente de zero)");
+if (!desc) {
+  alert("Preencha a descrição");
   return;
 }
 
