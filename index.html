@@ -362,13 +362,7 @@ button{border:none;cursor:pointer; font-weight:600;}
  <input id="salPadrao" oninput="mask(this)" placeholder="R$ 0,00">
  <div class="grid" style="margin-top:10px">
   <div><label class="small">Paulo</label><input id="sal_paulo" placeholder="Opcional" oninput="mask(this)"></div>
-  <div><label class="small">Rafael</label><input
-  id="v_${s}"
-  placeholder="R$ 0,00 (valor TOTAL se parcelado)"
-  inputmode="decimal"
-  autocomplete="off"
-  oninput="mask(this)">
-</div>
+  <div><label class="small">Rafael</label><input id="sal_rafael" placeholder="Opcional" oninput="mask(this)"></div>
   <div><label class="small">Bruno</label><input id="sal_bruno" placeholder="Opcional" oninput="mask(this)"></div>
  </div>
  <button class="primary" onclick="salvarSalarios()" style="margin-top:20px">Salvar salários</button>
