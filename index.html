@@ -33,6 +33,7 @@ button{border:none;cursor:pointer; font-weight:600;}
 .pos{color:#16a34a}
 .neg{color:#dc2626}
 .small{font-size:13px;color:#94a3b8}
+.badge-notif{background:#dc2626;color:#fff;border-radius:50%;padding:2px 6px;font-size:11px;font-weight:700;margin-left:5px}
 .tabs{ display:flex; gap:6px; background:rgba(0,0,0,0.03); padding:6px; border-radius:14px; }
 .tabs button{ padding:8px 14px; border-radius:10px; background:transparent; color:#64748b; margin-top:0; }
 .tabs .active{ background:var(--azul); color:#fff; box-shadow:0 4px 12px rgba(0,0,0,0.2); }
@@ -70,7 +71,7 @@ button{border:none;cursor:pointer; font-weight:600;}
   <select id="ano" style="width:auto"></select>
  </div>
  <div class="tabs">
-  <button id="tabLanc" class="active" onclick="abrirAba('lanc')">Lançamentos</button>
+  <button id="tabLanc" class="active" onclick="abrirAba('lanc')">Lançamentos <span id="badgeNotif" class="badge-notif hidden">0</span></button>
   <button id="tabInd" onclick="abrirAba('ind')">Indicadores</button>
 <button id="tabConf" onclick="abrirAba('conf')">Configurações</button>
   <span class="toggle" onclick="toggleTema()" style="padding:8px">🌙</span>
@@ -82,6 +83,13 @@ button{border:none;cursor:pointer; font-weight:600;}
 </header>
 <div id="abaLanc">
  <div id="statusMes" class="small" style="margin-bottom:10px"></div>
+<div id="painelNotif" class="hidden" style="background:rgba(220,38,38,0.1); padding:15px; border-radius:12px; margin-bottom:15px">
+  <div style="display:flex; justify-content:space-between; align-items:center">
+   <h4 style="margin:0; color:#dc2626">🔔 Novas despesas de funcionários</h4>
+   <button class="secondary" style="width:auto; padding:8px 15px" onclick="marcarTodasLidas()">Marcar todas como vistas</button>
+  </div>
+  <div id="listaNotif" style="margin-top:10px"></div>
+ </div>
  <div class="grid" id="cards"></div>
  <button class="secondary" onclick="alternarFechamento()" style="margin-top:20px">Fechar / Reabrir mês</button>
 </div>
@@ -93,9 +101,14 @@ button{border:none;cursor:pointer; font-weight:600;}
 </div>
 <div id="abaLog" class="hidden">
  <h3>Log de atividades</h3>
+ <input id="buscaLog" placeholder="🔍 Buscar nos logs..." style="margin-bottom:15px">
  <div class="card"><div id="listaLogs"></div></div>
-</div>
-<div id="abaConf" class="hidden">
+ <div style="display:flex; gap:10px; margin-top:15px; justify-content:center">
+  <button class="secondary" id="btnAnterior" onclick="mudarPaginaLog(-1)">← Anterior</button>
+  <span id="infoPage" class="small" style="padding:10px"></span>
+  <button class="secondary" id="btnProxima" onclick="mudarPaginaLog(1)">Próxima →</button>
+ </div>
+</div><div id="abaConf" class="hidden">
  <h3>Configurações</h3>
  <label class="small">Salário padrão (competência atual)</label>
  <input id="salPadrao" oninput="mask(this)" placeholder="R$ 0,00">
@@ -234,7 +247,25 @@ async function init(){
     document.getElementById("tabLog").style.display = "none";
     document.getElementById("tabConf").style.display = "none";
   }  
+await carregarNotificacoes();
+verificarBackupDiario();
 }
+
+
+function verificarBackupDiario() {
+  const hoje = new Date().toDateString();
+  const ultimoBackup = localStorage.getItem("ultimoBackupDiario");
+  
+  if (ultimoBackup !== hoje) {
+    // Aguarda 3 segundos e gera o backup automaticamente
+    setTimeout(() => {
+      gerarBackupExcel();
+      localStorage.setItem("ultimoBackupDiario", hoje);
+      alert("✅ Backup diário gerado automaticamente!");
+    }, 3000);
+  }
+}
+
 
 async function carregarTudo() {
   const { data: { session } } = await supabaseClient.auth.getSession();
@@ -275,6 +306,66 @@ async function carregarTudo() {
   dadosCache.salarios = sals || [];
   dadosCache.fechamentos = fechs || [];
 }
+
+async function carregarNotificacoes() {
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  const { data: usuarioSistema } = await supabaseClient
+    .from("usuarios")
+    .select("perfil, socio")
+    .eq("id", session.user.id)
+    .single();
+  
+  const perfilUsuario = usuarioSistema?.perfil || "admin";
+  
+  if (perfilUsuario !== "funcionario" && perfilUsuario !== "limitado") {
+    // Pega o nome do sócio do campo 'socio' do usuário
+    const nomeSocio = usuarioSistema?.socio;
+    
+    if (!nomeSocio) {
+      // Se não tem sócio definido, esconde notificações
+      document.getElementById("badgeNotif")?.classList.add("hidden");
+      document.getElementById("painelNotif")?.classList.add("hidden");
+      return;
+    }
+    
+    // Busca apenas notificações do sócio específico
+    const { data } = await supabaseClient
+      .from("notificacoes")
+      .select("*")
+      .eq("lida", false)
+      .eq("socio", nomeSocio.toLowerCase())
+      .order("criado_em", { ascending: false });
+    
+    const badge = document.getElementById("badgeNotif");
+    const painel = document.getElementById("painelNotif");
+    const lista = document.getElementById("listaNotif");
+    
+    if (data && data.length > 0) {
+      badge.textContent = data.length;
+      badge.classList.remove("hidden");
+      painel.classList.remove("hidden");
+      
+      lista.innerHTML = data.map(n => `
+        <div class="small" style="padding:8px; background:white; margin:5px 0; border-radius:8px">
+          <b>${new Date(n.criado_em).toLocaleString()}</b> - ${n.mensagem}
+        </div>
+      `).join("");
+    } else {
+      badge.classList.add("hidden");
+      painel.classList.add("hidden");
+    }
+  }
+}
+
+async function marcarTodasLidas() {
+  await supabaseClient
+    .from("notificacoes")
+    .update({ lida: true })
+    .eq("lida", false);
+  
+  await carregarNotificacoes();
+}
+
 function obterSalarioBase(s, m, a) {
     let curM = m, curA = a;
     while (curA >= baseInicial.ano) {
@@ -318,7 +409,7 @@ async function render(){
   statusMes.innerHTML = isFechado ? "🔒 Mês fechado" : "🔓 Mês aberto";
   let html = "";
   for (const s of socios) {
-    const arr = dadosCache.lancamentos.filter(l => l.socio === s && l.ano == a && l.mes == m);
+    const arr = dadosCache.lancamentos.filter(l => l.socio === s && l.ano == a && l.mes == m).sort((a, b) => b.id - a.id);
     const total = arr.reduce((x, y) => x + y.valor, 0);
     const base = obterSalarioBase(s, m, a);
     const prev = calcularSaldoAte(s, m, a);
@@ -362,7 +453,7 @@ ${!ehFuncionario ? `<div class="small">Salário: ${fmt(base)} | Saldo ant: <b cl
   <button class="primary" onclick="add('${s}')">OK</button>
 ` : ""}
 
-      <div style="margin-top:15px">${arr.map(r=>`<div class="linha"><div>${r.desc}</div><div class="${r.valor < 0 ? 'pos' : 'neg'}">
+      <div style="margin-top:15px">${arr.map(r=>`<div class="linha"><div>${r.desc.replace(/\(F\)/g, '<b style="color:#16a34a">(F)</b>')}</div><div class="${r.valor < 0 ? 'pos' : 'neg'}">
   ${fmt(r.valor)}
 </div>
 
@@ -370,11 +461,11 @@ ${!ehFuncionario ? `<div class="small">Salário: ${fmt(base)} | Saldo ant: <b cl
   <span onclick="excluir('${r.id}')">🗑️</span></div>` : ""}</div>`).join("")}</div>
 ${!ehFuncionario ? `<div class="small" style="margin-top:10px">Total: ${fmt(total)} | Saldo: <b class="${saldo>=0?'pos':'neg'}">${fmt(saldo)}</b></div>` : `<div class="small" style="margin-top:10px">Total lançado: <b>${fmt(total)}</b></div>`}</div>`;  }
   for (const g of gruposExtras) {
-    const arr = dadosCache.lancamentos.filter(l => l.socio === g && l.ano == a && l.mes == m);
+    const arr = dadosCache.lancamentos.filter(l => l.socio === g && l.ano == a && l.mes == m).sort((a, b) => b.id - a.id);
     const total = arr.reduce((x,y)=>x+y.valor,0);
     html += `<div class="card"><div class="socio"><span>${g.toUpperCase()}</span></div>
       ${!isFechado ? `<input id="d_${g}" placeholder="Descrição"><input id="v_${g}" placeholder="R$ 0,00" oninput="mask(this)"><button class="primary" onclick="add('${g}')">Adicionar</button>` : ""}
-      <div style="margin-top:15px">${arr.map(r=>`<div class="linha"><div>${r.desc}</div><div class="${r.valor < 0 ? 'pos' : 'neg'}">
+      <div style="margin-top:15px">${arr.map(r=>`<div class="linha"><div>${!ehFuncionario ? r.desc.replace(/\(F\)/g, '<b style="color:#16a34a">(F)</b>') : r.desc}</div><div class="${r.valor < 0 ? 'pos' : 'neg'}">
   ${fmt(r.valor)}
 </div>
 
@@ -383,6 +474,7 @@ ${!ehFuncionario ? `<div class="small" style="margin-top:10px">Total: ${fmt(tota
       <div class="small" style="margin-top:10px">Total: <b class="neg">${fmt(total)}</b></div></div>`;
   }
   cards.innerHTML = html;
+await carregarNotificacoes();
 }
 
 async function add(s) {
@@ -423,12 +515,20 @@ const { data: { session } } = await supabaseClient.auth.getSession();
       .from("movimentacoes")
       .insert([{
         socio: s,
-desc: (perfilUsuario === "funcionario" || perfilUsuario === "limitado") ? `${desc} (F)` : desc,
+desc: (perfilUsuario === "funcionario" || perfilUsuario === "limitado") ? `${desc} <b style="color:#16a34a">(F)</b>` : desc,
         valor: valorTotal,
         ano: +ano.value,
         mes: +mes.value,
         usuario_id: (perfilUsuario === "funcionario" || perfilUsuario === "limitado") ? session.user.id : null
       }]);
+// Criar notificação se for funcionário
+    if (perfilUsuario === "funcionario" || perfilUsuario === "limitado") {
+      await supabaseClient.from("notificacoes").insert({
+        tipo: "despesa_funcionario",
+        mensagem: `Nova despesa em ${s.toUpperCase()}: ${desc} - ${fmt(valorTotal)}`,
+        socio: s
+      });
+    }
     if (error) {
       alert("Erro ao salvar lançamento");
       console.error(error);
@@ -489,8 +589,7 @@ const { data: { session } } = await supabaseClient.auth.getSession();
         .from("movimentacoes")
         .insert([{
           socio: s,
-desc: (perfilUsuario === "funcionario" || perfilUsuario === "limitado") ? `${desc} (F) (${i + 1}/${parcelas})` : `${desc} (${i + 1}/${parcelas})`,
-          valor: valorParcela,
+desc: (perfilUsuario === "funcionario" || perfilUsuario === "limitado") ? `${desc} <b style="color:#16a34a">(F)</b> (${i + 1}/${parcelas})` : `${desc} (${i + 1}/${parcelas})`,          valor: valorParcela,
           ano: y,
           mes: m,
           usuario_id: (perfilUsuario === "funcionario" || perfilUsuario === "limitado") ? session.user.id : null
@@ -630,25 +729,63 @@ async function registrarLog(acao, detalhes) {
 }
 
 
-async function renderLogs() {
-  const { data } = await supabaseClient
-    .from("logs")
-    .select("*")
-    .order("criado_em", { ascending: false })
-    .limit(50);
+let paginaLogAtual = 1;
+const itensPorPagina = 50;
+let termoBuscaLog = "";
 
+async function renderLogs() {
+  const offset = (paginaLogAtual - 1) * itensPorPagina;
+  
+  let query = supabaseClient
+    .from("logs")
+    .select("*", { count: 'exact' })
+    .order("criado_em", { ascending: false });
+  
+  if (termoBuscaLog) {
+    query = query.or(`acao.ilike.%${termoBuscaLog}%,detalhes.ilike.%${termoBuscaLog}%,usuario_nome.ilike.%${termoBuscaLog}%`);
+  }
+  
+  const { data, count } = await query
+    .range(offset, offset + itensPorPagina - 1);
+
+  const totalPaginas = Math.ceil(count / itensPorPagina);
+  
   document.getElementById("listaLogs").innerHTML =
     data && data.length
       ? data.map(l => `
-          <div class="small">
+          <div class="small" style="padding:8px 0; border-bottom:1px dashed var(--borda)">
             <b>${new Date(l.criado_em).toLocaleString()}</b>
             — <strong>${l.acao}</strong><br>
             ${l.detalhes}
           </div>
         `).join("")
-      : "Sem logs";
+      : "Sem logs encontrados";
+  
+  document.getElementById("infoPage").innerHTML = `Página ${paginaLogAtual} de ${totalPaginas || 1} (${count} registros)`;
+  document.getElementById("btnAnterior").disabled = paginaLogAtual === 1;
+  document.getElementById("btnProxima").disabled = paginaLogAtual >= totalPaginas;
 }
 
+function mudarPaginaLog(direcao) {
+  paginaLogAtual += direcao;
+  renderLogs();
+}
+
+// Adicionar listener de busca
+document.addEventListener("DOMContentLoaded", () => {
+  const inputBusca = document.getElementById("buscaLog");
+  if (inputBusca) {
+    let timeout;
+    inputBusca.addEventListener("input", (e) => {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => {
+        termoBuscaLog = e.target.value.trim();
+        paginaLogAtual = 1;
+        renderLogs();
+      }, 500);
+    });
+  }
+});
 
 async function renderIndicadores() {
   const a = +anoIndicador.value;
