@@ -48,248 +48,8 @@ button{border:none;cursor:pointer; font-weight:600;}
 .login-box input{ padding: 16px; border: 2px solid #eee; border-radius: 10px; width: 100%; margin-bottom: 18px; text-align: center; font-size: 18px; background: #fff; }
 .login-box button{ background: #0056b3; color: white; border: none; padding: 16px; border-radius: 10px; width: 100%; font-weight: bold; font-size: 18px; cursor: pointer; }
 
-/* Estilos para filtros */
-.filtros-container {
-  background: rgba(31,60,136,0.05);
-  padding: 20px;
-  border-radius: 12px;
-  margin-bottom: 20px;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 15px;
-}
 
-.filtro-grupo label {
-  display: block;
-  font-weight: 600;
-  margin-bottom: 8px;
-  font-size: 13px;
-  color: var(--azul);
-}
 
-.filtro-grupo select {
-  width: 100%;
-  margin-top: 4px;
-}
-
-.btn-filtro {
-  align-self: flex-end;
-  margin-bottom: 0;
-}
-
-/* Estilos para cards de resumo */
-.cards-resumo {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 15px;
-  margin-bottom: 20px;
-}
-
-.card-resumo {
-  background: linear-gradient(135deg, rgba(31,60,136,0.1), rgba(79,107,220,0.1));
-  padding: 15px;
-  border-radius: 12px;
-  border-left: 4px solid var(--azul);
-}
-
-.card-resumo-titulo {
-  font-size: 12px;
-  color: #94a3b8;
-  text-transform: uppercase;
-  font-weight: 600;
-  margin-bottom: 8px;
-}
-
-.card-resumo-valor {
-  font-size: 22px;
-  font-weight: 700;
-  color: var(--azul);
-}
-
-.card-resumo-valor.pos {
-  color: #16a34a;
-}
-
-.card-resumo-valor.neg {
-  color: #dc2626;
-}
-
-/* Estilos para tabela em lista */
-.historico-lista {
-  background: var(--card);
-  border-radius: 12px;
-  overflow: hidden;
-}
-
-.unidade-grupo {
-  border-bottom: 3px solid var(--borda);
-  margin-bottom: 0;
-}
-
-.unidade-grupo:last-child {
-  border-bottom: none;
-}
-
-.unidade-header {
-  background: rgba(31,60,136,0.08);
-  padding: 12px 16px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  cursor: pointer;
-  user-select: none;
-  transition: background 0.2s;
-}
-
-.unidade-header:hover {
-  background: rgba(31,60,136,0.12);
-}
-
-.unidade-nome {
-  font-weight: 700;
-  color: var(--azul);
-  font-size: 15px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.unidade-toggle {
-  font-size: 18px;
-  transition: transform 0.2s;
-}
-
-.unidade-toggle.collapsed {
-  transform: rotate(-90deg);
-}
-
-.unidade-conteudo {
-  display: table;
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.unidade-conteudo.collapsed {
-  display: none;
-}
-
-.linha-historico {
-  display: table-row;
-  border-bottom: 1px solid rgba(0,0,0,0.05);
-}
-
-.linha-historico:hover {
-  background: rgba(31,60,136,0.03);
-}
-
-.celula-historico {
-  display: table-cell;
-  padding: 12px 16px;
-  font-size: 13px;
-  border-right: 1px solid rgba(0,0,0,0.02);
-}
-
-.celula-historico:last-child {
-  border-right: none;
-}
-
-.celula-tipo {
-  font-weight: 600;
-  color: #64748b;
-  min-width: 120px;
-}
-
-.celula-valor {
-  text-align: right;
-  min-width: 100px;
-  font-weight: 600;
-}
-
-.celula-valor.pos {
-  color: #16a34a;
-}
-
-.celula-valor.neg {
-  color: #dc2626;
-}
-
-/* Multi-select customizado */
-.multi-select {
-  position: relative;
-  width: 100%;
-}
-
-.multi-select-input {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  padding: 6px 8px;
-  background: #fff;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  cursor: pointer;
-  min-height: 36px;
-}
-
-.multi-select-tag {
-  background: var(--azul);
-  color: #fff;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 12px;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.multi-select-tag button {
-  background: none;
-  border: none;
-  color: #fff;
-  cursor: pointer;
-  padding: 0;
-  margin: 0;
-  font-size: 14px;
-  width: auto;
-}
-
-.multi-select-dropdown {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
-  background: #fff;
-  border: 1px solid #ddd;
-  border-top: none;
-  border-radius: 0 0 8px 8px;
-  max-height: 200px;
-  overflow-y: auto;
-  z-index: 100;
-  display: none;
-}
-
-.multi-select-dropdown.show {
-  display: block;
-}
-
-.multi-select-option {
-  padding: 8px 12px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  border-bottom: 1px solid rgba(0,0,0,0.05);
-}
-
-.multi-select-option:hover {
-  background: rgba(31,60,136,0.08);
-}
-
-.multi-select-option input[type="checkbox"] {
-  width: auto;
-  margin: 0;
-  cursor: pointer;
-}
 </style>
 </head>
 <body>
@@ -311,11 +71,11 @@ button{border:none;cursor:pointer; font-weight:600;}
  </div>
  <div class="tabs">
   <button id="tabLanc" class="active" onclick="abrirAba('lanc')">Lançamentos</button>
-  <button id="tabHist" onclick="abrirAba('hist')">Histórico</button>
   <button id="tabInd" onclick="abrirAba('ind')">Indicadores</button>
-  <button id="tabConf" onclick="abrirAba('conf')">Configurações</button>
+<button id="tabConf" onclick="abrirAba('conf')">Configurações</button>
   <span class="toggle" onclick="toggleTema()" style="padding:8px">🌙</span>
-  <button id="tabLog" onclick="abrirAba('log')">Logs</button>
+<button id="tabLog" onclick="abrirAba('log')">Logs</button>
+
    <button class="secondary" onclick="logout()">Sair</button>
 
  </div>
@@ -325,28 +85,7 @@ button{border:none;cursor:pointer; font-weight:600;}
  <div class="grid" id="cards"></div>
  <button class="secondary" onclick="alternarFechamento()" style="margin-top:20px">Fechar / Reabrir mês</button>
 </div>
-<div id="abaHist" class="hidden">
- <h3>Histórico em Lista</h3>
- <div class="filtros-container">
-  <div class="filtro-grupo">
-    <label>Unidades</label>
-    <div id="filtroUnidades" class="multi-select"></div>
-  </div>
-  <div class="filtro-grupo">
-    <label>Mês</label>
-    <select id="filtroMes" multiple style="height: 100px;"></select>
-  </div>
-  <div class="filtro-grupo">
-    <label>Ano</label>
-    <select id="filtroAno" multiple style="height: 100px;"></select>
-  </div>
-  <button class="primary btn-filtro" onclick="aplicarFiltros()">Filtrar</button>
- </div>
- 
- <div class="cards-resumo" id="resumoFiltrado"></div>
- 
- <div class="historico-lista" id="historicoLista"></div>
-</div>
+
 <div id="abaInd" class="hidden">
  <h3>Indicadores por ano</h3>
  <select id="anoIndicador" style="width:200px; margin-bottom:20px"></select>
@@ -373,10 +112,8 @@ button{border:none;cursor:pointer; font-weight:600;}
  <div style="margin-top:20px; display:flex; gap:10px">
   <button class="secondary" onclick="gerarBackupExcel()">📤 Exportar Excel</button>
   <button class="danger" onclick="document.getElementById('inputRestoreExcel').click()">♻️ Restaurar Excel</button>
-  <button class="secondary" onclick="document.getElementById('inputSmobuExcel').click()">📥 Importar SMOBU</button>
  </div>
  <input type="file" id="inputRestoreExcel" accept=".xlsx" style="display:none" onchange="processarRestoreExcel(event)">
- <input type="file" id="inputSmobuExcel" accept=".xlsx" style="display:none" onchange="processarSmobuExcel(event)">
 </div>
 </div>
 <div class="modal hidden" id="modal">
@@ -405,7 +142,7 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   if (event === "SIGNED_OUT") {
     document.getElementById("app").classList.add("hidden");
     document.getElementById("loginScreen").style.display = "flex";
-    dadosCache = { lancamentos: [], salarios: [], fechamentos: [], smobu: [] };
+dadosCache = { lancamentos: [], salarios: [], fechamentos: [] };
   }
 
   if (event === "SIGNED_IN") {
@@ -435,14 +172,7 @@ const baseInicial={mes:11,ano:2025};
 let dadosCache = {
   lancamentos: [],
   salarios: [],
-  fechamentos: [],
-  smobu: []
-};
-
-let filtrosAtivos = {
-  unidades: [],
-  meses: [],
-  anos: []
+  fechamentos: []
 };
 
 async function login() {
@@ -490,9 +220,6 @@ async function init(){
   ano.innerHTML = anosHtml;
   anoIndicador.innerHTML = anosHtml;
   
-  // Preencher filtros de histórico
-  document.getElementById("filtroMes").innerHTML = meses.map((m,i)=>`<option value="${i}">${m}</option>`).join("");
-  document.getElementById("filtroAno").innerHTML = anosHtml;
   
   mes.value = new Date().getMonth();
   ano.value = y;
@@ -502,18 +229,52 @@ async function init(){
   aplicarTema();
   await carregarTudo();
   render();
-  inicializarFiltroUnidades();
+// Ocultar abas para funcionários
+  if (usuarioSistema?.perfil === "funcionario" || usuarioSistema?.perfil === "limitado") {
+    document.getElementById("tabLog").style.display = "none";
+    document.getElementById("tabConf").style.display = "none";
+  }  
 }
 
 async function carregarTudo() {
-  const { data: lancs } = await supabaseClient.from("movimentacoes").select("*");
-  const { data: sals } = await supabaseClient.from("salarios").select("*");
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  const { data: usuarioSistema } = await supabaseClient
+    .from("usuarios")
+    .select("perfil")
+    .eq("id", session.user.id)
+    .single();
+  
+  const perfilUsuario = usuarioSistema?.perfil || "admin";
+  
+  let lancs, sals;
+  
+  if (perfilUsuario === "funcionario" || perfilUsuario === "limitado") {
+    // Usuário limitado: vê apenas seus próprios lançamentos
+    const { data: lancsLimitado } = await supabaseClient
+      .from("movimentacoes")
+      .select("*")
+      .eq("usuario_id", session.user.id);
+    lancs = lancsLimitado;
+    
+    // Salários padrão (sem socio específico)
+    const { data: salsLimitado } = await supabaseClient
+      .from("salarios")
+      .select("*")
+      .is("socio", null);
+    sals = salsLimitado;
+  } else {
+    // Admin/Socio: vê tudo
+    const { data: lancsTodos } = await supabaseClient.from("movimentacoes").select("*");
+    const { data: salsTodos } = await supabaseClient.from("salarios").select("*");
+    lancs = lancsTodos;
+    sals = salsTodos;
+  }
+  
   const { data: fechs } = await supabaseClient.from("fechamentos").select("*");
   dadosCache.lancamentos = lancs || [];
   dadosCache.salarios = sals || [];
   dadosCache.fechamentos = fechs || [];
 }
-
 function obterSalarioBase(s, m, a) {
     let curM = m, curA = a;
     while (curA >= baseInicial.ano) {
@@ -542,6 +303,16 @@ function calcularSaldoAte(s, mesAlvo, anoAlvo) {
 async function render(){
   cards.innerHTML = "Processando...";
   const m = +mes.value, a = +ano.value;
+// Verificar perfil do usuário
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  const { data: usuarioSistema } = await supabaseClient
+    .from("usuarios")
+    .select("perfil")
+    .eq("id", session.user.id)
+    .single();
+  
+  const perfilUsuario = usuarioSistema?.perfil || "admin";
+  const ehFuncionario = (perfilUsuario === "funcionario" || perfilUsuario === "limitado");
   const fechadoObj = dadosCache.fechamentos.find(x => x.ano == a && x.mes == m);
   const isFechado = fechadoObj ? fechadoObj.fechado : false;
   statusMes.innerHTML = isFechado ? "🔒 Mês fechado" : "🔓 Mês aberto";
@@ -553,7 +324,7 @@ async function render(){
     const prev = calcularSaldoAte(s, m, a);
     const saldo = base + prev - total;
     html += `<div class="card"><div class="socio"><span>${s.toUpperCase()}</span></div>
-      <div class="small">Salário: ${fmt(base)} | Saldo ant: <b class="${prev>=0?'pos':'neg'}">${fmt(prev)}</b></div>
+${!ehFuncionario ? `<div class="small">Salário: ${fmt(base)} | Saldo ant: <b class="${prev>=0?'pos':'neg'}">${fmt(prev)}</b></div>` : ''}
      ${!isFechado ? `
   <input id="d_${s}" placeholder="Descrição">
   <input id="v_${s}" placeholder="R$ 0,00 (valor TOTAL se parcelado)" oninput="mask(this)">
@@ -597,8 +368,7 @@ async function render(){
 
       ${!isFechado ? `<div class="acoes"> <span onclick="abrirEditar('${r.id}')">✏️</span>
   <span onclick="excluir('${r.id}')">🗑️</span></div>` : ""}</div>`).join("")}</div>
-      <div class="small" style="margin-top:10px">Total: ${fmt(total)} | Saldo: <b class="${saldo>=0?'pos':'neg'}">${fmt(saldo)}</b></div></div>`;
-  }
+${!ehFuncionario ? `<div class="small" style="margin-top:10px">Total: ${fmt(total)} | Saldo: <b class="${saldo>=0?'pos':'neg'}">${fmt(saldo)}</b></div>` : `<div class="small" style="margin-top:10px">Total lançado: <b>${fmt(total)}</b></div>`}</div>`;  }
   for (const g of gruposExtras) {
     const arr = dadosCache.lancamentos.filter(l => l.socio === g && l.ano == a && l.mes == m);
     const total = arr.reduce((x,y)=>x+y.valor,0);
@@ -640,16 +410,25 @@ if (!desc) {
   // NÃO PARCELADO
   if (!parcelado) {
     // 1. LANÇAMENTO PRINCIPAL (saída total)
+const { data: { session } } = await supabaseClient.auth.getSession();
+    const { data: usuarioSistema } = await supabaseClient
+      .from("usuarios")
+      .select("perfil")
+      .eq("id", session.user.id)
+      .single();
+    
+    const perfilUsuario = usuarioSistema?.perfil || "admin";
+    
     const { error } = await supabaseClient
       .from("movimentacoes")
       .insert([{
         socio: s,
-        desc: desc,
+desc: (perfilUsuario === "funcionario" || perfilUsuario === "limitado") ? `${desc} (F)` : desc,
         valor: valorTotal,
         ano: +ano.value,
-        mes: +mes.value
+        mes: +mes.value,
+        usuario_id: (perfilUsuario === "funcionario" || perfilUsuario === "limitado") ? session.user.id : null
       }]);
-
     if (error) {
       alert("Erro ao salvar lançamento");
       console.error(error);
@@ -697,14 +476,24 @@ if (!desc) {
       const y = dataObj.getFullYear();
       const m = dataObj.getMonth(); // 0 a 11
 
+const { data: { session } } = await supabaseClient.auth.getSession();
+      const { data: usuarioSistema } = await supabaseClient
+        .from("usuarios")
+        .select("perfil")
+        .eq("id", session.user.id)
+        .single();
+      
+      const perfilUsuario = usuarioSistema?.perfil || "admin";
+      
       const { error } = await supabaseClient
         .from("movimentacoes")
         .insert([{
           socio: s,
-          desc: `${desc} (${i + 1}/${parcelas})`,
+desc: (perfilUsuario === "funcionario" || perfilUsuario === "limitado") ? `${desc} (F) (${i + 1}/${parcelas})` : `${desc} (${i + 1}/${parcelas})`,
           valor: valorParcela,
           ano: y,
-          mes: m
+          mes: m,
+          usuario_id: (perfilUsuario === "funcionario" || perfilUsuario === "limitado") ? session.user.id : null
         }]);
 
       if (error) {
@@ -871,231 +660,6 @@ async function renderIndicadores() {
   indicadores.innerHTML = html;
 }
 
-function inicializarFiltroUnidades() {
-  const unidadesUnicas = [...new Set(dadosCache.smobu.map(s => s.unidade))].sort();
-  const container = document.getElementById("filtroUnidades");
-  
-  let html = '<div class="multi-select-input" onclick="toggleDropdownUnidades(event)">';
-  html += '<input type="text" placeholder="Selecione unidades..." readonly style="flex:1; border:none; background:none; cursor:pointer; margin:0; padding:0;">';
-  html += '<div class="multi-select-dropdown">';
-  
-  unidadesUnicas.forEach(u => {
-    html += `<label class="multi-select-option">
-      <input type="checkbox" value="${u}" onchange="atualizarTagsUnidades()">
-      <span>${u}</span>
-    </label>`;
-  });
-  
-  html += '</div></div>';
-  container.innerHTML = html;
-}
-
-function toggleDropdownUnidades(e) {
-  const dropdown = e.currentTarget.querySelector('.multi-select-dropdown');
-  dropdown.classList.toggle('show');
-}
-
-function atualizarTagsUnidades() {
-  const container = document.getElementById("filtroUnidades");
-  const checkboxes = container.querySelectorAll('input[type="checkbox"]:checked');
-  const selecionadas = Array.from(checkboxes).map(c => c.value);
-  
-  let html = '<div class="multi-select-input" onclick="toggleDropdownUnidades(event)">';
-  
-  selecionadas.forEach(u => {
-    html += `<div class="multi-select-tag">${u}<button onclick="removerUnidade('${u}')">×</button></div>`;
-  });
-  
-  html += '<input type="text" placeholder="Selecione unidades..." readonly style="flex:1; border:none; background:none; cursor:pointer; margin:0; padding:0;">';
-  html += '<div class="multi-select-dropdown">';
-  
-  const unidadesUnicas = [...new Set(dadosCache.smobu.map(s => s.unidade))].sort();
-  unidadesUnicas.forEach(u => {
-    const checked = selecionadas.includes(u) ? 'checked' : '';
-    html += `<label class="multi-select-option">
-      <input type="checkbox" value="${u}" ${checked} onchange="atualizarTagsUnidades()">
-      <span>${u}</span>
-    </label>`;
-  });
-  
-  html += '</div></div>';
-  container.innerHTML = html;
-}
-
-function removerUnidade(unidade) {
-  const container = document.getElementById("filtroUnidades");
-  const checkbox = container.querySelector(`input[value="${unidade}"]`);
-  if (checkbox) {
-    checkbox.checked = false;
-    atualizarTagsUnidades();
-  }
-}
-
-function aplicarFiltros() {
-  const container = document.getElementById("filtroUnidades");
-  const unidadesSelecionadas = Array.from(container.querySelectorAll('input[type="checkbox"]:checked')).map(c => c.value);
-  const mesesSelecionados = Array.from(document.getElementById("filtroMes").selectedOptions).map(o => +o.value);
-  const anosSelecionados = Array.from(document.getElementById("filtroAno").selectedOptions).map(o => +o.value);
-  
-  filtrosAtivos = {
-    unidades: unidadesSelecionadas,
-    meses: mesesSelecionados,
-    anos: anosSelecionados
-  };
-  
-  renderHistoricoFiltrado();
-}
-
-function renderHistoricoFiltrado() {
-  let dadosFiltrados = dadosCache.smobu;
-  
-  if (filtrosAtivos.unidades.length > 0) {
-    dadosFiltrados = dadosFiltrados.filter(d => filtrosAtivos.unidades.includes(d.unidade));
-  }
-  
-  if (filtrosAtivos.meses.length > 0) {
-    dadosFiltrados = dadosFiltrados.filter(d => filtrosAtivos.meses.includes(d.mes));
-  }
-  
-  if (filtrosAtivos.anos.length > 0) {
-    dadosFiltrados = dadosFiltrados.filter(d => filtrosAtivos.anos.includes(d.ano));
-  }
-  
-  // Calcular resumo
-  const resumo = {
-    receitaTotal: 0,
-    comissaoPais: 0,
-    despesas: 0,
-    lucro: 0
-  };
-  
-  dadosFiltrados.forEach(d => {
-    resumo.receitaTotal += d.receita_total || 0;
-    resumo.comissaoPais += d.comissao_portais || 0;
-    resumo.despesas += d.despesas || 0;
-  });
-  
-  resumo.lucro = resumo.receitaTotal - resumo.comissaoPais - resumo.despesas;
-  
-  // Renderizar cards de resumo
-  let htmlResumo = `
-    <div class="card-resumo">
-      <div class="card-resumo-titulo">Receita Total</div>
-      <div class="card-resumo-valor">${fmt(resumo.receitaTotal)}</div>
-    </div>
-    <div class="card-resumo">
-      <div class="card-resumo-titulo">Comissão Portais</div>
-      <div class="card-resumo-valor neg">${fmt(resumo.comissaoPais)}</div>
-    </div>
-    <div class="card-resumo">
-      <div class="card-resumo-titulo">Despesas</div>
-      <div class="card-resumo-valor neg">${fmt(resumo.despesas)}</div>
-    </div>
-    <div class="card-resumo">
-      <div class="card-resumo-titulo">Lucro Líquido</div>
-      <div class="card-resumo-valor ${resumo.lucro >= 0 ? 'pos' : 'neg'}">${fmt(resumo.lucro)}</div>
-    </div>
-  `;
-  
-  document.getElementById("resumoFiltrado").innerHTML = htmlResumo;
-  
-  // Agrupar por unidade
-  const unidadesAgrupadas = {};
-  dadosFiltrados.forEach(d => {
-    if (!unidadesAgrupadas[d.unidade]) {
-      unidadesAgrupadas[d.unidade] = [];
-    }
-    unidadesAgrupadas[d.unidade].push(d);
-  });
-  
-  // Renderizar tabela
-  let htmlTabela = '';
-  Object.keys(unidadesAgrupadas).sort().forEach(unidade => {
-    const dados = unidadesAgrupadas[unidade];
-    const unidadeId = unidade.replace(/\s+/g, '_');
-    
-    htmlTabela += `
-      <div class="unidade-grupo">
-        <div class="unidade-header" onclick="toggleUnidade('${unidadeId}')">
-          <div class="unidade-nome">
-            <span class="unidade-toggle" id="toggle_${unidadeId}">▼</span>
-            ${unidade}
-          </div>
-        </div>
-        <div class="unidade-conteudo" id="conteudo_${unidadeId}">
-          <div class="linha-historico" style="font-weight:600; background:rgba(31,60,136,0.05);">
-            <div class="celula-historico" style="min-width:120px;">Tipo</div>
-            <div class="celula-historico" style="min-width:100px;">Mês/Ano</div>
-            <div class="celula-historico" style="min-width:100px; text-align:right;">Receita</div>
-            <div class="celula-historico" style="min-width:100px; text-align:right;">Comissão</div>
-            <div class="celula-historico" style="min-width:100px; text-align:right;">Despesas</div>
-            <div class="celula-historico" style="min-width:100px; text-align:right;">Lucro</div>
-          </div>
-    `;
-    
-    dados.forEach(d => {
-      const lucro = (d.receita_total || 0) - (d.comissao_portais || 0) - (d.despesas || 0);
-      htmlTabela += `
-        <div class="linha-historico">
-          <div class="celula-historico celula-tipo">Resumo</div>
-          <div class="celula-historico">${meses[d.mes]}/${d.ano}</div>
-          <div class="celula-historico celula-valor pos">${fmt(d.receita_total)}</div>
-          <div class="celula-historico celula-valor neg">${fmt(d.comissao_portais)}</div>
-          <div class="celula-historico celula-valor neg">${fmt(d.despesas)}</div>
-          <div class="celula-historico celula-valor ${lucro >= 0 ? 'pos' : 'neg'}">${fmt(lucro)}</div>
-        </div>
-      `;
-    });
-    
-    htmlTabela += `</div></div>`;
-  });
-  
-  document.getElementById("historicoLista").innerHTML = htmlTabela || '<p style="padding:20px; text-align:center; color:#94a3b8;">Nenhum dado encontrado</p>';
-}
-
-function toggleUnidade(unidadeId) {
-  const conteudo = document.getElementById(`conteudo_${unidadeId}`);
-  const toggle = document.getElementById(`toggle_${unidadeId}`);
-  
-  conteudo.classList.toggle('collapsed');
-  toggle.classList.toggle('collapsed');
-}
-
-async function processarSmobuExcel(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-  
-  const reader = new FileReader();
-  reader.onload = async (e) => {
-    try {
-      const workbook = XLSX.read(e.target.result, { type: 'array' });
-      const sheet = workbook.Sheets[workbook.SheetNames[0]];
-      const dados = XLSX.utils.sheet_to_json(sheet);
-      
-      // Mapear colunas do Excel para o formato esperado
-      const smobuDados = dados.map(row => ({
-        unidade: row['UNIDADE'] || row['Unidade'] || '',
-        mes: parseInt(row['MES'] || row['Mês'] || '0') - 1, // Converter para 0-11
-        ano: parseInt(row['ANO'] || row['Ano'] || new Date().getFullYear()),
-        receita_total: parseFloat(row['RECEITA_TOTAL'] || row['Receita Total'] || '0'),
-        comissao_portais: parseFloat(row['COMISSAO_PORTAIS'] || row['Comissão Portais'] || '0'),
-        despesas: parseFloat(row['DESPESAS'] || row['Despesas'] || '0')
-      }));
-      
-      // Armazenar dados
-      dadosCache.smobu = smobuDados;
-      
-      // Reinicializar filtros
-      inicializarFiltroUnidades();
-      
-      alert(`${smobuDados.length} registros importados com sucesso!`);
-    } catch (error) {
-      alert('Erro ao processar arquivo: ' + error.message);
-      console.error(error);
-    }
-  };
-  reader.readAsArrayBuffer(file);
-}
 
 function fmt(v){ return new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(v||0); }
 function parseMoeda(v){
@@ -1129,15 +693,16 @@ function mask(i){
 
 function toggleTema(){ document.body.classList.toggle("dark"); localStorage.setItem("tema", document.body.classList.contains("dark")?"dark":"light"); }
 function aplicarTema(){ if(localStorage.getItem("tema")==="dark") document.body.classList.add("dark"); }
+
 function abrirAba(a){
-  ["abaLanc","abaHist","abaInd","abaConf","abaLog"].forEach(id => document.getElementById(id).classList.add("hidden"));
-  ["tabLanc","tabHist","tabInd","tabConf","tabLog"].forEach(id => document.getElementById(id).classList.remove("active"));
+  ["abaLanc","abaInd","abaConf","abaLog"].forEach(id => document.getElementById(id).classList.add("hidden"));
+  ["tabLanc","tabInd","tabConf","tabLog"].forEach(id => document.getElementById(id).classList.remove("active"));
   document.getElementById("aba"+a.charAt(0).toUpperCase()+a.slice(1)).classList.remove("hidden");
   document.getElementById("tab"+a.charAt(0).toUpperCase()+a.slice(1)).classList.add("active");
   if(a==='log') renderLogs(); 
   if(a==='ind') renderIndicadores();
-  if(a==='hist') renderHistoricoFiltrado();
 }
+
 function fecharModal(){ modal.classList.add("hidden"); }
 
   function abrirEditar(id){
