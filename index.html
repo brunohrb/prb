@@ -98,6 +98,7 @@ button{border:none;cursor:pointer; font-weight:600;}
  </div>
  <div class="grid" id="cards"></div>
  <button class="secondary" onclick="alternarFechamento()" style="margin-top:20px">Fechar / Reabrir mês</button>
+<button id="btnNotif" class="secondary" onclick="registrarPush()" style="margin-top:10px;display:none">🔔 Ativar notificações</button>
 </div>
 
 <div id="abaInd" class="hidden">
@@ -165,71 +166,45 @@ function urlBase64ToUint8Array(base64String) {
 }
 
 async function registrarPush() {
-  if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+  try {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+      console.log("Push não suportado neste navegador");
+      return;
+    }
 
-  const reg = await navigator.serviceWorker.register('/prb/sw.js');
-  const permissao = await Notification.requestPermission();
-  if (permissao !== 'granted') return;
+    const reg = await navigator.serviceWorker.register('/prb/sw.js');
+    console.log("Service Worker registrado:", reg);
 
-  const { data: { session } } = await supabaseClient.auth.getSession();
-  const { data: usuario } = await supabaseClient
-    .from("usuarios")
-    .select("socio")
-    .eq("id", session.user.id)
-    .maybeSingle();
+    const permissao = await Notification.requestPermission();
+    console.log("Permissão:", permissao);
+    if (permissao !== 'granted') return;
 
-  const subscription = await reg.pushManager.subscribe({
-    userVisibleOnly: true,
-    applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
-  });
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    const { data: usuario } = await supabaseClient
+      .from("usuarios")
+      .select("socio")
+      .eq("id", session.user.id)
+      .maybeSingle();
 
-  await supabaseClient.from("push_subscriptions").upsert({
-    usuario_id: session.user.id,
-    socio: usuario?.socio || null,
-    subscription: subscription.toJSON()
-  }, { onConflict: "usuario_id" });
+    const subscription = await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+    });
+    console.log("Subscription criada:", JSON.stringify(subscription));
+
+    const { error } = await supabaseClient.from("push_subscriptions").upsert({
+      usuario_id: session.user.id,
+      socio: usuario?.socio || null,
+      subscription: subscription.toJSON()
+    }, { onConflict: "usuario_id" });
+
+    if (error) console.log("Erro ao salvar:", error);
+    else console.log("Subscription salva com sucesso!");
+
+  } catch(e) {
+    console.log("Erro no registrarPush:", e.message);
+  }
 }
-
-
-const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-  supabaseClient.auth.onAuthStateChange((event, session) => {
-  console.log("Auth event:", event);
-
-  if (event === "SIGNED_OUT") {
-    document.getElementById("app").classList.add("hidden");
-    document.getElementById("loginScreen").style.display = "flex";
-dadosCache = { lancamentos: [], salarios: [], fechamentos: [] };
-  }
-
-  if (event === "SIGNED_IN") {
-    document.getElementById("loginScreen").style.display = "none";
-    document.getElementById("app").classList.remove("hidden");
-    init();
-  }
-});
-
-
-const cards = document.getElementById("cards");
-const statusMes = document.getElementById("statusMes");
-const mes = document.getElementById("mes");
-const ano = document.getElementById("ano");
-const indicadores = document.getElementById("indicadores");
-const anoIndicador = document.getElementById("anoIndicador");
-const modal = document.getElementById("modal");
-const mdDesc = document.getElementById("mdDesc");
-const mdValor = document.getElementById("mdValor");
-
-const socios=["paulo","rafael","bruno"];
-const gruposExtras = ["obras","familia"];
-const entidades = [...socios, ...gruposExtras];
-const meses=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
-const baseInicial={mes:11,ano:2025};
-
-let dadosCache = {
-  lancamentos: [],
-  salarios: [],
-  fechamentos: []
-};
 
 async function login() {
   const email = document.getElementById("user").value.trim();
