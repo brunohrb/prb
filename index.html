@@ -206,6 +206,39 @@ async function registrarPush() {
   }
 }
 
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+supabaseClient.auth.onAuthStateChange((event, session) => {
+  if (event === "SIGNED_OUT") {
+    document.getElementById("app").classList.add("hidden");
+    document.getElementById("loginScreen").style.display = "flex";
+    dadosCache = { lancamentos: [], salarios: [], fechamentos: [] };
+  }
+  if (event === "SIGNED_IN") {
+    document.getElementById("loginScreen").style.display = "none";
+    document.getElementById("app").classList.remove("hidden");
+    init();
+  }
+});
+
+const cards = document.getElementById("cards");
+const statusMes = document.getElementById("statusMes");
+const mes = document.getElementById("mes");
+const ano = document.getElementById("ano");
+const indicadores = document.getElementById("indicadores");
+const anoIndicador = document.getElementById("anoIndicador");
+const modal = document.getElementById("modal");
+const mdDesc = document.getElementById("mdDesc");
+const mdValor = document.getElementById("mdValor");
+
+const socios = ["paulo","rafael","bruno"];
+const gruposExtras = ["obras","familia"];
+const entidades = [...socios, ...gruposExtras];
+const meses = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+const baseInicial = {mes:11, ano:2025};
+
+let dadosCache = { lancamentos: [], salarios: [], fechamentos: [] };
+
 async function login() {
   const email = document.getElementById("user").value.trim();
   const password = document.getElementById("pass").value.trim();
