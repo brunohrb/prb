@@ -152,7 +152,44 @@ button{border:none;cursor:pointer; font-weight:600;}
 // ==========================================
 const SUPABASE_URL = "https://xuwwgprchhfshrqdhuqn.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh1d3dncHJjaGhmc2hycWRodXFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY5NTI0NTQsImV4cCI6MjA4MjUyODQ1NH0.MEUMQ4_z1R5tF3_wQbEj_eTitGJia03b0M0LT3aOAnc";
+
 // ==========================================
+
+const VAPID_PUBLIC_KEY = "BPBlRSeDra7xAoeZMptiLs1bKUXq1XGvmVqJoEf1WM5jbDB4RSR4QWJYv__Cs1596FE6hxZOgVfeGzqRanrQne8";
+
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const rawData = atob(base64);
+  return Uint8Array.from([...rawData].map(c => c.charCodeAt(0)));
+}
+
+async function registrarPush() {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+
+  const reg = await navigator.serviceWorker.register('/sw.js');
+  const permissao = await Notification.requestPermission();
+  if (permissao !== 'granted') return;
+
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  const { data: usuario } = await supabaseClient
+    .from("usuarios")
+    .select("socio")
+    .eq("id", session.user.id)
+    .maybeSingle();
+
+  const subscription = await reg.pushManager.subscribe({
+    userVisibleOnly: true,
+    applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+  });
+
+  await supabaseClient.from("push_subscriptions").upsert({
+    usuario_id: session.user.id,
+    socio: usuario?.socio || null,
+    subscription: subscription.toJSON()
+  }, { onConflict: "usuario_id" });
+}
+
 
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   supabaseClient.auth.onAuthStateChange((event, session) => {
@@ -264,6 +301,7 @@ if (!usuarioSistema) {
   }  
 await carregarNotificacoes();
 verificarBackupDiario();
+registrarPush();
 }
 
 
@@ -538,11 +576,31 @@ desc: (perfilUsuario === "funcionario" || perfilUsuario === "limitado") ? `${des
       }]);
 // Criar notificação se for funcionário
     if (perfilUsuario === "funcionario" || perfilUsuario === "limitado") {
-      await supabaseClient.from("notificacoes").insert({
+await supabaseClient.from("notificacoes").insert({
         tipo: "despesa_funcionario",
         mensagem: `Nova despesa em ${s.toUpperCase()}: ${desc} - ${fmt(valorTotal)}`,
         socio: s
       });
+
+const { data: subs } = await supabaseClient
+  .from("push_subscriptions")
+  .select("subscription")
+  .eq("socio", s);
+
+if (subs && subs.length > 0) {
+  await fetch("https://xuwwgprchhfshrqdhuqn.supabase.co/functions/v1/rapid-service", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${SUPABASE_ANON_KEY}`
+    },
+    body: JSON.stringify({
+      subscriptions: subs.map(x => x.subscription),
+      title: "PRB • Nova despesa",
+      body: `${s.toUpperCase()}: ${desc} - ${fmt(valorTotal)}`
+    })
+  });
+}
     }
     if (error) {
       alert("Erro ao salvar lançamento");
