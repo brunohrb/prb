@@ -58,9 +58,15 @@ button{border:none;cursor:pointer; font-weight:600;}
   <div class="login-box">
     <h1>PRB Participação</h1>
     <p>Pró-Labore</p>
-    <input id="user" type="email" placeholder="Email">
-    <input id="pass" type="password" placeholder="Senha">
-    <button onclick="login()">Entrar Agora</button>
+<form onsubmit="event.preventDefault(); login()">
+  <input id="user" type="email" placeholder="Email" autocomplete="email">
+  <input id="pass" type="password" placeholder="Senha" autocomplete="current-password">
+  <div style="display:flex; align-items:center; gap:8px; margin:10px 0; text-align:left">
+    <input type="checkbox" id="lembrar" style="width:auto; margin:0">
+    <label for="lembrar" style="color:#666; font-size:14px; cursor:pointer">Lembrar de mim</label>
+  </div>
+  <button type="submit">Entrar Agora</button>
+</form>
   </div>
 </div>
 <div class="container hidden" id="app">
@@ -111,7 +117,7 @@ button{border:none;cursor:pointer; font-weight:600;}
 </div><div id="abaConf" class="hidden">
  <h3>Configurações</h3>
  <label class="small">Salário padrão (competência atual)</label>
- <input id="salPadrao" oninput="mask(this)" placeholder="R$ 0,00">
+ <input id="salPadrao" inputmode="decimal" oninput="mask(this)" placeholder="R$ 0,00">
  <div class="grid" style="margin-top:10px">
   <div><label class="small">Paulo</label><input id="sal_paulo" placeholder="Opcional" oninput="mask(this)"></div>
   <div><label class="small">Rafael</label><input id="sal_rafael" placeholder="Opcional" oninput="mask(this)"></div>
@@ -133,7 +139,7 @@ button{border:none;cursor:pointer; font-weight:600;}
  <div class="modal-box">
   <h3>Editar lançamento</h3>
   <input id="mdDesc" placeholder="Descrição">
-  <input id="mdValor" oninput="mask(this)" placeholder="R$ 0,00">
+  <input id="mdValor" inputmode="decimal" oninput="mask(this)" placeholder="R$ 0,00">
   <div style="display:flex; gap:10px; margin-top:20px">
     <button class="primary" onclick="salvarEdicao()">Salvar</button>
     <button class="secondary" onclick="fecharModal()">Cancelar</button>
@@ -194,8 +200,17 @@ async function login() {
   if (!email || !password) { alert("Preencha e-mail e senha."); return; }
   await supabaseClient.auth.signOut();
   const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
-  if (error) { alert("Erro ao entrar: " + error.message); return; }
-  document.getElementById("loginScreen").style.display = "none";
+if (error) { alert("Erro ao entrar: " + error.message); return; }
+
+if (document.getElementById("lembrar").checked) {
+  localStorage.setItem("saved_email", email);
+  localStorage.setItem("saved_pass", password);
+} else {
+  localStorage.removeItem("saved_email");
+  localStorage.removeItem("saved_pass");
+}
+
+document.getElementById("loginScreen").style.display = "none";
   document.getElementById("app").classList.remove("hidden");
   init();
 }
@@ -418,7 +433,7 @@ async function render(){
 ${!ehFuncionario ? `<div class="small">Salário: ${fmt(base)} | Saldo ant: <b class="${prev>=0?'pos':'neg'}">${fmt(prev)}</b></div>` : ''}
      ${!isFechado ? `
   <input id="d_${s}" placeholder="Descrição">
-  <input id="v_${s}" placeholder="R$ 0,00 (valor TOTAL se parcelado)" oninput="mask(this)">
+  <input id="v_${s}" placeholder="R$ 0,00 (valor TOTAL se parcelado)" inputmode="decimal" oninput="mask(this)">
 
   <label class="small">
 <input type="checkbox" id="p_${s}" onclick="toggleParcelado('${s}')">
@@ -446,7 +461,7 @@ ${!ehFuncionario ? `<div class="small">Salário: ${fmt(base)} | Saldo ant: <b cl
       <option value="">Dividir com...</option>
       ${entidades.filter(e => e !== s).map(e => `<option value="${e}">${e.toUpperCase()}</option>`).join('')}
     </select>
-    <input id="divval_${s}" placeholder="Valor a dividir" oninput="mask(this)">
+    <input id="divval_${s}" placeholder="Valor a dividir" inputmode="decimal" oninput="mask(this)">
     <input id="divdesc_${s}" placeholder="Descrição da divisão">
   </div>
 
@@ -464,7 +479,7 @@ ${!ehFuncionario ? `<div class="small" style="margin-top:10px">Total: ${fmt(tota
     const arr = dadosCache.lancamentos.filter(l => l.socio === g && l.ano == a && l.mes == m).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
     const total = arr.reduce((x,y)=>x+y.valor,0);
     html += `<div class="card"><div class="socio"><span>${g.toUpperCase()}</span></div>
-      ${!isFechado ? `<input id="d_${g}" placeholder="Descrição"><input id="v_${g}" placeholder="R$ 0,00" oninput="mask(this)"><button class="primary" onclick="add('${g}')">Adicionar</button>` : ""}
+      ${!isFechado ? `<input id="d_${g}" placeholder="Descrição"><input id="v_${g}" placeholder="R$ 0,00" inputmode="decimal" oninput="mask(this)"><button class="primary" onclick="add('${g}')">Adicionar</button>` : ""}
       <div style="margin-top:15px">${arr.map(r=>`<div class="linha"><div title="${new Date(r.created_at).toLocaleString('pt-BR')}">${!ehFuncionario ? r.desc.replace(/\(F\)/g, '<b style="color:#16a34a">(F)</b>') : r.desc}</div><div class="${r.valor < 0 ? 'pos' : 'neg'}">
   ${fmt(r.valor)}
 </div>
@@ -1012,6 +1027,16 @@ async function processarRestoreExcel(event) {
   };
   reader.readAsArrayBuffer(file);
 }
+
+window.addEventListener("load", () => {
+  const savedEmail = localStorage.getItem("saved_email");
+  const savedPass = localStorage.getItem("saved_pass");
+  if (savedEmail) {
+    document.getElementById("user").value = savedEmail;
+    document.getElementById("pass").value = savedPass;
+    document.getElementById("lembrar").checked = true;
+  }
+});
   
 </script>
 </body>
