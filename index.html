@@ -167,7 +167,7 @@ function urlBase64ToUint8Array(base64String) {
 async function registrarPush() {
   if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
 
-  const reg = await navigator.serviceWorker.register('/sw.js');
+  const reg = await navigator.serviceWorker.register('/prb/sw.js');
   const permissao = await Notification.requestPermission();
   if (permissao !== 'granted') return;
 
