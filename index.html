@@ -409,7 +409,7 @@ async function render(){
   statusMes.innerHTML = isFechado ? "🔒 Mês fechado" : "🔓 Mês aberto";
   let html = "";
   for (const s of socios) {
-    const arr = dadosCache.lancamentos.filter(l => l.socio === s && l.ano == a && l.mes == m).sort((a, b) => b.id - a.id);
+    const arr = dadosCache.lancamentos.filter(l => l.socio === s && l.ano == a && l.mes == m).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
     const total = arr.reduce((x, y) => x + y.valor, 0);
     const base = obterSalarioBase(s, m, a);
     const prev = calcularSaldoAte(s, m, a);
@@ -453,7 +453,7 @@ ${!ehFuncionario ? `<div class="small">Salário: ${fmt(base)} | Saldo ant: <b cl
   <button class="primary" onclick="add('${s}')">OK</button>
 ` : ""}
 
-      <div style="margin-top:15px">${arr.map(r=>`<div class="linha"><div>${r.desc.replace(/\(F\)/g, '<b style="color:#16a34a">(F)</b>')}</div><div class="${r.valor < 0 ? 'pos' : 'neg'}">
+      <div style="margin-top:15px">${arr.map(r=>`<div class="linha"><div title="${new Date(r.created_at).toLocaleString('pt-BR')}">${r.desc.replace(/\(F\)/g, '<b style="color:#16a34a">(F)</b>')}</div><div class="${r.valor < 0 ? 'pos' : 'neg'}">
   ${fmt(r.valor)}
 </div>
 
@@ -461,11 +461,11 @@ ${!ehFuncionario ? `<div class="small">Salário: ${fmt(base)} | Saldo ant: <b cl
   <span onclick="excluir('${r.id}')">🗑️</span></div>` : ""}</div>`).join("")}</div>
 ${!ehFuncionario ? `<div class="small" style="margin-top:10px">Total: ${fmt(total)} | Saldo: <b class="${saldo>=0?'pos':'neg'}">${fmt(saldo)}</b></div>` : `<div class="small" style="margin-top:10px">Total lançado: <b>${fmt(total)}</b></div>`}</div>`;  }
   for (const g of gruposExtras) {
-    const arr = dadosCache.lancamentos.filter(l => l.socio === g && l.ano == a && l.mes == m).sort((a, b) => b.id - a.id);
+    const arr = dadosCache.lancamentos.filter(l => l.socio === g && l.ano == a && l.mes == m).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
     const total = arr.reduce((x,y)=>x+y.valor,0);
     html += `<div class="card"><div class="socio"><span>${g.toUpperCase()}</span></div>
       ${!isFechado ? `<input id="d_${g}" placeholder="Descrição"><input id="v_${g}" placeholder="R$ 0,00" oninput="mask(this)"><button class="primary" onclick="add('${g}')">Adicionar</button>` : ""}
-      <div style="margin-top:15px">${arr.map(r=>`<div class="linha"><div>${!ehFuncionario ? r.desc.replace(/\(F\)/g, '<b style="color:#16a34a">(F)</b>') : r.desc}</div><div class="${r.valor < 0 ? 'pos' : 'neg'}">
+      <div style="margin-top:15px">${arr.map(r=>`<div class="linha"><div title="${new Date(r.created_at).toLocaleString('pt-BR')}">${!ehFuncionario ? r.desc.replace(/\(F\)/g, '<b style="color:#16a34a">(F)</b>') : r.desc}</div><div class="${r.valor < 0 ? 'pos' : 'neg'}">
   ${fmt(r.valor)}
 </div>
 
