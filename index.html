@@ -210,19 +210,19 @@ async function init(){
   }
 
   // força validação no banco
-  const { data: usuarioSistema, error } = await supabaseClient
+const { data: usuarioSistema, error } = await supabaseClient
     .from("usuarios")
     .select("*")
     .eq("id", session.user.id)
-    .single();
+    .maybeSingle();
 
-  if (error || !usuarioSistema) {
+if (!usuarioSistema) {
     alert("Usuário não autorizado.");
     await supabaseClient.auth.signOut();
     localStorage.clear();
     location.reload();
     return;
-  }
+}
 
   document.getElementById("loginScreen").style.display = "none";
   document.getElementById("app").classList.remove("hidden");
