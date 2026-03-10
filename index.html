@@ -595,7 +595,10 @@ const { data: subs } = await supabaseClient
   .select("subscription")
   .eq("socio", s);
 
+console.log("Buscando subs para socio:", s);
+console.log("Subs encontradas:", subs);
 if (subs && subs.length > 0) {
+  console.log("Enviando push...");
   await fetch("https://xuwwgprchhfshrqdhuqn.supabase.co/functions/v1/rapid-service", {
     method: "POST",
     headers: {
