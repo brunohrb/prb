@@ -598,19 +598,23 @@ const { data: subs } = await supabaseClient
 console.log("Buscando subs para socio:", s);
 console.log("Subs encontradas:", subs);
 if (subs && subs.length > 0) {
-  console.log("Enviando push...");
-  await fetch("https://xuwwgprchhfshrqdhuqn.supabase.co/functions/v1/rapid-service", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${SUPABASE_ANON_KEY}`
-    },
-    body: JSON.stringify({
-      subscriptions: subs.map(x => x.subscription),
-      title: "PRB • Nova despesa",
-      body: `${s.toUpperCase()}: ${desc} - ${fmt(valorTotal)}`
-    })
-  });
+  try {
+    console.log("Enviando push...");
+    await fetch("https://xuwwgprchhfshrqdhuqn.supabase.co/functions/v1/rapid-service", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${SUPABASE_ANON_KEY}`
+      },
+      body: JSON.stringify({
+        subscriptions: subs.map(x => x.subscription),
+        title: "PRB • Nova despesa",
+        body: `${s.toUpperCase()}: ${desc} - ${fmt(valorTotal)}`
+      })
+    });
+  } catch(e) {
+    console.log("Erro ao enviar push:", e.message);
+  }
 }
     }
     if (error) {
