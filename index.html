@@ -12,7 +12,7 @@
 *{box-sizing:border-box}
 body{ margin:0; background:var(--bg); color:var(--texto); font-family: Inter, Segoe UI, system-ui, -apple-system, Arial, sans-serif; }
 .hidden{display:none!important}
-.container{ max-width:1200px; margin:24px auto; background:var(--card); padding:28px; border-radius:22px; box-shadow:0 12px 30px rgba(0,0,0,.08); }
+.container{ max-width:100%; margin:0; background:var(--card); padding:24px 32px; border-radius:0; box-shadow:none; min-height:100vh; }
 header{ display:flex; justify-content:space-between; align-items:center; margin-bottom:22px; padding-bottom:10px; border-bottom:1px solid rgba(0,0,0,0.05); }
 .brand{display:flex;align-items:center;gap:14px}
 .logo{ width:56px;height:56px;border-radius:14px; background:linear-gradient(135deg,var(--azul),#4f6bdc); color:#fff; display:flex;align-items:center;justify-content:center; font-weight:700;font-size:22px; box-shadow:0 6px 16px rgba(0,0,0,0.25); }
@@ -51,6 +51,82 @@ button{border:none;cursor:pointer; font-weight:600;}
 
 
 
+
+/* ===== CONSOLIDADO TEXNET ===== */
+.consol-filtros{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:0 0 16px;}
+.consol-filtro-label{font-size:0.8rem;color:#64748b;font-weight:600;margin-right:2px;}
+.consol-filtro-sep{width:1px;height:22px;background:#e2e8f0;margin:0 6px;}
+.c-btn{padding:4px 12px!important;border:2px solid #e2e8f0!important;border-radius:20px!important;background:white!important;font-size:0.78rem!important;font-weight:600!important;cursor:pointer;transition:all .2s;color:#374151!important;width:auto!important;margin-top:0!important;display:inline-block!important;}
+.c-btn-ano:hover{border-color:#2563eb!important;color:#2563eb!important;}
+.c-btn-ano.ativo{background:#2563eb!important;border-color:#2563eb!important;color:white!important;}
+.c-btn-mes:hover{border-color:#f59e0b!important;color:#f59e0b!important;}
+.c-btn-mes.ativo{background:#f59e0b!important;border-color:#f59e0b!important;color:white!important;}
+.consol-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:12px;margin-top:8px;}
+@media(max-width:1200px){.consol-grid{grid-template-columns:repeat(4,1fr)}}
+@media(max-width:700px){.consol-grid{grid-template-columns:repeat(2,1fr)}}
+.consol-card{background:var(--card);border-radius:14px;padding:14px 16px;box-shadow:0 2px 12px rgba(0,0,0,0.07);border-top:3px solid var(--cc,#2563eb);transition:transform .2s,box-shadow .2s;}
+.consol-card:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,0.11);}
+.consol-card-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.consol-card-title{font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#64748b;}
+.consol-card-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1rem;}
+.consol-card-value{font-size:1.15rem;font-weight:800;color:var(--cc,#2563eb);line-height:1.2;margin-bottom:4px;word-break:break-word;}
+.consol-card-pct{font-size:0.75rem;color:#64748b;}
+.consol-card-sub{font-size:0.65rem;color:#94a3b8;margin-top:4px;font-style:italic;}
+.consol-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:10px;}
+.consol-ebitda-badge{display:inline-flex;align-items:center;background:#dcfce7;color:#166534;border-radius:20px;padding:4px 12px;font-size:0.82rem;font-weight:700;margin-left:8px;}
+.consol-loading{text-align:center;padding:40px;color:#94a3b8;font-size:0.9rem;grid-column:1/-1;}
+.consol-error{background:#fef2f2;border:1px solid #fecaca;border-radius:12px;padding:18px;color:#991b1b;font-size:0.875rem;grid-column:1/-1;}
+/* ===== GRUPO DE EMPRESAS ===== */
+.grupo-section{background:linear-gradient(135deg,#0f172a 0%,#1e293b 100%);border-radius:20px;padding:22px 28px;margin-bottom:28px;color:#f1f5f9;border:1px solid rgba(255,255,255,0.1);}
+.grupo-header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:16px;}
+.grupo-title{font-size:1.15rem;font-weight:900;color:#ffffff;}
+.grupo-filtros{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.grupo-filtro-label{font-size:0.78rem;color:#cbd5e1;font-weight:700;}
+.grupo-filtro-sep{width:1px;height:20px;background:rgba(255,255,255,0.2);margin:0 4px;}
+.g-btn{padding:3px 11px!important;border:2px solid rgba(255,255,255,0.3)!important;border-radius:20px!important;background:rgba(255,255,255,0.05)!important;font-size:0.75rem!important;font-weight:700!important;cursor:pointer;transition:all .2s;color:#e2e8f0!important;width:auto!important;margin-top:0!important;display:inline-block!important;}
+.g-btn:hover{border-color:#f8fafc!important;color:#f8fafc!important;}
+.g-btn-ano.ativo{background:#2563eb!important;border-color:#2563eb!important;color:white!important;}
+.g-btn-mes.ativo{background:#f59e0b!important;border-color:#f59e0b!important;color:white!important;}
+.grupo-cards{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:16px;}
+@media(max-width:700px){.grupo-cards{grid-template-columns:1fr}}
+.grupo-card{background:rgba(255,255,255,0.06);border-radius:14px;padding:16px 18px;border:1px solid rgba(255,255,255,0.1);border-left:3px solid var(--gc,#f59e0b);}
+.grupo-card-label{font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#94a3b8;margin-bottom:6px;}
+.grupo-card-value{font-size:1.35rem;font-weight:800;color:#f8fafc;margin-bottom:2px;}
+.grupo-card-value.red{color:#fca5a5;}
+.grupo-card-sub{font-size:0.7rem;color:#64748b;}
+.grupo-total{background:rgba(16,185,129,0.12);border-radius:14px;padding:16px 18px;border:1px solid rgba(16,185,129,0.3);border-left:3px solid #10b981;margin-top:14px;display:flex;justify-content:space-between;align-items:center;}
+.grupo-total-label{font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#6ee7b7;}
+.grupo-total-value{font-size:1.6rem;font-weight:900;color:#4ade80;}
+.grupo-total-value.red{color:#fca5a5;}
+/* ===== PROPRIETÁRIOS ===== */
+.prop-divider{border-top:2px solid #e2e8f0;margin-top:32px;padding-top:24px;}
+.prop-title{font-size:1rem;font-weight:700;display:flex;align-items:center;gap:8px;margin:0;}
+.prop-filtros{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:14px 0 18px;}
+.prop-filtro-label{font-size:0.8rem;color:#64748b;font-weight:600;margin-right:2px;}
+.p-btn{padding:4px 12px!important;border:2px solid #e2e8f0!important;border-radius:20px!important;background:white!important;font-size:0.78rem!important;font-weight:600!important;cursor:pointer;transition:all .2s;color:#374151!important;width:auto!important;margin-top:0!important;display:inline-block!important;}
+.p-btn-ano:hover{border-color:#2563eb!important;color:#2563eb!important;}
+.p-btn-ano.ativo{background:#2563eb!important;border-color:#2563eb!important;color:white!important;}
+.p-btn-mes:hover{border-color:#16a34a!important;color:#16a34a!important;}
+.p-btn-mes.ativo{background:#16a34a!important;border-color:#16a34a!important;color:white!important;}
+.prop-bloco{background:var(--card);border-radius:16px;box-shadow:0 3px 14px rgba(0,0,0,0.07);margin-bottom:20px;padding:20px 24px;}
+.prop-bloco-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;flex-wrap:wrap;gap:8px;}
+.prop-bloco-nome{font-weight:800;font-size:1.05rem;color:var(--texto);}
+.prop-bloco-unidades{font-size:0.75rem;color:#64748b;margin-top:2px;}
+.prop-bloco-total-label{font-size:0.7rem;color:#64748b;text-transform:uppercase;letter-spacing:.05em;text-align:right;}
+.prop-bloco-total-valor{font-size:1.4rem;font-weight:800;text-align:right;}
+.prop-bloco-total-valor.green{color:#16a34a;}
+.prop-bloco-total-valor.red{color:#dc2626;}
+.prop-ano-label{font-size:0.72rem;font-weight:700;color:#64748b;margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em;}
+.prop-meses{display:grid;grid-template-columns:repeat(13,1fr);gap:6px;margin-bottom:12px;}
+@media(max-width:900px){.prop-meses{grid-template-columns:repeat(7,1fr)}}
+.prop-mes-card{border-radius:10px;padding:9px 6px;text-align:center;}
+.prop-mes-card.ativo{background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;}
+.prop-mes-card.negativo{background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;}
+.prop-mes-card.zero{background:#f1f5f9;color:#94a3b8;}
+.prop-mes-card.total-ano{background:linear-gradient(135deg,#2d7a7a,#1a4d4d);color:#fff;}
+.prop-mes-label{font-size:0.65rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;opacity:0.9;margin-bottom:3px;}
+.prop-mes-valor{font-size:0.75rem;font-weight:700;}
+
 </style>
 </head>
 <body>
@@ -78,6 +154,7 @@ button{border:none;cursor:pointer; font-weight:600;}
  </div>
  <div class="tabs">
   <button id="tabLanc" class="active" onclick="abrirAba('lanc')">Lançamentos <span id="badgeNotif" class="badge-notif hidden">0</span></button>
+  <button id="tabSocios" onclick="abrirAba('socios')">&#128202; Consolidado</button>
   <button id="tabInd" onclick="abrirAba('ind')">Indicadores</button>
 <button id="tabConf" onclick="abrirAba('conf')">Configurações</button>
   <span class="toggle" onclick="toggleTema()" style="padding:8px">🌙</span>
@@ -99,6 +176,90 @@ button{border:none;cursor:pointer; font-weight:600;}
  <div class="grid" id="cards"></div>
  <button class="secondary" onclick="alternarFechamento()" style="margin-top:20px">Fechar / Reabrir mês</button>
 <button id="btnNotif" class="secondary" onclick="registrarPush()" style="margin-top:10px;display:none">🔔 Ativar notificações</button>
+</div>
+
+<div id="abaSocios" class="hidden">
+  <div class="grupo-section">
+    <div class="grupo-header">
+      <div class="grupo-title">&#127970; Grupo de Empresas</div>
+      <div class="grupo-filtros">
+        <span class="grupo-filtro-label">Ano:</span>
+        <button class="g-btn g-btn-ano" onclick="gTogAno(this,'2024')">2024</button>
+        <button class="g-btn g-btn-ano" onclick="gTogAno(this,'2025')">2025</button>
+        <button class="g-btn g-btn-ano ativo" onclick="gTogAno(this,'2026')">2026</button>
+        <div class="grupo-filtro-sep"></div>
+        <span class="grupo-filtro-label">Meses:</span>
+        <button class="g-btn g-btn-mes ativo" onclick="gTogMes(this,'todos')">Todos</button>
+        <button class="g-btn g-btn-mes" onclick="gTogMes(this,'jan')">Jan</button>
+        <button class="g-btn g-btn-mes" onclick="gTogMes(this,'fev')">Fev</button>
+        <button class="g-btn g-btn-mes" onclick="gTogMes(this,'mar')">Mar</button>
+        <button class="g-btn g-btn-mes" onclick="gTogMes(this,'abr')">Abr</button>
+        <button class="g-btn g-btn-mes" onclick="gTogMes(this,'mai')">Mai</button>
+        <button class="g-btn g-btn-mes" onclick="gTogMes(this,'jun')">Jun</button>
+        <button class="g-btn g-btn-mes" onclick="gTogMes(this,'jul')">Jul</button>
+        <button class="g-btn g-btn-mes" onclick="gTogMes(this,'ago')">Ago</button>
+        <button class="g-btn g-btn-mes" onclick="gTogMes(this,'set')">Set</button>
+        <button class="g-btn g-btn-mes" onclick="gTogMes(this,'out')">Out</button>
+        <button class="g-btn g-btn-mes" onclick="gTogMes(this,'nov')">Nov</button>
+        <button class="g-btn g-btn-mes" onclick="gTogMes(this,'dez')">Dez</button>
+      </div>
+    </div>
+    <div id="grupoCards"><div style="color:rgba(255,255,255,0.4);font-size:0.85rem;padding:16px 0">Aguardando dados...</div></div>
+  </div>
+  <div class="consol-top">
+    <div style="display:flex;align-items:center;flex-wrap:wrap;gap:8px;">
+      <h3 style="margin:0">&#127968; Texnet</h3>
+      <span id="consolEbitdaBadge" class="consol-ebitda-badge" style="display:none"></span>
+    </div>
+    <div id="consolPeriodo" style="font-size:0.85rem;color:#64748b;"></div>
+  </div>
+  <div class="consol-filtros">
+    <span class="consol-filtro-label">Ano:</span>
+    <button class="c-btn c-btn-ano" onclick="cTogAno(this,'2024')">2024</button>
+    <button class="c-btn c-btn-ano" onclick="cTogAno(this,'2025')">2025</button>
+    <button class="c-btn c-btn-ano ativo" onclick="cTogAno(this,'2026')">2026</button>
+    <div class="prop-filtro-sep"></div>
+    <span class="consol-filtro-label">Meses:</span>
+    <button class="c-btn c-btn-mes ativo" onclick="cTogMes(this,'todos')">Todos</button>
+    <button class="c-btn c-btn-mes" onclick="cTogMes(this,'jan')">Jan</button>
+    <button class="c-btn c-btn-mes" onclick="cTogMes(this,'fev')">Fev</button>
+    <button class="c-btn c-btn-mes" onclick="cTogMes(this,'mar')">Mar</button>
+    <button class="c-btn c-btn-mes" onclick="cTogMes(this,'abr')">Abr</button>
+    <button class="c-btn c-btn-mes" onclick="cTogMes(this,'mai')">Mai</button>
+    <button class="c-btn c-btn-mes" onclick="cTogMes(this,'jun')">Jun</button>
+    <button class="c-btn c-btn-mes" onclick="cTogMes(this,'jul')">Jul</button>
+    <button class="c-btn c-btn-mes" onclick="cTogMes(this,'ago')">Ago</button>
+    <button class="c-btn c-btn-mes" onclick="cTogMes(this,'set')">Set</button>
+    <button class="c-btn c-btn-mes" onclick="cTogMes(this,'out')">Out</button>
+    <button class="c-btn c-btn-mes" onclick="cTogMes(this,'nov')">Nov</button>
+    <button class="c-btn c-btn-mes" onclick="cTogMes(this,'dez')">Dez</button>
+  </div>
+  <div class="consol-grid" id="consolCards"><div class="consol-loading">Carregando...</div></div>
+  <div class="prop-divider">
+    <div style="margin-bottom:4px;"><span class="prop-title">&#127968; Bandeira Beach House</span></div>
+    <div class="prop-filtros">
+      <span class="prop-filtro-label">Ano:</span>
+      <button class="p-btn p-btn-ano ativo" onclick="pTogAno(this,'2024')">2024</button>
+      <button class="p-btn p-btn-ano ativo" onclick="pTogAno(this,'2025')">2025</button>
+      <button class="p-btn p-btn-ano ativo" onclick="pTogAno(this,'2026')">2026</button>
+      <div class="prop-filtro-sep"></div>
+      <span class="prop-filtro-label">Meses:</span>
+      <button class="p-btn p-btn-mes ativo" onclick="pTogMes(this,'todos')">Todos</button>
+      <button class="p-btn p-btn-mes" onclick="pTogMes(this,'01')">Jan</button>
+      <button class="p-btn p-btn-mes" onclick="pTogMes(this,'02')">Fev</button>
+      <button class="p-btn p-btn-mes" onclick="pTogMes(this,'03')">Mar</button>
+      <button class="p-btn p-btn-mes" onclick="pTogMes(this,'04')">Abr</button>
+      <button class="p-btn p-btn-mes" onclick="pTogMes(this,'05')">Mai</button>
+      <button class="p-btn p-btn-mes" onclick="pTogMes(this,'06')">Jun</button>
+      <button class="p-btn p-btn-mes" onclick="pTogMes(this,'07')">Jul</button>
+      <button class="p-btn p-btn-mes" onclick="pTogMes(this,'08')">Ago</button>
+      <button class="p-btn p-btn-mes" onclick="pTogMes(this,'09')">Set</button>
+      <button class="p-btn p-btn-mes" onclick="pTogMes(this,'10')">Out</button>
+      <button class="p-btn p-btn-mes" onclick="pTogMes(this,'11')">Nov</button>
+      <button class="p-btn p-btn-mes" onclick="pTogMes(this,'12')">Dez</button>
+    </div>
+    <div id="propCards"><div class="consol-loading">Carregando...</div></div>
+  </div>
 </div>
 
 <div id="abaInd" class="hidden">
@@ -920,12 +1081,49 @@ function toggleTema(){ document.body.classList.toggle("dark"); localStorage.setI
 function aplicarTema(){ if(localStorage.getItem("tema")==="dark") document.body.classList.add("dark"); }
 
 function abrirAba(a){
-  ["abaLanc","abaInd","abaConf","abaLog"].forEach(id => document.getElementById(id).classList.add("hidden"));
-  ["tabLanc","tabInd","tabConf","tabLog"].forEach(id => document.getElementById(id).classList.remove("active"));
+  ["abaLanc","abaSocios","abaInd","abaConf","abaLog"].forEach(id => document.getElementById(id).classList.add("hidden"));
+  ["tabLanc","tabSocios","tabInd","tabConf","tabLog"].forEach(id => document.getElementById(id).classList.remove("active"));
   document.getElementById("aba"+a.charAt(0).toUpperCase()+a.slice(1)).classList.remove("hidden");
   document.getElementById("tab"+a.charAt(0).toUpperCase()+a.slice(1)).classList.add("active");
-  if(a==='log') renderLogs(); 
+  if(document.getElementById('mes')) document.getElementById('mes').style.display=a==='socios'?'none':'';
+  if(document.getElementById('ano')) document.getElementById('ano').style.display=a==='socios'?'none':'';
+  if(a==='log') renderLogs();
   if(a==='ind') renderIndicadores();
+  if(a==='socios'){ cCarregar(); pCarregar(false); }
+}
+
+function abrirSocios(){
+  const frame = document.getElementById('txPrbFrame');
+  if(frame.dataset.loaded) return;
+  frame.dataset.loaded = '1';
+
+  frame.onload = function(){
+    try{
+      const w = frame.contentWindow;
+
+      // Injeta estilos para esconder sidebar e header
+      const s = w.document.createElement('style');
+      s.textContent = '.sidebar,.sidebar-overlay,#sidebarOverlay,#mainHeader,.header{display:none!important}.main-content{margin-left:0!important;padding:0!important}';
+      w.document.head.appendChild(s);
+
+      // Polling: espera o login terminar e o app estar pronto
+      const t = setInterval(()=>{
+        try{
+          const ww = frame.contentWindow;
+          const login = ww.document.getElementById('loginScreen');
+          const loggedIn = login && login.style.display === 'none';
+          if(loggedIn && typeof ww.prbAbrirView === 'function'){
+            ww.prbAbrirView(ww.document.getElementById('prbNavItem'));
+            clearInterval(t);
+          }
+        } catch(e){ clearInterval(t); }
+      }, 300);
+
+      setTimeout(()=>clearInterval(t), 30000); // segurança: para após 30s
+    } catch(e){ console.warn('iframe PRB:', e); }
+  };
+
+  frame.src = 'https://brunohrb.github.io/indicadores/';
 }
 
 function fecharModal(){ modal.classList.add("hidden"); }
@@ -1111,6 +1309,233 @@ window.addEventListener("load", () => {
   }
 });
   
+
+// ===== CONSOLIDADO TEXNET =====
+var _MK=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+var _MN=['Janeiro','Fevereiro','Marco','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+var _cCache=null;
+var _cMeses=['todos'];
+var _cAno='2026';
+var _cDados2024={"receitas":[{"nome":"Link de Internet","jan":2296418.75,"fev":2246205.34,"mar":2240969.34,"abr":2391638.71,"mai":2400146.98,"jun":2388827.26,"jul":2467265.87,"ago":2430822.58,"set":2450297.05,"out":2499580.29,"nov":2434265.42,"dez":2521573.61,"total":28768011.2},{"nome":"Juros/Multa","jan":45838.7,"fev":44729.3,"mar":43775.38,"abr":47612.19,"mai":45305.8,"jun":41288.12,"jul":47039.04,"ago":42357.84,"set":32561.79,"out":31732.0,"nov":33249.76,"dez":44646.56,"total":500136.48},{"nome":"Eventos","jan":1520.0,"fev":0.0,"mar":0.0,"abr":6000.0,"mai":2200.0,"jun":3550.0,"jul":7790.0,"ago":4820.0,"set":18763.9,"out":9204.0,"nov":13230.6,"dez":19020.4,"total":86098.9},{"nome":"R. Financeiras","jan":9509.51,"fev":6744.59,"mar":8722.45,"abr":8325.75,"mai":6376.68,"jun":4183.04,"jul":7989.34,"ago":7384.25,"set":8748.23,"out":7492.37,"nov":812.97,"dez":844.05,"total":77133.23},{"nome":"V. Ativos","jan":398.44,"fev":918.44,"mar":0.0,"abr":8790.0,"mai":0.0,"jun":0.0,"jul":0.0,"ago":520.0,"set":0.0,"out":0.0,"nov":100.0,"dez":5120.0,"total":15846.88}],"impostos":[{"nome":"ICMS","jan":36455.94,"fev":43300.61,"mar":35468.81,"abr":30515.11,"mai":33781.1,"jun":0.0,"jul":0.0,"ago":0.0,"set":0.0,"out":5104.58,"nov":20458.03,"dez":24375.3,"total":229459.48},{"nome":"ICMS (Diversos)","jan":0.0,"fev":0.0,"mar":0.0,"abr":0.0,"mai":0.0,"jun":0.0,"jul":0.0,"ago":0.0,"set":0.0,"out":0.0,"nov":0.0,"dez":0.0,"total":0.0},{"nome":"COFINS","jan":40248.95,"fev":40517.31,"mar":34986.42,"abr":39950.72,"mai":37474.52,"jun":38382.94,"jul":43667.84,"ago":45016.21,"set":44243.26,"out":41140.92,"nov":42197.73,"dez":44550.12,"total":492376.94},{"nome":"PIS","jan":8729.25,"fev":8780.09,"mar":7580.81,"abr":8656.06,"mai":8119.83,"jun":8316.91,"jul":9450.6,"ago":9738.69,"set":9569.16,"out":8913.87,"nov":9142.88,"dez":9652.57,"total":106650.72},{"nome":"IRPJ","jan":104957.27,"fev":0.0,"mar":0.0,"abr":112700.97,"mai":0.0,"jun":0.0,"jul":36538.71,"ago":36904.09,"set":37221.99,"out":112018.4,"nov":0.0,"dez":0.0,"total":440341.43},{"nome":"CSLL","jan":39944.61,"fev":0.0,"mar":0.0,"abr":42732.35,"mai":0.0,"jun":0.0,"jul":13891.97,"ago":14030.51,"set":14151.38,"out":42721.0,"nov":0.0,"dez":0.0,"total":167471.82},{"nome":"ISS","jan":12348.32,"fev":13850.41,"mar":12066.06,"abr":12214.08,"mai":12711.35,"jun":10563.75,"jul":11955.4,"ago":16266.26,"set":16607.98,"out":13984.31,"nov":13389.3,"dez":14461.47,"total":160418.69},{"nome":"ISS (Diversos)","jan":16089.72,"fev":12544.2,"mar":13925.57,"abr":13050.59,"mai":13651.15,"jun":13377.37,"jul":13977.68,"ago":19271.39,"set":19377.31,"out":16841.93,"nov":17250.14,"dez":19416.1,"total":188773.15},{"nome":"Simples Nacional","jan":620.49,"fev":560.44,"mar":761.01,"abr":600.0,"mai":672.16,"jun":640.0,"jul":646.95,"ago":640.0,"set":1275.75,"out":1751.44,"nov":1688.35,"dez":1986.08,"total":11842.67},{"nome":"FUST/FUNTTEL","jan":3330.64,"fev":3343.99,"mar":3454.99,"abr":3261.01,"mai":3279.93,"jun":3290.94,"jul":3243.79,"ago":3257.53,"set":3406.45,"out":3682.24,"nov":4784.77,"dez":5040.55,"total":43376.83},{"nome":"Vendas Canc.","jan":703.88,"fev":79.9,"mar":447.93,"abr":289.7,"mai":2656.7,"jun":427.9,"jul":1732.18,"ago":891.55,"set":291.06,"out":333.82,"nov":124.85,"dez":1465.51,"total":9444.98}],"custos":[{"nome":"Kit Instalação","jan":131105.34,"fev":151790.59,"mar":128013.53,"abr":193758.13,"mai":191730.26,"jun":153199.62,"jul":194324.23,"ago":243236.35,"set":203855.13,"out":186381.55,"nov":147165.32,"dez":125678.94,"total":2050238.99},{"nome":"Materiais de Rede","jan":61156.71,"fev":51499.21,"mar":47779.84,"abr":52466.74,"mai":43319.5,"jun":52769.3,"jul":42625.73,"ago":57442.08,"set":65333.4,"out":71366.99,"nov":66772.94,"dez":59494.94,"total":672027.38},{"nome":"Links de Dados / Voip","jan":80539.67,"fev":84823.52,"mar":24320.01,"abr":92199.5,"mai":95225.0,"jun":59801.29,"jul":57535.87,"ago":60294.36,"set":60972.34,"out":61091.52,"nov":52533.96,"dez":56930.69,"total":786267.73},{"nome":"Vtal","jan":0.0,"fev":26804.91,"mar":47958.2,"abr":51962.86,"mai":55102.73,"jun":56403.65,"jul":54974.71,"ago":52642.08,"set":53177.09,"out":52296.52,"nov":54787.32,"dez":55611.65,"total":561721.72},{"nome":"Alugueis/Postes","jan":18280.16,"fev":18280.16,"mar":0.0,"abr":34248.32,"mai":15968.16,"jun":0.0,"jul":31936.32,"ago":0.0,"set":31936.32,"out":15968.16,"nov":15968.16,"dez":15968.16,"total":198553.92},{"nome":"Alugueis/Torres","jan":6531.54,"fev":10940.05,"mar":12122.05,"abr":12361.93,"mai":11699.57,"jun":18912.05,"jul":13101.94,"ago":12293.45,"set":12842.63,"out":11900.52,"nov":11299.97,"dez":12584.19,"total":146589.89},{"nome":"Custo com SVA","jan":5563.19,"fev":7973.25,"mar":7316.04,"abr":11219.49,"mai":10293.24,"jun":8676.64,"jul":8966.44,"ago":12408.21,"set":12424.17,"out":12432.15,"nov":12436.14,"dez":13291.61,"total":123000.57},{"nome":"Energia / POP","jan":9123.05,"fev":10886.81,"mar":4542.69,"abr":8424.34,"mai":7515.53,"jun":5064.86,"jul":7309.14,"ago":5905.11,"set":9034.73,"out":7891.74,"nov":10552.72,"dez":11523.69,"total":97774.41},{"nome":"Manut. POP","jan":2540.05,"fev":6746.28,"mar":5815.38,"abr":5843.75,"mai":297.25,"jun":1871.11,"jul":297.25,"ago":1131.25,"set":297.25,"out":3866.73,"nov":1277.15,"dez":532.65,"total":30516.1},{"nome":"Comissões","jan":48221.17,"fev":51826.44,"mar":33569.41,"abr":26823.63,"mai":36510.72,"jun":41343.32,"jul":33369.87,"ago":56702.27,"set":61152.13,"out":52925.24,"nov":35028.03,"dez":44534.34,"total":522006.57},{"nome":"Comb. Técnico","jan":28249.4,"fev":21447.05,"mar":31047.17,"abr":31967.72,"mai":22494.94,"jun":24221.26,"jul":37720.24,"ago":37755.89,"set":24965.4,"out":29821.02,"nov":24100.22,"dez":30515.31,"total":344305.62},{"nome":"Manut. Veículo","jan":12618.76,"fev":13358.47,"mar":9815.68,"abr":13194.87,"mai":16661.32,"jun":16326.64,"jul":15409.38,"ago":22002.19,"set":25221.88,"out":27751.8,"nov":26625.24,"dez":16931.47,"total":215917.7},{"nome":"Folha - Direta","jan":536742.69,"fev":683041.05,"mar":558657.28,"abr":595850.56,"mai":590829.95,"jun":634516.91,"jul":621824.36,"ago":654484.24,"set":624825.96,"out":634353.97,"nov":712332.85,"dez":813838.36,"total":7661298.18},{"nome":"Telefonia","jan":4985.91,"fev":4627.96,"mar":4804.12,"abr":4946.74,"mai":4977.45,"jun":4937.77,"jul":4956.63,"ago":4705.37,"set":4828.63,"out":4785.91,"nov":6144.57,"dez":4215.5,"total":58916.56},{"nome":"Man. Equipamento","jan":0.0,"fev":2840.0,"mar":830.0,"abr":713.85,"mai":140.0,"jun":1110.0,"jul":560.0,"ago":0.0,"set":925.0,"out":0.0,"nov":813.34,"dez":438.33,"total":8370.52},{"nome":"Ferramentas","jan":4059.86,"fev":4051.3,"mar":3335.52,"abr":3254.43,"mai":7275.51,"jun":6675.11,"jul":4363.67,"ago":5448.01,"set":3903.83,"out":5429.96,"nov":5802.44,"dez":2490.42,"total":56090.06},{"nome":"Tercerização de Serv.","jan":16241.1,"fev":17476.66,"mar":11175.05,"abr":14812.73,"mai":12405.1,"jun":19872.08,"jul":11381.06,"ago":6246.5,"set":1010.0,"out":1440.0,"nov":0.0,"dez":10200.0,"total":122260.28},{"nome":"Custos Lastmile","jan":35416.1,"fev":37449.61,"mar":26715.09,"abr":33815.58,"mai":31373.83,"jun":28404.22,"jul":37159.36,"ago":34320.66,"set":32992.96,"out":29827.85,"nov":26184.92,"dez":37278.74,"total":390938.92},{"nome":"Investimento/POP","jan":1382.75,"fev":19044.93,"mar":15022.86,"abr":15980.46,"mai":15686.1,"jun":25440.83,"jul":24181.03,"ago":21301.61,"set":45090.43,"out":36092.96,"nov":37998.4,"dez":34692.02,"total":291914.38},{"nome":"Operação Recife","jan":0.0,"fev":315.6,"mar":0.0,"abr":0.0,"mai":0.0,"jun":0.0,"jul":0.0,"ago":0.0,"set":0.0,"out":0.0,"nov":0.0,"dez":0.0,"total":315.6}],"despesas":[{"nome":"Propaganda","jan":45324.4,"fev":55346.48,"mar":50289.55,"abr":55935.47,"mai":45191.03,"jun":53430.57,"jul":71189.37,"ago":59904.16,"set":43074.94,"out":50968.31,"nov":44242.05,"dez":53218.58,"total":628114.91},{"nome":"Serv. Terceiros","jan":32197.2,"fev":38797.27,"mar":36462.56,"abr":35394.07,"mai":30983.1,"jun":50318.82,"jul":32969.02,"ago":29789.1,"set":27225.66,"out":30642.25,"nov":33190.59,"dez":40422.25,"total":418391.89},{"nome":"Viagens/Estadia","jan":0.0,"fev":0.0,"mar":0.0,"abr":0.0,"mai":0.0,"jun":378.43,"jul":4645.5,"ago":4402.04,"set":0.0,"out":3108.65,"nov":1011.95,"dez":1445.03,"total":14991.6},{"nome":"Segurança Trabalho/ EPI","jan":865.0,"fev":612.5,"mar":1248.34,"abr":1869.29,"mai":2374.7,"jun":2420.54,"jul":1301.06,"ago":2048.34,"set":1467.67,"out":1434.08,"nov":2132.25,"dez":857.5,"total":18631.27},{"nome":"Desp. Aluguel","jan":20550.93,"fev":25595.5,"mar":24349.61,"abr":25018.14,"mai":24363.82,"jun":24763.82,"jul":25371.68,"ago":25371.68,"set":26577.93,"out":26826.39,"nov":26851.39,"dez":27095.39,"total":302736.28},{"nome":"Desp. Reformas","jan":6424.06,"fev":10894.25,"mar":5037.11,"abr":4378.44,"mai":2897.33,"jun":4521.5,"jul":1761.0,"ago":4081.71,"set":927.38,"out":2519.0,"nov":1533.6,"dez":637.18,"total":45612.56},{"nome":"Material Consumo","jan":1489.84,"fev":1762.12,"mar":1907.8,"abr":1979.92,"mai":1940.75,"jun":2365.17,"jul":784.03,"ago":1720.81,"set":3592.86,"out":2565.11,"nov":983.58,"dez":3326.21,"total":24418.2},{"nome":"Comb. Adm","jan":1586.08,"fev":845.42,"mar":935.75,"abr":1055.63,"mai":1557.75,"jun":483.95,"jul":766.29,"ago":1508.89,"set":1094.2,"out":933.01,"nov":579.7,"dez":305.05,"total":11651.72},{"nome":"Veiculos","jan":926.07,"fev":10342.89,"mar":10595.37,"abr":11968.64,"mai":10981.61,"jun":12481.82,"jul":2817.36,"ago":1516.46,"set":1568.77,"out":1817.73,"nov":1200.93,"dez":745.86,"total":66963.51},{"nome":"Despesas Tributárias/ Taxas legais","jan":267.12,"fev":544.04,"mar":11574.19,"abr":467.3,"mai":531.6,"jun":1491.7,"jul":462.09,"ago":968.56,"set":369.28,"out":999.23,"nov":911.67,"dez":1450.68,"total":20037.46},{"nome":"Despesas Judiciais","jan":5040.34,"fev":0.0,"mar":677.03,"abr":25594.88,"mai":12932.88,"jun":895.6,"jul":900.32,"ago":3106.47,"set":573.51,"out":0.0,"nov":1673.08,"dez":0.0,"total":51394.11},{"nome":"Treinamentos","jan":0.0,"fev":0.0,"mar":4806.0,"abr":581.31,"mai":0.0,"jun":0.0,"jul":0.0,"ago":0.0,"set":0.0,"out":121.98,"nov":213.6,"dez":213.6,"total":5936.49},{"nome":"Pró-Labore","jan":199175.51,"fev":201983.51,"mar":202516.06,"abr":204212.09,"mai":198625.39,"jun":199255.1,"jul":200810.66,"ago":201005.09,"set":200328.43,"out":200000.0,"nov":200000.0,"dez":200000.0,"total":2407911.84},{"nome":"Sistema","jan":21341.51,"fev":24665.99,"mar":25478.35,"abr":26264.03,"mai":20602.87,"jun":20898.18,"jul":22190.05,"ago":24079.28,"set":19468.59,"out":19362.87,"nov":20033.45,"dez":18934.0,"total":263319.17},{"nome":"Taxas Boleto","jan":14275.38,"fev":14384.98,"mar":14786.53,"abr":17288.08,"mai":15823.48,"jun":13974.91,"jul":14624.91,"ago":13209.5,"set":13144.53,"out":14088.34,"nov":13153.12,"dez":13158.13,"total":171911.89},{"nome":"Enérgia Elétrica","jan":0.0,"fev":1472.16,"mar":3027.24,"abr":1511.12,"mai":1655.16,"jun":5991.65,"jul":6713.35,"ago":6426.7,"set":0.0,"out":5668.04,"nov":0.0,"dez":5931.02,"total":38396.44},{"nome":"Despesas Diversas","jan":2056.49,"fev":1516.12,"mar":1014.21,"abr":1350.98,"mai":1037.63,"jun":801.93,"jul":3485.57,"ago":302.03,"set":1058.84,"out":2151.94,"nov":1343.07,"dez":1878.11,"total":17996.92},{"nome":"Despesas Financ.","jan":226.87,"fev":208.62,"mar":677.46,"abr":496.35,"mai":609.51,"jun":519.07,"jul":914.23,"ago":664.86,"set":692.73,"out":674.13,"nov":987.58,"dez":970.54,"total":7641.95},{"nome":"Tarifas Diversas","jan":226.87,"fev":208.62,"mar":677.46,"abr":496.35,"mai":609.51,"jun":519.07,"jul":914.23,"ago":664.86,"set":692.73,"out":674.13,"nov":987.58,"dez":970.54,"total":7641.95}],"ebitda":[{"nome":"EBITDA","jan":735752.08,"fev":561425.02,"mar":816552.49,"abr":579184.69,"mai":800067.95,"jun":808309.19,"jul":801275.41,"ago":671463.13,"set":748272.03,"out":692010.5,"nov":774757.4,"dez":752916.78,"total":8741986.67}],"ebitda_ajustado":[{"nome":"EBITDA (Ajustado)","jan":735752.08,"fev":561425.02,"mar":816552.49,"abr":579184.69,"mai":800067.95,"jun":808309.19,"jul":801275.41,"ago":671463.13,"set":748272.03,"out":692010.5,"nov":774757.4,"dez":752916.78,"total":8741986.67}],"ajustes":[{"nome":"Veículos","jan":7956.2,"fev":9730.29,"mar":10795.0,"abr":10992.61,"mai":5992.61,"jun":10992.61,"jul":10992.61,"ago":10992.61,"set":31550.36,"out":27992.61,"nov":13064.3,"dez":8752.36,"total":159804.17},{"nome":"Equipamentos/TI","jan":3556.23,"fev":2511.09,"mar":3814.81,"abr":2192.31,"mai":3998.39,"jun":4408.54,"jul":5748.22,"ago":5550.19,"set":4351.36,"out":7976.74,"nov":1568.55,"dez":1979.64,"total":47656.07},{"nome":"Ativos imobilizado","jan":24267.8,"fev":9498.1,"mar":34908.1,"abr":28122.13,"mai":19070.22,"jun":6296.66,"jul":7182.96,"ago":6394.65,"set":5023.45,"out":5274.63,"nov":42419.17,"dez":14022.6,"total":202480.47},{"nome":"Aq. de provedor","jan":84796.25,"fev":84796.25,"mar":474576.75,"abr":125574.73,"mai":124345.63,"jun":75369.01,"jul":36990.0,"ago":28770.0,"set":28770.0,"out":25170.0,"nov":0.0,"dez":84810.3,"total":1173968.92},{"nome":"Empréstimos","jan":79138.29,"fev":79118.42,"mar":79092.37,"abr":79068.25,"mai":79372.99,"jun":79029.36,"jul":79005.42,"ago":78984.3,"set":29465.04,"out":7569.28,"nov":29424.97,"dez":29403.03,"total":728671.72},{"nome":"Reneg. Débitos","jan":0.0,"fev":0.0,"mar":0.0,"abr":0.0,"mai":455000.0,"jun":0.0,"jul":0.0,"ago":0.0,"set":0.0,"out":0.0,"nov":534795.74,"dez":15952.9,"total":1005748.64},{"nome":"Sócios ou Retiradas","jan":1506376.03,"fev":317104.44,"mar":100000.0,"abr":483184.0,"mai":440000.0,"jun":417500.0,"jul":310224.68,"ago":245000.0,"set":709046.11,"out":999763.96,"nov":362492.12,"dez":367917.97,"total":6258609.31}]};
+var _cDados2025={"receitas":[{"nome":"Link Pessoa Física","jan":1363399.16,"fev":1367967.95,"mar":1418508.41,"abr":1390498.57,"mai":1430991.92,"jun":1413512.4,"jul":1466625.21,"ago":1418820.85,"set":1455501.47,"out":1457362.84,"nov":1413065.73,"dez":1510923.43,"total":17107177.94},{"nome":"Link Pessoa Jurídica","jan":1107509.73,"fev":1111562.08,"mar":1082138.31,"abr":1097961.87,"mai":1116194.38,"jun":1121342.48,"jul":1141569.18,"ago":1127690.44,"set":1168813.56,"out":1162242.0,"nov":1140248.57,"dez":1200934.81,"total":13578207.41},{"nome":"Juros/Multa","jan":46455.66,"fev":43118.57,"mar":48273.02,"abr":47701.9,"mai":53235.77,"jun":49520.08,"jul":48019.0,"ago":51576.45,"set":54044.9,"out":55880.89,"nov":55082.99,"dez":58569.49,"total":611478.72},{"nome":"Taxa de instalação","jan":18611.23,"fev":16540.68,"mar":604.16,"abr":6812.2,"mai":2454.0,"jun":2571.66,"jul":3900.0,"ago":4606.34,"set":5797.89,"out":2522.38,"nov":2136.15,"dez":1358.1,"total":67914.79},{"nome":"Eventos","jan":5515.0,"fev":4750.0,"mar":3567.0,"abr":6364.2,"mai":12812.2,"jun":15415.0,"jul":7570.0,"ago":14750.0,"set":10677.8,"out":17100.0,"nov":23643.44,"dez":3750.0,"total":125914.64},{"nome":"Multa fidelidade e equipamento","jan":3169.58,"fev":3520.7,"mar":4586.3,"abr":2678.57,"mai":7250.6,"jun":1206.14,"jul":1513.32,"ago":1563.15,"set":1733.65,"out":6749.9,"nov":1797.02,"dez":5157.34,"total":40926.27},{"nome":"Rendimentos financeiros","jan":4015.77,"fev":490.05,"mar":2429.12,"abr":3601.85,"mai":3428.85,"jun":3292.8,"jul":4061.8,"ago":2246.13,"set":2503.13,"out":3119.32,"nov":1429.28,"dez":1247.07,"total":31865.17},{"nome":"V. Ativos imobilizados","jan":10980.0,"fev":1110.0,"mar":35.46,"abr":6140.0,"mai":7395.24,"jun":560.0,"jul":10770.0,"ago":0.0,"set":2900.0,"out":5101.2,"nov":0.0,"dez":935.0,"total":45926.9},{"nome":"Vendas canceladas e estornos","jan":-2465.14,"fev":-725.79,"mar":-594.61,"abr":-948.08,"mai":-2026.5,"jun":-7404.15,"jul":-13200.67,"ago":-579.17,"set":-1280.25,"out":-989.65,"nov":-936.77,"dez":-1048.88,"total":-32199.66}],"impostos":[{"nome":"ICMS","jan":30597.6,"fev":34726.14,"mar":38336.96,"abr":34174.7,"mai":37871.45,"jun":37074.49,"jul":25594.9,"ago":62012.2,"set":61168.11,"out":70567.87,"nov":74433.94,"dez":79760.87,"total":586319.23},{"nome":"COFINS","jan":46634.52,"fev":43957.41,"mar":39340.17,"abr":39463.09,"mai":39771.8,"jun":40321.67,"jul":40931.46,"ago":35228.16,"set":35286.4,"out":39361.52,"nov":43803.62,"dez":46406.86,"total":490506.68},{"nome":"PIS","jan":10104.19,"fev":9524.16,"mar":8523.76,"abr":8543.69,"mai":8615.59,"jun":8698.4,"jul":8859.9,"ago":7623.38,"set":7633.73,"out":8518.02,"nov":8415.05,"dez":10034.41,"total":105094.28},{"nome":"IRPJ","jan":103897.71,"fev":0.0,"mar":0.0,"abr":99206.19,"mai":0.0,"jun":0.0,"jul":96821.55,"ago":0.0,"set":0.0,"out":89161.15,"nov":0.0,"dez":0.0,"total":389086.6},{"nome":"CSLL","jan":39564.49,"fev":0.0,"mar":0.0,"abr":37875.92,"mai":0.0,"jun":0.0,"jul":37017.52,"ago":0.0,"set":0.0,"out":34258.01,"nov":0.0,"dez":0.0,"total":148715.94},{"nome":"ISS","jan":18254.95,"fev":16458.99,"mar":10223.78,"abr":10345.86,"mai":10294.69,"jun":9618.5,"jul":10295.88,"ago":10295.18,"set":7796.86,"out":6595.62,"nov":8769.05,"dez":6702.33,"total":125651.69},{"nome":"ISS Retido","jan":18971.32,"fev":16757.53,"mar":14251.95,"abr":14218.51,"mai":14047.6,"jun":14886.84,"jul":12708.36,"ago":1764.23,"set":2189.75,"out":1629.33,"nov":0.0,"dez":1791.96,"total":113217.38},{"nome":"Simples Nacional","jan":695.28,"fev":2336.09,"mar":1652.92,"abr":1631.45,"mai":1601.47,"jun":1678.71,"jul":1956.65,"ago":2103.44,"set":2247.94,"out":2170.66,"nov":1596.69,"dez":1844.46,"total":21515.76},{"nome":"FUST/FUNTTEL","jan":5485.12,"fev":5593.1,"mar":5782.24,"abr":5593.15,"mai":5829.49,"jun":5810.05,"jul":6349.68,"ago":6758.96,"set":7321.15,"out":9070.8,"nov":10037.3,"dez":13262.5,"total":86893.54}],"custos":[{"nome":"Kit Instalação","jan":260689.26,"fev":261971.69,"mar":229352.38,"abr":191538.93,"mai":194621.58,"jun":174329.82,"jul":46599.08,"ago":91329.61,"set":95091.81,"out":145298.6,"nov":177552.88,"dez":186721.54,"total":2055097.18},{"nome":"Materiais de Rede","jan":80070.44,"fev":75688.68,"mar":51552.31,"abr":46816.63,"mai":44844.9,"jun":43536.07,"jul":75324.87,"ago":57887.22,"set":44451.61,"out":44260.3,"nov":43230.57,"dez":50269.82,"total":657933.42},{"nome":"Links de Dados / Voip","jan":59397.16,"fev":67442.76,"mar":44781.95,"abr":58651.37,"mai":50353.87,"jun":42924.0,"jul":64260.58,"ago":59004.83,"set":67519.9,"out":54092.81,"nov":54207.57,"dez":57993.04,"total":680629.84},{"nome":"Vtal","jan":53187.19,"fev":55129.82,"mar":59791.89,"abr":60174.32,"mai":59708.46,"jun":63167.29,"jul":61909.34,"ago":58057.25,"set":61713.74,"out":62083.24,"nov":63968.44,"dez":62320.71,"total":721211.69},{"nome":"Alugueis de Postes","jan":15968.16,"fev":17008.82,"mar":17008.82,"abr":17008.82,"mai":17008.82,"jun":17008.82,"jul":17008.82,"ago":17008.82,"set":17008.82,"out":17008.82,"nov":0.0,"dez":0.0,"total":169047.54},{"nome":"Alugueis de Torre e POP","jan":14642.08,"fev":13133.7,"mar":11642.08,"abr":11642.08,"mai":11079.97,"jun":13364.19,"jul":12776.07,"ago":11879.56,"set":13317.29,"out":12648.42,"nov":12680.49,"dez":12680.49,"total":151486.42},{"nome":"Custo com SVA","jan":14987.36,"fev":15343.15,"mar":15888.19,"abr":16612.13,"mai":13711.61,"jun":16160.53,"jul":16710.4,"ago":13393.41,"set":13393.41,"out":13393.41,"nov":18559.36,"dez":13393.41,"total":181546.37},{"nome":"Energia / POP","jan":9343.15,"fev":11572.06,"mar":20832.56,"abr":11331.13,"mai":14132.4,"jun":18075.79,"jul":23374.4,"ago":23973.16,"set":26085.36,"out":35450.36,"nov":27953.1,"dez":24112.67,"total":246236.14},{"nome":"Manutenção POP","jan":480.1,"fev":319.13,"mar":2039.13,"abr":1272.88,"mai":1014.5,"jun":544.5,"jul":0.0,"ago":874.5,"set":324.5,"out":1885.0,"nov":2221.13,"dez":594.5,"total":11569.87},{"nome":"Comissões de vendas","jan":26857.73,"fev":36100.59,"mar":21581.04,"abr":22696.7,"mai":39158.8,"jun":40844.88,"jul":29618.21,"ago":33704.96,"set":40727.97,"out":35862.08,"nov":36114.07,"dez":32095.3,"total":395362.33},{"nome":"Combustivel técnico","jan":33115.04,"fev":26065.99,"mar":15188.51,"abr":29337.96,"mai":33559.17,"jun":17862.89,"jul":31492.89,"ago":34102.45,"set":35197.72,"out":33381.95,"nov":32416.3,"dez":31734.54,"total":353455.41},{"nome":"Manut. Veículo","jan":15174.5,"fev":16900.44,"mar":18519.45,"abr":21932.56,"mai":20497.59,"jun":16087.14,"jul":24748.36,"ago":23038.32,"set":16383.0,"out":14517.61,"nov":21341.22,"dez":23095.83,"total":232236.02},{"nome":"Folha - Direta","jan":676621.22,"fev":623295.17,"mar":638485.38,"abr":622564.54,"mai":664955.52,"jun":697697.14,"jul":708888.5,"ago":649727.33,"set":689457.84,"out":718786.99,"nov":781146.5,"dez":938629.63,"total":8410255.76},{"nome":"Telefonia","jan":4352.48,"fev":4206.63,"mar":4333.62,"abr":4590.58,"mai":4315.84,"jun":4352.39,"jul":4468.69,"ago":4328.48,"set":4632.66,"out":4598.41,"nov":4566.74,"dez":4467.57,"total":53214.09},{"nome":"Man. Equipamento","jan":646.33,"fev":1631.68,"mar":441.66,"abr":871.66,"mai":0.0,"jun":0.0,"jul":1200.0,"ago":0.0,"set":1421.48,"out":2028.82,"nov":819.3,"dez":379.28,"total":9440.21},{"nome":"Ferramentas","jan":4395.1,"fev":8254.68,"mar":12642.72,"abr":6296.26,"mai":7580.59,"jun":4053.06,"jul":3379.69,"ago":4321.37,"set":3393.9,"out":4033.38,"nov":5787.96,"dez":5705.1,"total":69843.81},{"nome":"Moveis e equipamentos escritório TI","jan":579.69,"fev":209.9,"mar":1610.29,"abr":2015.36,"mai":1385.66,"jun":4366.14,"jul":5730.23,"ago":10735.55,"set":16492.85,"out":8249.92,"nov":3980.26,"dez":8467.65,"total":63823.5},{"nome":"Tercerização de Serv. (Instalações)","jan":1000.0,"fev":3000.0,"mar":10000.0,"abr":0.0,"mai":2000.0,"jun":2000.0,"jul":3000.0,"ago":400.0,"set":0.0,"out":0.0,"nov":0.0,"dez":550.0,"total":21950.0},{"nome":"Custos Lastmile","jan":31619.06,"fev":31827.15,"mar":21296.57,"abr":41642.14,"mai":31689.2,"jun":32259.55,"jul":32906.77,"ago":35443.08,"set":24952.79,"out":32166.61,"nov":33319.1,"dez":34306.46,"total":383428.48}],"despesas":[{"nome":"Marketing","jan":66923.63,"fev":52361.86,"mar":55473.48,"abr":65219.61,"mai":53889.69,"jun":51542.29,"jul":73614.74,"ago":72961.4,"set":73911.24,"out":57010.18,"nov":57009.85,"dez":50561.57,"total":730479.54},{"nome":"Serv. Terceiros, jurídicos e consultorias","jan":38008.8,"fev":35034.7,"mar":35867.88,"abr":34626.81,"mai":35129.78,"jun":33643.95,"jul":37172.74,"ago":34259.48,"set":36156.15,"out":41137.01,"nov":44025.03,"dez":41060.93,"total":446123.26},{"nome":"Viagens/Estadia","jan":0.0,"fev":10535.72,"mar":41.03,"abr":400.0,"mai":1352.65,"jun":0.0,"jul":455.0,"ago":0.0,"set":0.0,"out":1841.38,"nov":0.0,"dez":63.0,"total":14688.78},{"nome":"Segurança Trabalho/ EPI","jan":940.0,"fev":0.0,"mar":958.5,"abr":958.5,"mai":934.9,"jun":2184.3,"jul":1699.0,"ago":809.0,"set":1508.92,"out":2003.0,"nov":1493.0,"dez":0.0,"total":13489.12},{"nome":"Desp. Aluguel de escritório","jan":25415.85,"fev":27515.39,"mar":26905.43,"abr":26905.43,"mai":26834.6,"jun":27331.98,"jul":27137.58,"ago":27108.58,"set":27456.85,"out":27372.97,"nov":27372.97,"dez":27372.97,"total":324730.6},{"nome":"Desp. Reformas empresa","jan":627.14,"fev":2619.09,"mar":878.97,"abr":340.0,"mai":1770.6,"jun":2054.46,"jul":3039.56,"ago":3852.35,"set":5994.1,"out":6729.68,"nov":2543.32,"dez":1659.38,"total":32108.65},{"nome":"Material de uso, consumo e papelaria","jan":1629.07,"fev":1196.93,"mar":1849.58,"abr":1310.2,"mai":0.0,"jun":2447.67,"jul":1060.5,"ago":871.57,"set":984.96,"out":1104.71,"nov":1603.34,"dez":664.09,"total":14722.62},{"nome":"Combustivel Adm","jan":1031.85,"fev":823.23,"mar":425.06,"abr":926.98,"mai":693.6,"jun":549.69,"jul":1254.87,"ago":971.86,"set":972.39,"out":740.42,"nov":716.81,"dez":799.5,"total":9906.26},{"nome":"Despesas e taxas com Veiculos","jan":900.94,"fev":0.0,"mar":12742.24,"abr":16457.96,"mai":17390.77,"jun":13152.11,"jul":3328.64,"ago":3433.65,"set":2208.85,"out":1620.24,"nov":1652.29,"dez":1112.08,"total":73999.77},{"nome":"Despesas Tributárias/ Taxas legais","jan":2335.57,"fev":1751.6,"mar":2713.36,"abr":301.36,"mai":467.68,"jun":660.35,"jul":380.65,"ago":170.0,"set":633.03,"out":852.54,"nov":1125.0,"dez":1178.24,"total":12569.38},{"nome":"Despesas Judiciais","jan":0.0,"fev":1760.0,"mar":1375.0,"abr":1375.0,"mai":2624.2,"jun":1375.0,"jul":1556.0,"ago":2123.02,"set":2000.0,"out":1250.0,"nov":2094.54,"dez":4314.55,"total":21847.31},{"nome":"Treinamentos","jan":213.6,"fev":213.6,"mar":213.6,"abr":213.6,"mai":213.6,"jun":213.6,"jul":563.6,"ago":0.0,"set":0.0,"out":0.0,"nov":0.0,"dez":0.0,"total":1845.2},{"nome":"Pró-Labore","jan":200000.0,"fev":200000.0,"mar":200000.0,"abr":200000.0,"mai":200000.0,"jun":200000.0,"jul":200000.0,"ago":200000.0,"set":200000.0,"out":200000.0,"nov":200000.0,"dez":200000.0,"total":2400000.0},{"nome":"Sistema","jan":20725.95,"fev":22178.08,"mar":19484.08,"abr":25387.25,"mai":19675.56,"jun":18822.71,"jul":19638.93,"ago":18339.07,"set":20914.5,"out":21952.61,"nov":19279.3,"dez":19421.76,"total":245819.8},{"nome":"Taxas Boleto","jan":13838.59,"fev":13791.34,"mar":13971.72,"abr":13970.5,"mai":13529.28,"jun":12332.11,"jul":12950.62,"ago":10742.81,"set":10486.11,"out":10018.77,"nov":9532.08,"dez":10118.24,"total":145282.17},{"nome":"Enérgia Elétrica escritório","jan":11977.98,"fev":0.0,"mar":2494.79,"abr":10781.14,"mai":0.0,"jun":10790.23,"jul":8975.51,"ago":6021.04,"set":0.0,"out":3461.16,"nov":2224.58,"dez":2210.85,"total":58937.28},{"nome":"Despesas Diversas / Estacionamento","jan":1894.42,"fev":2741.46,"mar":4874.74,"abr":3438.66,"mai":14619.28,"jun":4921.98,"jul":1096.71,"ago":4412.8,"set":1961.18,"out":1033.35,"nov":433.19,"dez":545.52,"total":41973.29},{"nome":"Despesas Financ.","jan":737.41,"fev":654.26,"mar":983.57,"abr":801.66,"mai":730.91,"jun":416.34,"jul":377.57,"ago":968.56,"set":421.55,"out":688.86,"nov":468.63,"dez":771.65,"total":8020.97},{"nome":"Tarifas bancárias","jan":737.41,"fev":654.26,"mar":983.57,"abr":801.66,"mai":730.91,"jun":416.34,"jul":377.57,"ago":968.56,"set":421.55,"out":688.86,"nov":468.63,"dez":771.65,"total":8020.97}],"ebitda":[{"nome":"EBITDA","jan":592658.96,"fev":776701.52,"mar":863193.81,"abr":739347.81,"mai":912228.79,"jun":890854.78,"jul":872592.82,"ago":978633.55,"set":1019871.73,"out":829192.29,"nov":797971.84,"dez":772651.1,"total":10045899.0}],"ebitda_ajustado":[{"nome":"IRPJ (Previsão)","jan":34129.17,"fev":33232.85,"mar":33309.86,"abr":32773.05,"mai":32777.38,"jun":33123.28,"jul":30925.98,"ago":30635.27,"set":30866.23,"out":29202.32,"nov":28237.87,"dez":21910.08,"total":371123.34},{"nome":"CSSL (Previsão)","jan":13006.5,"fev":12683.82,"mar":12711.55,"abr":12518.3,"mai":12518.86,"jun":12644.38,"jul":11853.35,"ago":11748.7,"set":11831.84,"out":11232.83,"nov":10885.63,"dez":8607.63,"total":142243.39},{"nome":"Trimestral","jan":143462.2,"fev":0.0,"mar":0.0,"abr":137082.11,"mai":0.0,"jun":0.0,"jul":133839.07,"ago":0.0,"set":0.0,"out":123419.16,"nov":0.0,"dez":0.0,"total":537802.54},{"nome":"Compra de Provedor","jan":11708.33,"fev":11708.33,"mar":11708.33,"abr":11708.33,"mai":11708.33,"jun":11708.33,"jul":11708.33,"ago":11708.33,"set":11708.33,"out":11708.33,"nov":11708.33,"dez":11708.33,"total":140499.96},{"nome":"Credito ICMS","jan":42559.98,"fev":33091.49,"mar":29877.95,"abr":28983.01,"mai":29105.22,"jun":28435.48,"jul":24475.22,"ago":0.0,"set":0.0,"out":0.0,"nov":0.0,"dez":0.0,"total":216528.35},{"nome":"Ajuste (Mark/Equip)","jan":7799.59,"fev":7799.59,"mar":1600.0,"abr":1600.0,"mai":1600.0,"jun":1600.0,"jul":0.0,"ago":0.0,"set":0.0,"out":0.0,"nov":0.0,"dez":0.0,"total":21999.18},{"nome":"Datora","jan":0.0,"fev":0.0,"mar":0.0,"abr":0.0,"mai":0.0,"jun":0.0,"jul":0.0,"ago":0.0,"set":0.0,"out":0.0,"nov":0.0,"dez":0.0,"total":0.0},{"nome":"Inclusão 3","jan":0.0,"fev":0.0,"mar":0.0,"abr":0.0,"mai":0.0,"jun":0.0,"jul":0.0,"ago":0.0,"set":0.0,"out":0.0,"nov":0.0,"dez":0.0,"total":0.0},{"nome":"Inclusão 4","jan":0.0,"fev":0.0,"mar":0.0,"abr":0.0,"mai":0.0,"jun":0.0,"jul":0.0,"ago":0.0,"set":0.0,"out":0.0,"nov":0.0,"dez":0.0,"total":0.0},{"nome":"Inclusão 5","jan":0.0,"fev":0.0,"mar":0.0,"abr":0.0,"mai":0.0,"jun":0.0,"jul":0.0,"ago":0.0,"set":0.0,"out":0.0,"nov":0.0,"dez":0.0,"total":0.0},{"nome":"Ajuste (Postes)","jan":28918.36,"fev":28918.36,"mar":28918.36,"abr":28918.36,"mai":28918.36,"jun":28918.36,"jul":28918.36,"ago":28918.36,"set":28918.36,"out":28918.36,"nov":45927.18,"dez":45927.18,"total":381037.96},{"nome":"Ajuste Vtal Fora","jan":26875.3,"fev":26193.41,"mar":24214.97,"abr":23636.03,"mai":23072.18,"jun":22542.19,"jul":19099.03,"ago":19367.08,"set":18332.64,"out":18131.99,"nov":15941.39,"dez":14882.45,"total":252288.66},{"nome":"EBITDA (Ajustado)","jan":427661.73,"fev":623073.67,"mar":720852.79,"abr":736292.84,"mai":772528.46,"jun":751882.76,"jul":879451.62,"ago":876255.81,"set":918214.33,"out":853417.62,"nov":685271.44,"dez":669615.43,"total":9655547.01}],"ajustes":[{"nome":"Compra de veículos","jan":10976.35,"fev":10013.17,"mar":23751.12,"abr":12614.54,"mai":61574.26,"jun":41274.26,"jul":494531.42,"ago":4840.5,"set":7556.43,"out":6511.58,"nov":6548.44,"dez":6548.44,"total":686740.51},{"nome":"Aq. de provedor","jan":39850.3,"fev":39850.3,"mar":39340.0,"abr":39340.0,"mai":34340.0,"jun":0.0,"jul":0.0,"ago":0.0,"set":0.0,"out":0.0,"nov":0.0,"dez":0.0,"total":192720.6},{"nome":"Investimentos POP","jan":22231.05,"fev":32757.87,"mar":167183.13,"abr":29119.23,"mai":47253.84,"jun":52923.58,"jul":86910.56,"ago":96147.41,"set":67646.2,"out":59564.62,"nov":49074.74,"dez":51950.01,"total":762762.24},{"nome":"Empréstimos para giro","jan":29389.43,"fev":29375.16,"mar":29358.08,"abr":29339.21,"mai":29324.73,"jun":29310.33,"jul":29295.79,"ago":47971.76,"set":44529.63,"out":44259.96,"nov":44596.71,"dez":43736.37,"total":430487.16},{"nome":"Empréstimos","jan":0.0,"fev":0.0,"mar":0.0,"abr":0.0,"mai":0.0,"jun":0.0,"jul":500000.0,"ago":0.0,"set":0.0,"out":0.0,"nov":0.0,"dez":0.0,"total":500000.0},{"nome":"Reneg. Débitos","jan":0.0,"fev":0.0,"mar":0.0,"abr":0.0,"mai":0.0,"jun":0.0,"jul":0.0,"ago":0.0,"set":0.0,"out":0.0,"nov":0.0,"dez":0.0,"total":0.0},{"nome":"Sócios ou Retiradas","jan":1159354.52,"fev":273654.97,"mar":554150.02,"abr":612778.15,"mai":659982.08,"jun":637862.39,"jul":930619.68,"ago":616589.01,"set":797035.18,"out":823685.44,"nov":578657.29,"dez":705233.81,"total":8349602.54}]};
+function _cf(v){return new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL',minimumFractionDigits:2}).format(v||0);}
+function _cp(v,f){if(!f)return'';return((v/f)*100).toFixed(1).replace('.',',')+'% da receita';}
+function _cs(arr,k){return(arr||[]).reduce(function(s,r){return s+(Number(r[k])||0);},0);}
+
+function _cCalc(df,meses){
+  var keys=(meses[0]==='todos')?_MK:meses;
+  var fat=0,imp=0,cus=0,des=0,pl=0,ebitda=0,invDiv=0;
+  var ajArr=df.ajustes||[];
+  var socItem=ajArr.find(function(r){if(!r.nome)return false;var n=r.nome.toLowerCase();return n.indexOf('cio')>=0||n.indexOf('retirada')>=0;});
+  if(!socItem&&ajArr.length>0)socItem=ajArr[ajArr.length-1];
+  var eaItem=(df.ebitda_ajustado||[]).find(function(r){return r.nome&&r.nome.indexOf('Ajustado')>=0;});
+  keys.forEach(function(mk){
+    fat+=_cs(df.receitas,mk);imp+=_cs(df.impostos,mk);cus+=_cs(df.custos,mk);des+=_cs(df.despesas,mk);
+    (df.despesas||[]).forEach(function(r){if(r.nome&&r.nome.toLowerCase().indexOf('labore')>=0)pl+=(Number(r[mk])||0);});
+    if(eaItem)ebitda+=(Number(eaItem[mk])||0);
+    var invDivMk=0;
+    ajArr.forEach(function(r){
+      if(!r.nome)return;var n=r.nome.toLowerCase().trim();
+      var ehSocios=n.indexOf('cio')>=0;
+      var ehSubEF=n.indexOf('empr/finac')>=0;
+      var ehSubI=n==='investimento';
+      if(!ehSocios&&!ehSubEF&&!ehSubI)invDivMk+=(Number(r[mk])||0);
+    });
+    invDiv+=invDivMk;
+  });
+  if(!eaItem)ebitda=fat-imp-cus-des;
+  var despTot=cus+des;
+  return{fat:fat,despTot:despTot,imp:imp,ebitda:ebitda,invDiv:invDiv,lucroSocio:ebitda+pl,lucroBruto:fat-(despTot-pl)-imp-invDiv};
+}
+
+function cTogAno(btn,ano){
+  document.querySelectorAll('.c-btn-ano').forEach(function(b){b.classList.remove('ativo');});
+  btn.classList.add('ativo');_cAno=ano;_cCache=null;
+  if(ano==='2024'){_cCache=_cDados2024;_cRender(_cCache);gRender();return;}
+  if(ano==='2025'){_cCache=_cDados2025;_cRender(_cCache);gRender();return;}
+  cCarregar();
+}
+function cTogMes(btn,mes){
+  if(mes==='todos'){document.querySelectorAll('.c-btn-mes').forEach(function(b){b.classList.remove('ativo');});btn.classList.add('ativo');_cMeses=['todos'];}
+  else{document.querySelector('.c-btn-mes[onclick*="todos"]').classList.remove('ativo');btn.classList.toggle('ativo');
+    var at=Array.from(document.querySelectorAll('.c-btn-mes.ativo')).map(function(b){var m=b.getAttribute('onclick').match(/'([a-z]+)'/);return(m&&m[1]!=='todos')?m[1]:null;}).filter(Boolean);
+    if(!at.length){_cMeses=['todos'];document.querySelector('.c-btn-mes[onclick*="todos"]').classList.add('ativo');}else _cMeses=at;
+  }
+  if(_cCache)_cRender(_cCache);
+}
+
+function _cRender(df){
+  var c=_cCalc(df,_cMeses),f=c.fat;
+  var periodoTxt=(_cMeses[0]==='todos')?'Todos os meses':_cMeses.map(function(m){return _MN[_MK.indexOf(m)];}).join(', ');
+  var pe=document.getElementById('consolPeriodo');if(pe)pe.textContent='Periodo: '+periodoTxt+' / '+_cAno;
+  var badge=document.getElementById('consolEbitdaBadge');
+  if(badge&&f>0){badge.textContent='Margem EBITDA: '+((c.ebitda/f)*100).toFixed(1).replace('.',',')+'%';badge.style.display='inline-flex';}
+  var cards=[
+    {t:'FATURAMENTO',v:c.fat,cor:'#f59e0b',i:'&#128176;',p:_cp(c.fat,f),s:null},
+    {t:'DESPESAS TOTAIS',v:c.despTot,cor:'#ef4444',i:'&#128176;',p:_cp(c.despTot,f),s:'Custos + Despesas (incl. PL)'},
+    {t:'IMPOSTOS',v:c.imp,cor:'#f97316',i:'&#127963;',p:_cp(c.imp,f),s:null},
+    {t:'EBITDA AJUSTADO',v:c.ebitda,cor:'#10b981',i:'&#128202;',p:_cp(c.ebitda,f),s:null},
+    {t:'INVEST. E DIVIDAS',v:c.invDiv,cor:'#3b82f6',i:'&#128230;',p:_cp(c.invDiv,f),s:'Aj. Caixa - Participacao de Lucro'},
+    {t:'LUCRO SOCIO',v:c.lucroSocio,cor:'#8b5cf6',i:'&#127942;',p:_cp(c.lucroSocio,f),s:'EBITDA Ajustado + Pro-Labore'},
+    {t:'LUCRO BRUTO',v:c.lucroBruto,cor:'#f59e0b',i:'&#128176;',p:_cp(c.lucroBruto,f),s:'Fat - Desp.(sem PL) - Impostos - Invest.'}
+  ];
+  var h='';
+  for(var i=0;i<cards.length;i++){var d=cards[i];var vc=d.v<0?'style="color:#dc2626"':'';
+    h+='<div class="consol-card" style="--cc:'+d.cor+'"><div class="consol-card-head"><div class="consol-card-title">'+d.t+'</div>'+
+    '<div class="consol-card-icon" style="background:'+d.cor+'22">'+d.i+'</div></div>'+
+    '<div class="consol-card-value" '+vc+'>'+_cf(d.v)+'</div>'+
+    '<div class="consol-card-pct">'+d.p+'</div>'+(d.s?'<div class="consol-card-sub">'+d.s+'</div>':'')+
+    '</div>';
+  }
+  document.getElementById('consolCards').innerHTML=h;
+}
+
+async function cCarregar(){
+  if(_cCache){_cRender(_cCache);return;}
+  document.getElementById('consolCards').innerHTML='<div class="consol-loading">Buscando dados...</div>';
+  try{
+    var r=await supabaseClient.from('indicadores_app_storage').select('value').eq('key','consolidado_dados').maybeSingle();
+    if(r.error)throw new Error(r.error.message);
+    if(!r.data||!r.data.value){document.getElementById('consolCards').innerHTML='<div class="consol-error">Sem dados. Acesse TEXNET e faca upload do XLSX.</div>';return;}
+    _cCache=JSON.parse(r.data.value);_cRender(_cCache);gRender();
+  }catch(e){document.getElementById('consolCards').innerHTML='<div class="consol-error">Erro: '+e.message+'</div>';}
+}
+
+// ===== BANDEIRA BEACH HOUSE =====
+var sbB=supabase.createClient('https://vzdxhxbevewmbdnmetrj.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ6ZHhoeGJldmV3bWJkbm1ldHJqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgwOTI4MTgsImV4cCI6MjA4MzY2ODgxOH0.XRWZ66NkqYFM8qWPwBQD5D1veokAuNaWMSwjbG1a5RE');
+var _MABR=['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'];
+var _MNUM=['01','02','03','04','05','06','07','08','09','10','11','12'];
+var _pAnos=['2024','2025','2026'];var _pMeses=['todos'];var _pData=null;
+function _pf(v){return new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL',minimumFractionDigits:2}).format(v||0);}
+function pTogAno(btn,ano){btn.classList.toggle('ativo');_pAnos=_pAnos.filter(function(a){return a!==ano;});if(btn.classList.contains('ativo'))_pAnos.push(ano);_pData=null;pCarregar(false);}
+function pTogMes(btn,mes){
+  if(mes==='todos'){document.querySelectorAll('.p-btn-mes').forEach(function(b){b.classList.remove('ativo');});btn.classList.add('ativo');_pMeses=['todos'];pRender();return;}
+  document.querySelector('.p-btn-mes[onclick*="todos"]').classList.remove('ativo');btn.classList.toggle('ativo');
+  var at=Array.from(document.querySelectorAll('.p-btn-mes.ativo')).map(function(b){var m=b.getAttribute('onclick').match(/'(\\d{2})'/);return m?m[1]:null;}).filter(Boolean);
+  if(!at.length){_pMeses=['todos'];document.querySelector('.p-btn-mes[onclick*="todos"]').classList.add('ativo');}else _pMeses=at;
+  pRender();
+}
+async function pCarregar(forcar){
+  var el=document.getElementById('propCards');if(!el)return;
+  if(_pData&&!forcar){pRender();return;}
+  el.innerHTML='<div class="consol-loading">Buscando Bandeira Beach House...</div>';
+  try{
+    var r1=await sbB.from('proprietarios').select('nome,unidades(nome)');
+    if(r1.error)throw new Error(r1.error.message);
+    var pm={};(r1.data||[]).forEach(function(p){if(!p.nome||!p.unidades)return;if(!pm[p.nome])pm[p.nome]=[];pm[p.nome].push(p.unidades.nome);});
+    var res=[],dep=[];
+    for(var i=0;i<_pAnos.length;i++){
+      var ano=_pAnos[i];
+      var r2=await sbB.from('reservas').select('ano,mes,receita,comissao_portais,comissao_short_stay,status,unidades!inner(nome)').eq('ano',ano).neq('status','cancelada');
+      if(!r2.error)res=res.concat(r2.data||[]);
+      var r3=await sbB.from('despesas').select('valor,data,unidades!inner(nome)').gte('data',ano+'-01-01').lte('data',ano+'-12-31');
+      if(!r3.error)dep=dep.concat(r3.data||[]);
+    }
+    _pData={pm:pm,res:res,dep:dep};pRender();gRender();
+  }catch(e){document.getElementById('propCards').innerHTML='<div class="consol-error">Erro: '+e.message+'</div>';}
+}
+function pRender(){
+  var el=document.getElementById('propCards');if(!el||!_pData)return;
+  var pm=_pData.pm,res=_pData.res,dep=_pData.dep;
+  var fMes=(_pMeses.indexOf('todos')<0);
+  var unsBBH=null;
+  Object.keys(pm).forEach(function(nome){if(nome.toLowerCase().indexOf('bandeira beach')>=0)unsBBH=pm[nome];});
+  if(!unsBBH){var t=[];Object.values(pm).forEach(function(a){a.forEach(function(u){if(t.indexOf(u)<0)t.push(u);});});unsBBH=t;}
+  var mHtml='',lucGeral=0;
+  _MNUM.forEach(function(m,mi){
+    if(fMes&&_pMeses.indexOf(m)<0)return;
+    var lucMes=0;
+    _pAnos.forEach(function(ano){
+      var rc=0,cp=0,cs=0,dp=0;
+      unsBBH.forEach(function(u){
+        res.filter(function(r){return r.unidades&&r.unidades.nome===u&&r.mes===m&&r.ano===ano;}).forEach(function(r){rc+=(r.receita||0);cp+=(r.comissao_portais||0);cs+=(r.comissao_short_stay||0);});
+        dep.filter(function(d){return d.unidades&&d.unidades.nome===u&&d.data&&d.data.slice(0,4)===ano&&d.data.slice(5,7)===m;}).forEach(function(d){dp+=(d.valor||0);});
+      });
+      lucMes+=(rc-cp-cs-dp);
+    });
+    lucGeral+=lucMes;
+    var cls=lucMes>0?'ativo':lucMes<0?'negativo':'zero';
+    mHtml+='<div class="prop-mes-card '+cls+'"><div class="prop-mes-label">'+_MABR[mi]+'</div><div class="prop-mes-valor">'+_pf(lucMes)+'</div></div>';
+  });
+  var anosLabel=_pAnos.slice().sort().join(' + ');
+  var html='<div class="prop-bloco"><div class="prop-bloco-top"><div>'+
+    '<div class="prop-bloco-nome">Bandeira Beach House</div>'+
+    '<div class="prop-bloco-unidades">'+(unsBBH.join(' · '))+'</div></div>'+
+    '<div><div class="prop-bloco-total-label">TOTAL — '+anosLabel+'</div>'+
+    '<div class="prop-bloco-total-valor '+(lucGeral>=0?'green':'red')+'">'+_pf(lucGeral)+'</div></div></div>'+
+    (mHtml?'<div class="prop-ano-label">'+anosLabel+'</div><div class="prop-meses">'+mHtml+
+    '<div class="prop-mes-card total-ano"><div class="prop-mes-label">TOTAL</div><div class="prop-mes-valor">'+_pf(lucGeral)+'</div></div></div>':'')+
+    '</div>';
+  el.innerHTML=html;
+}
+
+// ===== GRUPO DE EMPRESAS =====
+var _gAnos=['2026'];var _gMeses=['todos'];
+function gTogAno(btn,ano){
+  btn.classList.toggle('ativo');
+  _gAnos=_gAnos.filter(function(a){return a!==ano;});
+  if(btn.classList.contains('ativo'))_gAnos.push(ano);
+  gRender();
+}
+function gTogMes(btn,mes){
+  if(mes==='todos'){document.querySelectorAll('.g-btn-mes').forEach(function(b){b.classList.remove('ativo');});btn.classList.add('ativo');_gMeses=['todos'];gRender();return;}
+  document.querySelector('.g-btn-mes[onclick*="todos"]').classList.remove('ativo');btn.classList.toggle('ativo');
+  var at=Array.from(document.querySelectorAll('.g-btn-mes.ativo')).map(function(b){var m=b.getAttribute('onclick').match(/'([a-z]+)'/);return(m&&m[1]!=='todos')?m[1]:null;}).filter(Boolean);
+  if(!at.length){_gMeses=['todos'];document.querySelector('.g-btn-mes[onclick*="todos"]').classList.add('ativo');}else _gMeses=at;
+  gRender();
+}
+function gRender(){
+  var el=document.getElementById('grupoCards');if(!el)return;
+  var gKeys=(_gMeses[0]==='todos')?_MK:_gMeses;
+  var lucroSocio=0;
+  var anoMap={'2024':_cDados2024,'2025':_cDados2025,'2026':_cCache};
+  _gAnos.forEach(function(ano){var df=anoMap[ano];if(!df)return;lucroSocio+=_cCalc(df,gKeys).lucroSocio;});
+  var lucroBBH=0;
+  if(_pData){
+    var fMes=(_gMeses.indexOf('todos')<0);
+    var pm=_pData.pm,res=_pData.res,dep=_pData.dep;
+    var unsBBH=null;
+    Object.keys(pm).forEach(function(nome){if(nome.toLowerCase().indexOf('bandeira beach')>=0)unsBBH=pm[nome];});
+    if(!unsBBH){var t=[];Object.values(pm).forEach(function(a){a.forEach(function(u){if(t.indexOf(u)<0)t.push(u);});});unsBBH=t;}
+    _MNUM.forEach(function(m){
+      if(fMes&&_gMeses.indexOf(_MK[parseInt(m)-1])<0)return;
+      _gAnos.forEach(function(ano){
+        var rc=0,cp=0,cs=0,dp=0;
+        unsBBH.forEach(function(u){
+          res.filter(function(r){return r.unidades&&r.unidades.nome===u&&r.mes===m&&r.ano===ano;}).forEach(function(r){rc+=(r.receita||0);cp+=(r.comissao_portais||0);cs+=(r.comissao_short_stay||0);});
+          dep.filter(function(d){return d.unidades&&d.unidades.nome===u&&d.data&&d.data.slice(0,4)===ano&&d.data.slice(5,7)===m;}).forEach(function(d){dp+=(d.valor||0);});
+        });
+        lucroBBH+=(rc-cp-cs-dp);
+      });
+    });
+  }
+  var total=lucroSocio+lucroBBH;
+  var anosL=_gAnos.slice().sort().join(' + ');
+  var mesesL=(_gMeses[0]==='todos')?'Todos os meses':_gMeses.map(function(m){return _MN[_MK.indexOf(m)];}).join(', ');
+  el.innerHTML=
+    '<div class="grupo-cards">'+
+      '<div class="grupo-card" style="--gc:#8b5cf6"><div class="grupo-card-label">&#127942; Lucro Sócio — Texnet</div>'+
+      '<div class="grupo-card-value '+(lucroSocio<0?'red':'')+'">'+_cf(lucroSocio)+'</div>'+
+      '<div class="grupo-card-sub">'+mesesL+' / '+anosL+'</div></div>'+
+      '<div class="grupo-card" style="--gc:#2d7a7a"><div class="grupo-card-label">&#127968; Bandeira Beach House</div>'+
+      '<div class="grupo-card-value '+(lucroBBH<0?'red':'')+'">'+_cf(lucroBBH)+'</div>'+
+      '<div class="grupo-card-sub">'+mesesL+' / '+anosL+'</div></div>'+
+    '</div>'+
+    '<div class="grupo-total">'+
+      '<div><div class="grupo-total-label">&#9989; Total Grupo de Empresas</div>'+
+      '<div style="font-size:0.7rem;color:rgba(255,255,255,0.4);margin-top:2px;">'+mesesL+' / '+anosL+'</div></div>'+
+      '<div class="grupo-total-value '+(total<0?'red':'')+'">'+_cf(total)+'</div>'+
+    '</div>';
+}
+
+async function alterarSenha(){
+  var s=document.getElementById('novaSenha').value.trim();
+  if(!s||s.length<6){alert('Minimo 6 caracteres.');return;}
+  var r=await supabaseClient.auth.updateUser({password:s});
+  if(r.error)alert('Erro: '+r.error.message);
+  else{alert('Senha alterada!');document.getElementById('novaSenha').value='';}
+}
+
 </script>
 </body>
 </html>
