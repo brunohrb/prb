@@ -87,8 +87,9 @@ button{border:none;cursor:pointer; font-weight:600;}
 .g-btn:hover{border-color:#f8fafc!important;color:#f8fafc!important;}
 .g-btn-ano.ativo{background:#2563eb!important;border-color:#2563eb!important;color:white!important;}
 .g-btn-mes.ativo{background:#f59e0b!important;border-color:#f59e0b!important;color:white!important;}
-.grupo-cards{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:16px;}
-@media(max-width:700px){.grupo-cards{grid-template-columns:1fr}}
+.g-btn-emp.ativo{background:#16a34a!important;border-color:#16a34a!important;color:white!important;}
+.grupo-ticket{font-size:0.72rem;color:rgba(255,255,255,0.45);margin-top:5px;text-align:right;}
+.grupo-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-top:16px;}
 .grupo-card{background:rgba(255,255,255,0.06);border-radius:14px;padding:16px 18px;border:1px solid rgba(255,255,255,0.1);border-left:3px solid var(--gc,#f59e0b);}
 .grupo-card-label{font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#94a3b8;margin-bottom:6px;}
 .grupo-card-value{font-size:1.35rem;font-weight:800;color:#f8fafc;margin-bottom:2px;}
@@ -108,6 +109,8 @@ button{border:none;cursor:pointer; font-weight:600;}
 .p-btn-ano.ativo{background:#2563eb!important;border-color:#2563eb!important;color:white!important;}
 .p-btn-mes:hover{border-color:#16a34a!important;color:#16a34a!important;}
 .p-btn-mes.ativo{background:#16a34a!important;border-color:#16a34a!important;color:white!important;}
+.i-btn-ano.ativo{background:#2563eb!important;border-color:#2563eb!important;color:white!important;}
+.i-btn-mes.ativo{background:#16a34a!important;border-color:#16a34a!important;color:white!important;}
 .prop-bloco{background:var(--card);border-radius:16px;box-shadow:0 3px 14px rgba(0,0,0,0.07);margin-bottom:20px;padding:20px 24px;}
 .prop-bloco-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;flex-wrap:wrap;gap:8px;}
 .prop-bloco-nome{font-weight:800;font-size:1.05rem;color:var(--texto);}
@@ -202,6 +205,11 @@ button{border:none;cursor:pointer; font-weight:600;}
         <button class="g-btn g-btn-mes" onclick="gTogMes(this,'out')">Out</button>
         <button class="g-btn g-btn-mes" onclick="gTogMes(this,'nov')">Nov</button>
         <button class="g-btn g-btn-mes" onclick="gTogMes(this,'dez')">Dez</button>
+        <div class="grupo-filtro-sep"></div>
+        <span class="grupo-filtro-label">Empresa:</span>
+        <button class="g-btn g-btn-emp ativo" onclick="gTogEmp(this,'texnet')">&#127942; Texnet</button>
+        <button class="g-btn g-btn-emp ativo" onclick="gTogEmp(this,'bbh')">&#127968; BBH</button>
+        <button class="g-btn g-btn-emp ativo" onclick="gTogEmp(this,'bim')">&#127968; BIM</button>
       </div>
     </div>
     <div id="grupoCards"><div style="color:rgba(255,255,255,0.4);font-size:0.85rem;padding:16px 0">Aguardando dados...</div></div>
@@ -259,6 +267,31 @@ button{border:none;cursor:pointer; font-weight:600;}
       <button class="p-btn p-btn-mes" onclick="pTogMes(this,'12')">Dez</button>
     </div>
     <div id="propCards"><div class="consol-loading">Carregando...</div></div>
+  </div>
+  <div class="prop-divider">
+    <div style="margin-bottom:4px;"><span class="prop-title">&#127968; Bandeira Imóveis Mensal</span></div>
+    <div class="prop-filtros">
+      <span class="prop-filtro-label">Ano:</span>
+      <button class="p-btn i-btn-ano ativo" onclick="iTogAno(this,'2024')">2024</button>
+      <button class="p-btn i-btn-ano ativo" onclick="iTogAno(this,'2025')">2025</button>
+      <button class="p-btn i-btn-ano ativo" onclick="iTogAno(this,'2026')">2026</button>
+      <div class="prop-filtro-sep"></div>
+      <span class="prop-filtro-label">Meses:</span>
+      <button class="p-btn i-btn-mes ativo" onclick="iTogMes(this,'todos')">Todos</button>
+      <button class="p-btn i-btn-mes" onclick="iTogMes(this,'jan')">Jan</button>
+      <button class="p-btn i-btn-mes" onclick="iTogMes(this,'fev')">Fev</button>
+      <button class="p-btn i-btn-mes" onclick="iTogMes(this,'mar')">Mar</button>
+      <button class="p-btn i-btn-mes" onclick="iTogMes(this,'abr')">Abr</button>
+      <button class="p-btn i-btn-mes" onclick="iTogMes(this,'mai')">Mai</button>
+      <button class="p-btn i-btn-mes" onclick="iTogMes(this,'jun')">Jun</button>
+      <button class="p-btn i-btn-mes" onclick="iTogMes(this,'jul')">Jul</button>
+      <button class="p-btn i-btn-mes" onclick="iTogMes(this,'ago')">Ago</button>
+      <button class="p-btn i-btn-mes" onclick="iTogMes(this,'set')">Set</button>
+      <button class="p-btn i-btn-mes" onclick="iTogMes(this,'out')">Out</button>
+      <button class="p-btn i-btn-mes" onclick="iTogMes(this,'nov')">Nov</button>
+      <button class="p-btn i-btn-mes" onclick="iTogMes(this,'dez')">Dez</button>
+    </div>
+    <div id="imovelCards"><div class="consol-loading">Carregando...</div></div>
   </div>
 </div>
 
@@ -1089,7 +1122,7 @@ function abrirAba(a){
   if(document.getElementById('ano')) document.getElementById('ano').style.display=a==='socios'?'none':'';
   if(a==='log') renderLogs();
   if(a==='ind') renderIndicadores();
-  if(a==='socios'){ cCarregar(); pCarregar(false); }
+  if(a==='socios'){ cCarregar(); pCarregar(false); iCarregar(false); }
 }
 
 function abrirSocios(){
@@ -1456,8 +1489,75 @@ function pRender(){
   var aL=_pAnos.slice().sort().join(' + ');
   el.innerHTML='<div class="prop-bloco"><div class="prop-bloco-top"><div><div class="prop-bloco-nome">Bandeira Beach House</div><div class="prop-bloco-unidades">'+unsBBH.join(' · ')+'</div></div><div><div class="prop-bloco-total-label">TOTAL — '+aL+'</div><div class="prop-bloco-total-valor '+(lucGeral>=0?'green':'red')+'">'+_pf(lucGeral)+'</div></div></div>'+(mHtml?'<div class="prop-ano-label">'+aL+'</div><div class="prop-meses">'+mHtml+'<div class="prop-mes-card total-ano"><div class="prop-mes-label">TOTAL</div><div class="prop-mes-valor">'+_pf(lucGeral)+'</div></div></div>':'')+'</div>';
 }
+// ===== BANDEIRA IMÓVEIS MENSAL =====
+var sbI=supabase.createClient('https://fmwmrjawsitbblkxaoxo.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZtd21yamF3c2l0YmJsa3hhb3hvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgwOTMyMDUsImV4cCI6MjA4MzY2OTIwNX0.QQ4Cwq46o3v8KqLoYTEHDmYyND79PU7V9A4bQbAWZhY');
+var _iAnos=['2024','2025','2026'];var _iMeses=['todos'];var _iData=null;
+function iTogAno(btn,ano){btn.classList.toggle('ativo');_iAnos=_iAnos.filter(function(a){return a!==ano;});if(btn.classList.contains('ativo'))_iAnos.push(ano);_iData=null;iCarregar(false);}
+function iTogMes(btn,mes){
+  if(mes==='todos'){document.querySelectorAll('.i-btn-mes').forEach(function(b){b.classList.remove('ativo');});btn.classList.add('ativo');_iMeses=['todos'];iRender();return;}
+  document.querySelector('.i-btn-mes[onclick*="todos"]').classList.remove('ativo');btn.classList.toggle('ativo');
+  var at=Array.from(document.querySelectorAll('.i-btn-mes.ativo')).map(function(b){var m=b.getAttribute('onclick').match(/'([a-z]+)'/);return(m&&m[1]!=='todos')?m[1]:null;}).filter(Boolean);
+  if(!at.length){_iMeses=['todos'];document.querySelector('.i-btn-mes[onclick*="todos"]').classList.add('ativo');}else _iMeses=at;
+  iRender();
+}
+async function iCarregar(forcar){
+  var el=document.getElementById('imovelCards');if(!el)return;
+  if(_iData&&!forcar){iRender();return;}
+  el.innerHTML='<div class="consol-loading">Buscando Bandeira Imóveis Mensal...</div>';
+  try{
+    var r=await sbI.from('backup_sistema').select('dados').eq('id','principal').maybeSingle();
+    if(r.error)throw new Error(r.error.message);
+    if(!r.data||!r.data.dados)throw new Error('Sem dados no backup_sistema');
+    var dados=typeof r.data.dados==='string'?JSON.parse(r.data.dados):r.data.dados;
+    var lancs=(dados.financeiro&&dados.financeiro.lancamentos)||[];
+    var predios=dados.predios||[];
+    var predioMap={};predios.forEach(function(p){predioMap[p.id]=p.nome;});
+    var agg={};
+    lancs.forEach(function(l){
+      var ano=String(l.ano);
+      if(_iAnos.indexOf(ano)<0)return;
+      if(l.categoria==='caucao')return;
+      var nm=((l.predioNome||predioMap[l.predioId]||'(sem nome)').trim());
+      var key=ano+'|'+nm;
+      if(!agg[key])agg[key]={ano:ano,imovel:nm,jan:0,fev:0,mar:0,abr:0,mai:0,jun:0,jul:0,ago:0,set:0,out:0,nov:0,dez:0};
+      var mk=_MK[l.mes];if(!mk)return;
+      agg[key][mk]+=(l.valor||0)*((l.tipo==='receita')?1:-1);
+    });
+    _iData=Object.values(agg);iRender();gRender();
+  }catch(e){document.getElementById('imovelCards').innerHTML='<div class="consol-error">Erro: '+e.message+'</div>';}
+}
+function iRender(){
+  var el=document.getElementById('imovelCards');if(!el||!_iData)return;
+  var fMes=(_iMeses.indexOf('todos')<0);
+  var mKeys=fMes?_iMeses:_MK;
+  var aL=_iAnos.slice().sort().join(' + ');
+  // Mapa: imovel → total
+  var imovelMap={};
+  _iData.forEach(function(row){
+    if(_iAnos.indexOf(String(row.ano))<0)return;
+    var nm=row.imovel||'(sem nome)';
+    if(!imovelMap[nm])imovelMap[nm]=0;
+    mKeys.forEach(function(mk){imovelMap[nm]+=(row[mk]||0);});
+  });
+  var imoveis=Object.keys(imovelMap).sort();
+  var totalGeral=0;
+  // Bloco consolidado: soma todos os imóveis por mês
+  var consHtml='';
+  _MK.forEach(function(mk,mi){
+    if(fMes&&_iMeses.indexOf(mk)<0)return;
+    var vMes=0;
+    _iData.forEach(function(row){if(_iAnos.indexOf(String(row.ano))<0)return;vMes+=(row[mk]||0);});
+    totalGeral+=vMes;
+    var mc=vMes>0?'ativo':vMes<0?'negativo':'zero';
+    consHtml+='<div class="prop-mes-card '+mc+'"><div class="prop-mes-label">'+_MABR[mi]+'</div><div class="prop-mes-valor">'+_pf(vMes)+'</div></div>';
+  });
+  // totalGeral calculado somando os meses filtrados
+  var totalGeralV=Object.values(imovelMap).reduce(function(s,v){return s+v;},0);
+  var consBloco='<div class="prop-bloco" style="border:2px solid #c47800;"><div class="prop-bloco-top"><div><div class="prop-bloco-nome">Todos os Imóveis</div><div class="prop-bloco-unidades">'+imoveis.filter(function(n){return n!=='(sem nome)';}).join(' · ')+'</div></div><div><div class="prop-bloco-total-label">TOTAL — '+aL+'</div><div class="prop-bloco-total-valor '+(totalGeralV>=0?'green':'red')+'">'+_pf(totalGeralV)+'</div></div></div>'+(consHtml?'<div class="prop-ano-label">'+aL+'</div><div class="prop-meses">'+consHtml+'<div class="prop-mes-card total-ano"><div class="prop-mes-label">TOTAL</div><div class="prop-mes-valor">'+_pf(totalGeralV)+'</div></div></div>':'')+'</div>';
+  el.innerHTML=imoveis.length?consBloco:'<div class="consol-error">Nenhum dado encontrado para os filtros selecionados.</div>';
+}
 // ===== GRUPO DE EMPRESAS =====
-var _gAnos=['2026'];var _gMeses=['todos'];
+var _gAnos=['2026'];var _gMeses=['todos'];var _gEmpresas=['texnet','bbh','bim'];
 function gTogAno(btn,ano){btn.classList.toggle('ativo');_gAnos=_gAnos.filter(function(a){return a!==ano;});if(btn.classList.contains('ativo'))_gAnos.push(ano);gRender();}
 function gTogMes(btn,mes){
   if(mes==='todos'){document.querySelectorAll('.g-btn-mes').forEach(function(b){b.classList.remove('ativo');});btn.classList.add('ativo');_gMeses=['todos'];gRender();return;}
@@ -1466,16 +1566,25 @@ function gTogMes(btn,mes){
   if(!at.length){_gMeses=['todos'];document.querySelector('.g-btn-mes[onclick*="todos"]').classList.add('ativo');}else _gMeses=at;
   gRender();
 }
+function gTogEmp(btn,emp){
+  btn.classList.toggle('ativo');
+  var idx=_gEmpresas.indexOf(emp);
+  if(btn.classList.contains('ativo')){if(idx<0)_gEmpresas.push(emp);}else{if(idx>=0)_gEmpresas.splice(idx,1);}
+  gRender();
+}
 function gRender(){
   var el=document.getElementById('grupoCards');if(!el)return;
   var gKeys=(_gMeses[0]==='todos')?_MK:_gMeses;
+  var temTex=_gEmpresas.indexOf('texnet')>=0;
+  var temBBH=_gEmpresas.indexOf('bbh')>=0;
+  var temBIM=_gEmpresas.indexOf('bim')>=0;
   // Lucro Socio Texnet
   var lucroSocio=0;
   var anoMap={'2024':_cDados2024,'2025':_cDados2025,'2026':_cCache};
-  _gAnos.forEach(function(ano){var df=anoMap[ano];if(!df)return;lucroSocio+=_cCalc(df,gKeys).lucroSocio;});
+  if(temTex)_gAnos.forEach(function(ano){var df=anoMap[ano];if(!df)return;lucroSocio+=_cCalc(df,gKeys).lucroSocio;});
   // Lucro BBH
   var lucroBBH=0;
-  if(_pData){
+  if(temBBH&&_pData){
     var fMes=(_gMeses.indexOf('todos')<0);
     var unsBBH=_getBBHUns(_pData.pm);
     _MNUM.forEach(function(m,mi){
@@ -1490,10 +1599,27 @@ function gRender(){
       });
     });
   }
-  var total=lucroSocio+lucroBBH;
+  // Lucro BIM
+  var lucroBIM=0;
+  if(temBIM&&_iData){
+    var fMesBIM=(_gMeses.indexOf('todos')<0);
+    var mKeysBIM=fMesBIM?_gMeses:_MK;
+    _iData.forEach(function(row){
+      if(_gAnos.indexOf(String(row.ano))<0)return;
+      mKeysBIM.forEach(function(mk){lucroBIM+=(row[mk]||0);});
+    });
+  }
+  var total=lucroSocio+lucroBBH+lucroBIM;
+  var nMeses=(_gMeses[0]==='todos')?12:_gMeses.length;
+  var nAnos=_gAnos.length||1;
+  var ticket=(nMeses*nAnos)>0?total/(nMeses*nAnos):0;
   var anosL=_gAnos.slice().sort().join(' + ');
   var mesesL=(_gMeses[0]==='todos')?'Todos os meses':_gMeses.map(function(m){return _MN[_MK.indexOf(m)];}).join(', ');
-  el.innerHTML='<div class="grupo-cards"><div class="grupo-card" style="--gc:#8b5cf6"><div class="grupo-card-label">&#127942; Lucro Sócio — Texnet</div><div class="grupo-card-value '+(lucroSocio<0?'red':'')+'">'+_cf(lucroSocio)+'</div><div class="grupo-card-sub">'+mesesL+' / '+anosL+'</div></div><div class="grupo-card" style="--gc:#2d7a7a"><div class="grupo-card-label">&#127968; Bandeira Beach House</div><div class="grupo-card-value '+(lucroBBH<0?'red':'')+'">'+_cf(lucroBBH)+'</div><div class="grupo-card-sub">'+mesesL+' / '+anosL+'</div></div></div><div class="grupo-total"><div><div class="grupo-total-label">&#9989; Total Grupo de Empresas</div><div style="font-size:0.7rem;color:rgba(255,255,255,0.4);margin-top:2px;">'+mesesL+' / '+anosL+'</div></div><div class="grupo-total-value '+(total<0?'red':'')+'">'+_cf(total)+'</div></div>';
+  var cardsHtml='';
+  if(temTex)cardsHtml+='<div class="grupo-card" style="--gc:#8b5cf6"><div class="grupo-card-label">&#127942; Lucro Sócio — Texnet</div><div class="grupo-card-value '+(lucroSocio<0?'red':'')+'">'+_cf(lucroSocio)+'</div><div class="grupo-card-sub">'+mesesL+' / '+anosL+'</div></div>';
+  if(temBBH)cardsHtml+='<div class="grupo-card" style="--gc:#2d7a7a"><div class="grupo-card-label">&#127968; Bandeira Beach House</div><div class="grupo-card-value '+(lucroBBH<0?'red':'')+'">'+_cf(lucroBBH)+'</div><div class="grupo-card-sub">'+mesesL+' / '+anosL+'</div></div>';
+  if(temBIM)cardsHtml+='<div class="grupo-card" style="--gc:#c47800"><div class="grupo-card-label">&#127968; Bandeira Imóveis Mensal</div><div class="grupo-card-value '+(lucroBIM<0?'red':'')+'">'+_cf(lucroBIM)+'</div><div class="grupo-card-sub">'+mesesL+' / '+anosL+'</div></div>';
+  el.innerHTML='<div class="grupo-cards">'+cardsHtml+'</div><div class="grupo-total"><div><div class="grupo-total-label">&#9989; Total Grupo de Empresas</div><div style="font-size:0.7rem;color:rgba(255,255,255,0.4);margin-top:2px;">'+mesesL+' / '+anosL+'</div></div><div style="text-align:right"><div class="grupo-total-value '+(total<0?'red':'')+'">'+_cf(total)+'</div><div class="grupo-ticket">Ticket médio: '+_cf(ticket)+'/mês</div></div></div>';
 }
 async function alterarSenha(){
   var s=document.getElementById('novaSenha').value.trim();
