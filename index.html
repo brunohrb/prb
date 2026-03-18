@@ -130,6 +130,40 @@ button{border:none;cursor:pointer; font-weight:600;}
 .prop-mes-label{font-size:0.65rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;opacity:0.9;margin-bottom:3px;}
 .prop-mes-valor{font-size:0.75rem;font-weight:700;}
 
+/* ===== MOBILE ===== */
+@media(max-width:600px){
+  .container{padding:10px 8px}
+  header{flex-wrap:wrap;gap:8px;margin-bottom:14px}
+  .brand select{font-size:13px;padding:7px}
+  .tabs{overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:2px;gap:3px}
+  .tabs::-webkit-scrollbar{display:none}
+  .tabs button{white-space:nowrap;padding:7px 10px;font-size:12px}
+  .tabs .toggle{padding:6px}
+  .modal-box{width:96%;padding:18px 14px}
+  /* Consolidado - filtros compactos */
+  .consol-filtros,.grupo-filtros,.prop-filtros{gap:3px;row-gap:5px}
+  .c-btn,.g-btn,.p-btn{padding:3px 8px!important;font-size:0.72rem!important}
+  .consol-filtro-sep,.grupo-filtro-sep,.prop-filtro-sep{display:none}
+  .consol-filtro-label,.grupo-filtro-label,.prop-filtro-label{font-size:0.72rem}
+  /* Grupo de empresas */
+  .grupo-section{padding:14px 12px}
+  .grupo-header{flex-direction:column;align-items:flex-start;gap:8px}
+  .grupo-title{font-size:1rem}
+  .grupo-cards{grid-template-columns:1fr!important}
+  .grupo-total{flex-direction:column;align-items:flex-start;gap:4px}
+  .grupo-total-value{font-size:1.3rem}
+  /* Cards do Consolidado */
+  .consol-grid{grid-template-columns:repeat(2,1fr)!important;gap:8px}
+  .consol-card{padding:10px 12px}
+  .consol-card-value{font-size:0.95rem}
+  .consol-top{flex-direction:column;align-items:flex-start;gap:6px}
+  /* Proprietários */
+  .prop-meses{grid-template-columns:repeat(4,1fr)!important}
+  .prop-bloco{padding:14px 12px}
+  .prop-bloco-top{flex-direction:column}
+  .prop-bloco-total-valor{font-size:1.15rem;text-align:left}
+  .prop-bloco-total-label{text-align:left}
+}
 </style>
 </head>
 <body>
@@ -508,9 +542,12 @@ registrarPush();
 
 
 function verificarBackupDiario() {
+  // No celular não faz backup automático (só no computador)
+  if (window.innerWidth <= 768) return;
+
   const hoje = new Date().toDateString();
   const ultimoBackup = localStorage.getItem("ultimoBackupDiario");
-  
+
   if (ultimoBackup !== hoje) {
     // Aguarda 3 segundos e gera o backup automaticamente
     setTimeout(() => {
@@ -1241,7 +1278,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       Descricao: l.desc,
       Valor: l.valor,
       Mes: l.mes + 1,
-      Ano: l.ano
+      Ano: l.ano,
+      CriadoEm: l.created_at ? new Date(l.created_at).toLocaleString('pt-BR') : ""
     }))
   );
   XLSX.utils.book_append_sheet(wb, wsLanc, "Movimentacoes");
@@ -1310,7 +1348,7 @@ async function processarRestoreExcel(event) {
         for (const s of salarios) {
           const tipo = s.Tipo;
           const socio = s.Socio !== 'PADRAO' ? s.Socio : null;
-          
+
           await supabaseClient.from('salarios').insert({
             tipo: tipo,
             socio: socio,
@@ -1320,7 +1358,19 @@ async function processarRestoreExcel(event) {
           });
         }
       }
-      
+
+      const wsFechamentos = workbook.Sheets['Fechamentos'];
+      if (wsFechamentos) {
+        const fechamentos = XLSX.utils.sheet_to_json(wsFechamentos);
+        for (const f of fechamentos) {
+          await supabaseClient.from('fechamentos').upsert({
+            mes: f.Mes - 1,
+            ano: f.Ano,
+            fechado: f.Fechado === 'SIM'
+          }, { onConflict: 'ano, mes, user_id' });
+        }
+      }
+
       alert('Dados restaurados com sucesso!');
       await carregarTudo();
       render();
