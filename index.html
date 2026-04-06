@@ -1545,7 +1545,7 @@ function pRender(){
   el.innerHTML='<div class="prop-bloco"><div class="prop-bloco-top"><div><div class="prop-bloco-nome">Bandeira Beach House</div><div class="prop-bloco-unidades">'+unsBBH.join(' · ')+'</div></div><div><div class="prop-bloco-total-label">TOTAL — '+aL+'</div><div class="prop-bloco-total-valor '+(lucGeral>=0?'green':'red')+'">'+_pf(lucGeral)+'</div></div></div>'+(mHtml?'<div class="prop-ano-label">'+aL+'</div><div class="prop-meses">'+mHtml+'<div class="prop-mes-card total-ano"><div class="prop-mes-label">TOTAL</div><div class="prop-mes-valor">'+_pf(lucGeral)+'</div></div></div>':'')+'</div>';
 }
 // ===== BANDEIRA IMÓVEIS MENSAL =====
-var sbI=supabase.createClient('https://fmwmrjawsitbblkxaoxo.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZtd21yamF3c2l0YmJsa3hhb3hvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgwOTMyMDUsImV4cCI6MjA4MzY2OTIwNX0.QQ4Cwq46o3v8KqLoYTEHDmYyND79PU7V9A4bQbAWZhY');
+var sbI=supabase.createClient('https://daozgmiytfrwomxznjln.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRhb3pnbWl5dGZyd29teHpuamxuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwMDY4NzMsImV4cCI6MjA5MDU4Mjg3M30.evEDpNDP5nFaxCDPqyhyWg2uxM9TvjsVKP0ujNqfQWs');
 var _iAnos=['2024','2025','2026'];var _iMeses=['todos'];var _iData=null;
 function iTogAno(btn,ano){btn.classList.toggle('ativo');_iAnos=_iAnos.filter(function(a){return a!==ano;});if(btn.classList.contains('ativo'))_iAnos.push(ano);_iData=null;iCarregar(false);}
 function iTogMes(btn,mes){
