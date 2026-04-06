@@ -252,6 +252,7 @@ button{border:none;cursor:pointer; font-weight:600;}
     <div style="display:flex;align-items:center;flex-wrap:wrap;gap:8px;">
       <h3 style="margin:0">&#127968; Texnet</h3>
       <span id="consolEbitdaBadge" class="consol-ebitda-badge" style="display:none"></span>
+      <button onclick="cRecarregar()" style="background:none;border:1px solid #e2e8f0;border-radius:6px;padding:3px 10px;font-size:0.8rem;color:#64748b;cursor:pointer;" title="Buscar dados mais recentes do Texnet Indicadores">&#128260; Atualizar</button>
     </div>
     <div id="consolPeriodo" style="font-size:0.85rem;color:#64748b;"></div>
   </div>
@@ -650,11 +651,16 @@ async function carregarNotificacoes() {
 }
 
 async function marcarTodasLidas() {
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  const { data: usuario } = await supabaseClient.from("usuarios").select("socio").eq("id", session.user.id).maybeSingle();
+  const nomeSocio = usuario?.socio;
+  if (!nomeSocio) return;
   await supabaseClient
     .from("notificacoes")
     .update({ lida: true })
-    .eq("lida", false);
-  
+    .eq("lida", false)
+    .eq("socio", nomeSocio.toLowerCase());
+
   await carregarNotificacoes();
 }
 
@@ -888,7 +894,6 @@ if (subs && subs.length > 0) {
 
     const [anoIni, mesIniNum] = mesIni.split("-").map(Number);
     const valorParcela = +(valorTotal / parcelas).toFixed(2);
-    const divValorParcela = temDivisao ? +(divValor / parcelas).toFixed(2) : 0;
 
     for (let i = 0; i < parcelas; i++) {
       const dataObj = new Date(anoIni, (mesIniNum - 1) + i, 1);
@@ -902,9 +907,9 @@ const { data: { session } } = await supabaseClient.auth.getSession();
         .select("perfil")
         .eq("id", session.user.id)
         .single();
-
+      
       const perfilUsuario = usuarioSistema?.perfil || "admin";
-
+      
       const { error } = await supabaseClient
         .from("movimentacoes")
         .insert([{
@@ -919,26 +924,6 @@ desc: (perfilUsuario === "funcionario" || perfilUsuario === "limitado") ? `${des
         alert("Erro ao salvar parcela");
         console.error(error);
         return;
-      }
-
-      if (temDivisao) {
-        // Crédito (reembolso) para quem pagou
-        await supabaseClient.from("movimentacoes").insert([{
-          socio: s,
-          desc: `Reembolso: ${divDesc} (${i + 1}/${parcelas})`,
-          valor: -divValorParcela,
-          ano: y,
-          mes: m
-        }]);
-
-        // Débito para quem dividiu
-        await supabaseClient.from("movimentacoes").insert([{
-          socio: divPara,
-          desc: `${divDesc} (${i + 1}/${parcelas})`,
-          valor: divValorParcela,
-          ano: y,
-          mes: m
-        }]);
       }
     }
   }
@@ -1452,7 +1437,7 @@ function cTogAno(btn,ano){
   _cAnos=_cAnos.filter(function(a){return a!==ano;});
   if(btn.classList.contains('ativo'))_cAnos.push(ano);
   if(!_cAnos.length){_cAnos=[ano];btn.classList.add('ativo');}
-  if(_cAnos.indexOf('2026')>=0&&!_cCache){cCarregar();return;}
+  if(_cAnos.indexOf('2026')>=0){cCarregar();return;}
   _cRenderMulti();
 }
 function cTogMes(btn,mes){
@@ -1491,7 +1476,6 @@ function _cRenderMulti(){
   document.getElementById('consolCards').innerHTML=h;
 }
 async function cCarregar(){
-  if(_cCache){_cRenderMulti();gRender();return;}
   document.getElementById('consolCards').innerHTML='<div class="consol-loading">Buscando dados...</div>';
   try{
     var r=await supabaseClient.from('indicadores_app_storage').select('value').eq('key','consolidado_dados').maybeSingle();
@@ -1629,7 +1613,7 @@ function iRender(){
 }
 // ===== GRUPO DE EMPRESAS =====
 var _gAnos=['2026'];var _gMeses=['todos'];var _gEmpresas=['texnet','bbh','bim'];
-function gTogAno(btn,ano){btn.classList.toggle('ativo');_gAnos=_gAnos.filter(function(a){return a!==ano;});if(btn.classList.contains('ativo'))_gAnos.push(ano);gRender();}
+function gTogAno(btn,ano){btn.classList.toggle('ativo');_gAnos=_gAnos.filter(function(a){return a!==ano;});if(btn.classList.contains('ativo'))_gAnos.push(ano);if(!_gAnos.length){_gAnos=[ano];btn.classList.add('ativo');}gRender();}
 function gTogMes(btn,mes){
   if(mes==='todos'){document.querySelectorAll('.g-btn-mes').forEach(function(b){b.classList.remove('ativo');});btn.classList.add('ativo');_gMeses=['todos'];gRender();return;}
   document.querySelector('.g-btn-mes[onclick*="todos"]').classList.remove('ativo');btn.classList.toggle('ativo');
