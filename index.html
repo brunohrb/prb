@@ -466,18 +466,18 @@ async function login() {
   let email = document.getElementById("user").value.trim();
   const password = document.getElementById("pass").value.trim();
   if (!email || !password) { alert("Preencha usuário e senha."); return; }
-  // Aceita usuário curto (ex: "bruno") e converte pro e-mail real cadastrado no Supabase.
-  // Esses e-mails são os da base do PRB (NÃO os do app Obras, que usam @bandeira.app).
+  // Aceita apelido curto (ex: "bruno", "paulo") e converte pro e-mail real do Supabase.
+  // Ajuste a lista abaixo conforme os usuários do PRB.
   if (!email.includes("@")) {
     const apelido = email.toLowerCase();
     const mapaUsuarios = {
-      bruno:  "brunohrb@gmail.com",
-      paulo:  "paulo@texnet.com.br",
-      rafael: "rafael@texnet.com.br",
-      joice:  "financeiro@texnet.com.br"
+      bruno:      "brunohrb@gmail.com",
+      paulo:      "paulo@texnet.com.br",
+      rafael:     "rafael@texnet.com.br",
+      financeiro: "financeiro@texnet.com.br"
     };
     if (!mapaUsuarios[apelido]) {
-      alert('Usuário "' + apelido + '" não reconhecido. Use: bruno, paulo, rafael ou joice — ou digite o e-mail completo.');
+      alert('Usuário "' + apelido + '" não reconhecido. Use: bruno, paulo, rafael ou financeiro — ou digite o e-mail completo.');
       return;
     }
     email = mapaUsuarios[apelido];
