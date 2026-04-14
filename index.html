@@ -169,15 +169,9 @@ button{border:none;cursor:pointer; font-weight:600;}
 <body>
 <div id="loginScreen">
   <div class="login-box">
-    <h1>PRB Participação</h1>
-    <p>Pró-Labore</p>
 <form onsubmit="event.preventDefault(); login()">
-  <input id="user" type="email" placeholder="Email" autocomplete="email">
-  <input id="pass" type="password" placeholder="Senha" autocomplete="current-password">
-  <div style="display:flex; align-items:center; gap:8px; margin:10px 0; text-align:left">
-    <input type="checkbox" id="lembrar" style="width:auto; margin:0">
-    <label for="lembrar" style="color:#666; font-size:14px; cursor:pointer">Lembrar de mim</label>
-  </div>
+  <input id="user" type="email" placeholder="bruno" autocomplete="email">
+  <input id="pass" type="password" placeholder="xxxxxx" autocomplete="current-password">
   <button type="submit">Entrar Agora</button>
 </form>
   </div>
@@ -476,7 +470,7 @@ async function login() {
   const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
 if (error) { alert("Erro ao entrar: " + error.message); return; }
 
-if (document.getElementById("lembrar").checked) {
+if (document.getElementById("lembrar")?.checked) {
   localStorage.setItem("saved_email", email);
   localStorage.setItem("saved_pass", password);
 } else {
@@ -1394,7 +1388,8 @@ window.addEventListener("load", () => {
   if (savedEmail) {
     document.getElementById("user").value = savedEmail;
     document.getElementById("pass").value = savedPass;
-    document.getElementById("lembrar").checked = true;
+    const lembrarEl = document.getElementById("lembrar");
+    if (lembrarEl) lembrarEl.checked = true;
   }
 });
   
