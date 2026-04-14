@@ -169,6 +169,14 @@ function setupApp() {
     document.getElementById('dropdown-menu').classList.add('hidden');
     navigateTo('usuarios');
   });
+  document.getElementById('menu-financeiro').addEventListener('click', () => {
+    document.getElementById('dropdown-menu').classList.add('hidden');
+    navigateTo('financeiro');
+  });
+  document.getElementById('menu-semana').addEventListener('click', () => {
+    document.getElementById('dropdown-menu').classList.add('hidden');
+    navigateTo('semana');
+  });
   document.getElementById('menu-logout').addEventListener('click', handleLogout);
 
   // Bottom nav
@@ -207,6 +215,10 @@ function setupApp() {
   // Modal projetos (Grandes Obras)
   setupProjetosModal();
 
+  // Financeiro
+  setupGastoForm();
+  setupFinanceiroFilters();
+
   // Notificações - limpar
   document.getElementById('btn-limpar-notifs').addEventListener('click', async () => {
     await Notifications.markAllRead();
@@ -230,7 +242,7 @@ function toggleMenu() {
 let viewHistory = [];
 
 function navigateTo(viewName, pushHistory = true) {
-  const views = ['dashboard', 'nova', 'detalhe', 'imoveis', 'notificacoes', 'usuarios', 'projetos', 'projeto-detalhe'];
+  const views = ['dashboard', 'nova', 'detalhe', 'imoveis', 'notificacoes', 'usuarios', 'projetos', 'projeto-detalhe', 'financeiro', 'novo-gasto', 'semana'];
   if (!views.includes(viewName)) return;
 
   if (pushHistory && currentView !== viewName) {
@@ -256,13 +268,16 @@ function navigateTo(viewName, pushHistory = true) {
     notificacoes: 'Notificações',
     usuarios: 'Usuários',
     projetos: 'Grandes Obras',
-    'projeto-detalhe': 'Pendências da Obra'
+    'projeto-detalhe': 'Pendências da Obra',
+    financeiro: 'Financeiro',
+    'novo-gasto': 'Novo Gasto',
+    semana: 'Pagamento da Semana'
   };
   document.getElementById('page-title').textContent = titles[viewName] || viewName;
 
   // Botão voltar
   const backBtn = document.getElementById('btn-back');
-  const showBack = ['nova', 'detalhe', 'imoveis', 'notificacoes', 'usuarios', 'projetos', 'projeto-detalhe'].includes(viewName);
+  const showBack = ['nova', 'detalhe', 'imoveis', 'notificacoes', 'usuarios', 'projetos', 'projeto-detalhe', 'financeiro', 'novo-gasto', 'semana'].includes(viewName);
   backBtn.classList.toggle('hidden', !showBack);
   document.querySelector('.header-logo').classList.toggle('hidden', showBack);
 
@@ -273,6 +288,9 @@ function navigateTo(viewName, pushHistory = true) {
     case 'notificacoes': loadNotificacoes(); break;
     case 'usuarios': loadUsuarios(); break;
     case 'projetos': loadProjetos(); break;
+    case 'financeiro': loadFinanceiro(); break;
+    case 'novo-gasto': openNovoGasto(); break;
+    case 'semana': loadSemana(); break;
     case 'nova':
       Requests.initPhotoPicker();
       Requests.clearPendingPhotos();
@@ -953,6 +971,291 @@ function openEditProjeto(projeto) {
   document.getElementById('projeto-status').value = projeto.status;
   document.getElementById('projeto-end').value = projeto.end_date || '';
   document.getElementById('modal-projeto').classList.remove('hidden');
+}
+
+// =============================================
+// FINANCEIRO
+// =============================================
+
+let filterGastoDest = 'todos';
+let filterGastoCat = '';
+let tipoGasto = 'socio';
+
+// ---- Tipo de destino ----
+function setDestGasto(dest) {
+  tipoGasto = dest;
+  document.querySelectorAll('.dest-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.dest === dest);
+  });
+  document.querySelector('.dest-field-socio')  .classList.toggle('hidden', dest !== 'socio');
+  document.querySelector('.dest-field-familia').classList.toggle('hidden', dest !== 'familia');
+  document.querySelector('.dest-field-obra')   .classList.toggle('hidden', dest !== 'obra');
+}
+
+// ---- Carrega view Financeiro ----
+async function loadFinanceiro() {
+  const list = document.getElementById('list-expenses');
+  const empty = document.getElementById('empty-expenses');
+  list.querySelectorAll('.expense-card').forEach(c => c.remove());
+
+  try {
+    const filters = {};
+    if (filterGastoDest !== 'todos') filters.destinationType = filterGastoDest;
+    if (filterGastoCat)              filters.category = filterGastoCat;
+
+    const [expenses, totals] = await Promise.all([
+      Finance.list(filters),
+      Finance.getTotals()
+    ]);
+
+    document.getElementById('fin-total').textContent  = Finance.formatBRL(totals.total);
+    document.getElementById('fin-pago').textContent   = Finance.formatBRL(totals.pago);
+    document.getElementById('fin-semana').textContent = Finance.formatBRL(totals.semana);
+
+    if (!expenses.length) {
+      empty.style.display = 'block';
+    } else {
+      empty.style.display = 'none';
+      expenses.forEach(e => {
+        const card = Finance.renderCard(e);
+        card.addEventListener('click', () => openDetalheGasto(e.id));
+        list.appendChild(card);
+      });
+    }
+  } catch (err) {
+    showToast('Erro ao carregar gastos', 'error');
+    console.error(err);
+  }
+}
+
+// ---- Detalhe do gasto (modal simples p/ excluir/editar pagamento) ----
+async function openDetalheGasto(id) {
+  try {
+    const exp = await Finance.getById(id);
+    const destInfo = exp.destination_type === 'socio'   ? (exp.socio?.name || '—')
+                   : exp.destination_type === 'familia' ? (exp.destination_family || '—')
+                   : (exp.projects?.name || exp.properties?.name || 'Obra');
+    const msg = `Valor: ${Finance.formatBRL(exp.amount)}\n` +
+                `Descrição: ${exp.description}\n` +
+                `Direcionado a: ${exp.destination_type} — ${destInfo}\n` +
+                `Data: ${exp.expense_date}\n` +
+                (exp.worker_name ? `Prestador: ${exp.worker_name}\n` : '') +
+                `\nExcluir este gasto?`;
+    if (confirm(msg)) {
+      await Finance.remove(id);
+      showToast('Gasto excluído', 'success');
+      loadFinanceiro();
+    }
+  } catch (err) {
+    showToast('Erro ao abrir gasto', 'error');
+    console.error(err);
+  }
+}
+
+// ---- Novo Gasto ----
+async function openNovoGasto() {
+  document.getElementById('form-gasto').reset();
+  document.getElementById('gasto-error').classList.add('hidden');
+  document.getElementById('gasto-data').value = new Date().toISOString().slice(0, 10);
+  document.getElementById('gasto-worker-fields').classList.add('hidden');
+  setDestGasto('socio');
+
+  // Popula selects
+  await populateSociosSelect('gasto-socio');
+  await Properties.populateSelects(['gasto-imovel']);
+  await Projects.populateSelect('gasto-projeto');
+}
+
+async function populateSociosSelect(selectId) {
+  const sel = document.getElementById(selectId);
+  if (!sel) return;
+  sel.innerHTML = '<option value="">Selecione o sócio</option>';
+  const { data } = await supabase
+    .from('profiles')
+    .select('id, name, email')
+    .eq('role', 'socio')
+    .order('name');
+  (data || []).forEach(p => {
+    const opt = document.createElement('option');
+    opt.value = p.id;
+    opt.textContent = p.name || p.email;
+    sel.appendChild(opt);
+  });
+}
+
+function setupGastoForm() {
+  const form = document.getElementById('form-gasto');
+
+  // Mostra campos de prestador quando categoria exige
+  document.getElementById('gasto-cat').addEventListener('change', (e) => {
+    const show = ['servico', 'pedreiro'].includes(e.target.value);
+    document.getElementById('gasto-worker-fields').classList.toggle('hidden', !show);
+  });
+
+  // Imóvel e projeto — apenas 1 por vez
+  document.getElementById('gasto-imovel').addEventListener('change', () => {
+    if (document.getElementById('gasto-imovel').value)
+      document.getElementById('gasto-projeto').value = '';
+  });
+  document.getElementById('gasto-projeto').addEventListener('change', () => {
+    if (document.getElementById('gasto-projeto').value)
+      document.getElementById('gasto-imovel').value = '';
+  });
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('btn-salvar-gasto');
+    const errEl = document.getElementById('gasto-error');
+    errEl.classList.add('hidden');
+
+    const valor = parseFloat(document.getElementById('gasto-valor').value);
+    const desc  = document.getElementById('gasto-desc').value.trim();
+    const data  = document.getElementById('gasto-data').value;
+    const cat   = document.getElementById('gasto-cat').value;
+
+    if (!valor || valor <= 0 || !desc || !data || !cat) {
+      errEl.textContent = 'Preencha valor, descrição, data e categoria.';
+      errEl.classList.remove('hidden');
+      return;
+    }
+
+    const payload = {
+      description: desc,
+      amount: valor,
+      expense_date: data,
+      category: cat,
+      service_type: document.getElementById('gasto-servicetype').value.trim() || null,
+      worker_name:  document.getElementById('gasto-worker').value.trim() || null,
+      notes:        document.getElementById('gasto-notes').value.trim() || null,
+      destination_type: tipoGasto
+    };
+
+    if (tipoGasto === 'socio') {
+      payload.destination_socio_id = document.getElementById('gasto-socio').value;
+      if (!payload.destination_socio_id) {
+        errEl.textContent = 'Selecione o sócio.';
+        errEl.classList.remove('hidden'); return;
+      }
+    } else if (tipoGasto === 'familia') {
+      payload.destination_family = document.getElementById('gasto-familia').value.trim();
+      if (!payload.destination_family) {
+        errEl.textContent = 'Informe o nome do familiar.';
+        errEl.classList.remove('hidden'); return;
+      }
+    } else if (tipoGasto === 'obra') {
+      payload.property_id = document.getElementById('gasto-imovel').value || null;
+      payload.project_id  = document.getElementById('gasto-projeto').value || null;
+    }
+
+    setLoading(btn, true, 'Salvando...');
+    try {
+      await Finance.create(payload);
+      showToast('Gasto lançado! Sócios notificados ✓', 'success');
+      navigateTo('financeiro');
+    } catch (err) {
+      errEl.textContent = 'Erro ao salvar: ' + err.message;
+      errEl.classList.remove('hidden');
+      setLoading(btn, false);
+      console.error(err);
+    }
+  });
+}
+
+// ---- Filtros da view Financeiro ----
+function setupFinanceiroFilters() {
+  document.getElementById('filter-fin-dest').addEventListener('click', (e) => {
+    const tab = e.target.closest('.filter-tab');
+    if (!tab) return;
+    document.querySelectorAll('#filter-fin-dest .filter-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    filterGastoDest = tab.dataset.dest;
+    loadFinanceiro();
+  });
+  document.getElementById('filter-fin-cat').addEventListener('change', (e) => {
+    filterGastoCat = e.target.value;
+    loadFinanceiro();
+  });
+  document.getElementById('btn-novo-gasto').addEventListener('click', () => navigateTo('novo-gasto'));
+}
+
+// ---- Pagamento da Semana ----
+async function loadSemana() {
+  const listEl = document.getElementById('list-workers');
+  listEl.innerHTML = '<div style="text-align:center;padding:32px"><div class="loading-spinner" style="margin:0 auto;border-color:rgba(0,0,0,0.15);border-top-color:var(--fin-primary)"></div></div>';
+
+  try {
+    const { range, groups } = await Finance.getWeekWorkers();
+
+    // Header
+    const [y1,m1,d1] = range.start.split('-');
+    const [y2,m2,d2] = range.end.split('-');
+    document.getElementById('week-range').textContent =
+      `${d1}/${m1} → ${d2}/${m2}/${y2}`;
+    document.getElementById('week-title').textContent =
+      'Prestadores da semana';
+    const totalPending = groups.reduce((s, g) => s + g.total_pending, 0);
+    document.getElementById('week-total-pending').textContent =
+      Finance.formatBRL(totalPending);
+
+    listEl.innerHTML = '';
+    if (!groups.length) {
+      listEl.innerHTML = '<div class="empty-state"><p>Nenhum gasto de serviço nesta semana</p></div>';
+      return;
+    }
+
+    groups.forEach(g => {
+      const card = Finance.renderWeekWorkerCard(g);
+      listEl.appendChild(card);
+
+      // Copiar PIX
+      card.querySelector('.btn-copy-pix').addEventListener('click', () => {
+        const pix = card.querySelector('.input-pix').value.trim();
+        if (!pix) return showToast('Informe a chave PIX primeiro', 'error');
+        navigator.clipboard?.writeText(pix).then(
+          () => showToast('Chave PIX copiada ✓', 'success'),
+          () => showToast('Não foi possível copiar', 'error')
+        );
+      });
+
+      // Pagar item individual
+      card.querySelectorAll('.btn-pay-item').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const id = btn.dataset.id;
+          const pix = card.querySelector('.input-pix').value.trim();
+          setLoading(btn, true, '...');
+          try {
+            await Finance.markPaid(id, { pix_key: pix });
+            showToast('Marcado como pago ✓', 'success');
+            loadSemana();
+          } catch (err) {
+            showToast('Erro ao pagar', 'error');
+            setLoading(btn, false);
+          }
+        });
+      });
+
+      // Pagar tudo da semana (do prestador)
+      const payAll = card.querySelector('.btn-pay-all');
+      payAll.addEventListener('click', async () => {
+        const pix = card.querySelector('.input-pix').value.trim();
+        const pend = g.items.filter(i => !i.paid);
+        if (!pend.length) return;
+        if (!confirm(`Marcar ${pend.length} lançamento(s) de ${g.worker_name} como PAGO?`)) return;
+        setLoading(payAll, true, '...');
+        try {
+          await Promise.all(pend.map(i => Finance.markPaid(i.id, { pix_key: pix })));
+          showToast('Semana paga ✓', 'success');
+          loadSemana();
+        } catch (err) {
+          showToast('Erro no pagamento', 'error');
+          setLoading(payAll, false);
+        }
+      });
+    });
+  } catch (err) {
+    listEl.innerHTML = '<div class="empty-state"><p>Erro ao carregar</p></div>';
+    console.error(err);
+  }
 }
 
 // ---- Image Viewer ----
