@@ -226,10 +226,10 @@ function setupApp() {
     showToast('Todas as notificações marcadas como lidas');
   });
 
-  // Toggle senha
+  // Toggle senha (elemento pode não existir no login simplificado)
   document.getElementById('toggle-password')?.addEventListener('click', () => {
     const input = document.getElementById('login-password');
-    input.type = input.type === 'password' ? 'text' : 'password';
+    if (input) input.type = input.type === 'password' ? 'text' : 'password';
   });
 }
 
@@ -319,43 +319,46 @@ function setupLoginForm() {
   // Auto-preenche usuário salvo
   restoreLoginForm();
 
-  // Mostra botão de biometria se disponível e registrado
-  Auth.isBiometricAvailable().then(available => {
-    if (available && Auth.hasBiometricSaved()) {
-      document.getElementById('btn-biometrico').classList.remove('hidden');
-    }
-  });
-
-  // Login com biometria
-  document.getElementById('btn-biometrico').addEventListener('click', async () => {
-    const btn = document.getElementById('btn-biometrico');
-    const errEl = document.getElementById('login-error');
-    errEl.classList.add('hidden');
-    btn.disabled = true;
-    btn.textContent = 'Verificando...';
-    try {
-      await Auth.verifyBiometric();
-      await initApp(); // sessão restaurada com sucesso
-    } catch (err) {
-      if (err.message === 'SESSAO_EXPIRADA') {
-        errEl.textContent = 'Sessão expirada. Faça login com senha — o Face ID continuará disponível.';
-        btn.classList.add('hidden');
-      } else if (err.message === 'CREDENCIAL_INVALIDA') {
-        // Credencial removida do dispositivo (ex: trocou de celular). Permite reativar.
-        errEl.textContent = 'Face ID não reconhecido neste dispositivo. Faça login com senha para reativar.';
-        btn.classList.add('hidden');
-      } else if (err.name === 'NotAllowedError') {
-        errEl.textContent = 'Biometria cancelada.';
-        btn.disabled = false;
-        btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="22" height="22"><path d="M12 2C8.5 2 6 4.5 6 8v1"/><path d="M12 22c3.5 0 6-2.5 6-6v-1"/><path d="M9 8.5A3.5 3.5 0 0115 12v2"/><path d="M9 15.5A3.5 3.5 0 019 12v-1"/><path d="M12 8v8"/><path d="M6 12H3"/><path d="M21 12h-3"/></svg> Entrar com Face ID / Digital`;
-      } else {
-        errEl.textContent = 'Erro na biometria. Use sua senha.';
-        btn.disabled = false;
-        btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="22" height="22"><path d="M12 2C8.5 2 6 4.5 6 8v1"/><path d="M12 22c3.5 0 6-2.5 6-6v-1"/><path d="M9 8.5A3.5 3.5 0 0115 12v2"/><path d="M9 15.5A3.5 3.5 0 019 12v-1"/><path d="M12 8v8"/><path d="M6 12H3"/><path d="M21 12h-3"/></svg> Entrar com Face ID / Digital`;
+  // Mostra botão de biometria se disponível e registrado (pode não existir no login simplificado)
+  const bioBtn = document.getElementById('btn-biometrico');
+  if (bioBtn) {
+    Auth.isBiometricAvailable().then(available => {
+      if (available && Auth.hasBiometricSaved()) {
+        bioBtn.classList.remove('hidden');
       }
-      errEl.classList.remove('hidden');
-    }
-  });
+    });
+
+    // Login com biometria
+    bioBtn.addEventListener('click', async () => {
+      const btn = document.getElementById('btn-biometrico');
+      const errEl = document.getElementById('login-error');
+      errEl.classList.add('hidden');
+      btn.disabled = true;
+      btn.textContent = 'Verificando...';
+      try {
+        await Auth.verifyBiometric();
+        await initApp(); // sessão restaurada com sucesso
+      } catch (err) {
+        if (err.message === 'SESSAO_EXPIRADA') {
+          errEl.textContent = 'Sessão expirada. Faça login com senha — o Face ID continuará disponível.';
+          btn.classList.add('hidden');
+        } else if (err.message === 'CREDENCIAL_INVALIDA') {
+          // Credencial removida do dispositivo (ex: trocou de celular). Permite reativar.
+          errEl.textContent = 'Face ID não reconhecido neste dispositivo. Faça login com senha para reativar.';
+          btn.classList.add('hidden');
+        } else if (err.name === 'NotAllowedError') {
+          errEl.textContent = 'Biometria cancelada.';
+          btn.disabled = false;
+          btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="22" height="22"><path d="M12 2C8.5 2 6 4.5 6 8v1"/><path d="M12 22c3.5 0 6-2.5 6-6v-1"/><path d="M9 8.5A3.5 3.5 0 0115 12v2"/><path d="M9 15.5A3.5 3.5 0 019 12v-1"/><path d="M12 8v8"/><path d="M6 12H3"/><path d="M21 12h-3"/></svg> Entrar com Face ID / Digital`;
+        } else {
+          errEl.textContent = 'Erro na biometria. Use sua senha.';
+          btn.disabled = false;
+          btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="22" height="22"><path d="M12 2C8.5 2 6 4.5 6 8v1"/><path d="M12 22c3.5 0 6-2.5 6-6v-1"/><path d="M9 8.5A3.5 3.5 0 0115 12v2"/><path d="M9 15.5A3.5 3.5 0 019 12v-1"/><path d="M12 8v8"/><path d="M6 12H3"/><path d="M21 12h-3"/></svg> Entrar com Face ID / Digital`;
+        }
+        errEl.classList.remove('hidden');
+      }
+    });
+  }
 
   // Login com senha
   const form = document.getElementById('login-form');
@@ -363,7 +366,7 @@ function setupLoginForm() {
     e.preventDefault();
     const username = document.getElementById('login-email').value.trim();
     const password = document.getElementById('login-password').value;
-    const remember = document.getElementById('login-remember').checked;
+    const remember = document.getElementById('login-remember')?.checked ?? false;
     const btn = document.getElementById('login-btn');
     const errEl = document.getElementById('login-error');
 
@@ -449,8 +452,10 @@ async function handleLogout() {
 function restoreLoginForm() {
   const savedUser = Auth.getSavedUsername();
   if (savedUser) {
-    document.getElementById('login-email').value = savedUser;
-    document.getElementById('login-remember').checked = true;
+    const emailEl = document.getElementById('login-email');
+    if (emailEl) emailEl.value = savedUser;
+    const rememberEl = document.getElementById('login-remember');
+    if (rememberEl) rememberEl.checked = true;
   }
 }
 
