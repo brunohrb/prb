@@ -170,7 +170,7 @@ button{border:none;cursor:pointer; font-weight:600;}
 <div id="loginScreen">
   <div class="login-box">
 <form onsubmit="event.preventDefault(); login()">
-  <input id="user" type="email" placeholder="bruno" autocomplete="email">
+  <input id="user" type="text" placeholder="bruno" autocomplete="username">
   <input id="pass" type="password" placeholder="xxxxxx" autocomplete="current-password">
   <button type="submit">Entrar Agora</button>
 </form>
@@ -463,20 +463,19 @@ const baseInicial = {mes:11, ano:2025};
 let dadosCache = { lancamentos: [], salarios: [], fechamentos: [] };
 
 async function login() {
-  const email = document.getElementById("user").value.trim();
+  let email = document.getElementById("user").value.trim();
   const password = document.getElementById("pass").value.trim();
-  if (!email || !password) { alert("Preencha e-mail e senha."); return; }
+  if (!email || !password) { alert("Preencha usuário e senha."); return; }
+  // Aceita usuário curto (ex: "bruno") e completa com "@gmail.com" automaticamente
+  if (!email.includes("@")) email = email.toLowerCase() + "@gmail.com";
   await supabaseClient.auth.signOut();
   const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
 if (error) { alert("Erro ao entrar: " + error.message); return; }
 
-if (document.getElementById("lembrar")?.checked) {
-  localStorage.setItem("saved_email", email);
-  localStorage.setItem("saved_pass", password);
-} else {
-  localStorage.removeItem("saved_email");
-  localStorage.removeItem("saved_pass");
-}
+// Salva automaticamente pra entrar direto na próxima vez no mesmo aparelho.
+// Se o usuário clicar em "Sair", essas chaves são apagadas no logout().
+localStorage.setItem("saved_email", email);
+localStorage.setItem("saved_pass", password);
 
 document.getElementById("loginScreen").style.display = "none";
   document.getElementById("app").classList.remove("hidden");
@@ -1251,6 +1250,9 @@ function toggleDivisao(s) {
 }
 
  async function logout() {
+  // Apaga as credenciais salvas para não entrar automático depois de um logout explícito
+  localStorage.removeItem("saved_email");
+  localStorage.removeItem("saved_pass");
   await supabaseClient.auth.signOut();
   location.reload();
 }
@@ -1262,10 +1264,31 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.getElementById("loginScreen").style.display = "none";
     document.getElementById("app").classList.remove("hidden");
     init();
-  } else {
-    document.getElementById("loginScreen").style.display = "flex";
-    document.getElementById("app").classList.add("hidden");
+    return;
   }
+
+  // Sem sessão ativa: tenta entrar automaticamente com credenciais salvas
+  const savedEmail = localStorage.getItem("saved_email");
+  const savedPass = localStorage.getItem("saved_pass");
+  if (savedEmail && savedPass) {
+    const { error } = await supabaseClient.auth.signInWithPassword({
+      email: savedEmail,
+      password: savedPass
+    });
+    if (!error) {
+      document.getElementById("loginScreen").style.display = "none";
+      document.getElementById("app").classList.remove("hidden");
+      init();
+      return;
+    }
+    // Credenciais salvas não funcionaram mais (senha trocada, etc.) — limpa
+    localStorage.removeItem("saved_email");
+    localStorage.removeItem("saved_pass");
+  }
+
+  // Mostra a tela de login normalmente
+  document.getElementById("loginScreen").style.display = "flex";
+  document.getElementById("app").classList.add("hidden");
 });
 
   async function gerarBackupExcel() {
@@ -1383,13 +1406,15 @@ async function processarRestoreExcel(event) {
 }
 
 window.addEventListener("load", () => {
+  // Se, por algum motivo, a tela de login estiver visível mesmo havendo
+  // credenciais salvas, pré-preenche os campos pra facilitar.
   const savedEmail = localStorage.getItem("saved_email");
   const savedPass = localStorage.getItem("saved_pass");
   if (savedEmail) {
-    document.getElementById("user").value = savedEmail;
-    document.getElementById("pass").value = savedPass;
-    const lembrarEl = document.getElementById("lembrar");
-    if (lembrarEl) lembrarEl.checked = true;
+    const userEl = document.getElementById("user");
+    const passEl = document.getElementById("pass");
+    if (userEl && !userEl.value) userEl.value = savedEmail;
+    if (passEl && !passEl.value) passEl.value = savedPass;
   }
 });
   
