@@ -170,7 +170,7 @@ button{border:none;cursor:pointer; font-weight:600;}
 <div id="loginScreen">
   <div class="login-box">
 <form onsubmit="event.preventDefault(); login()">
-  <input id="user" type="email" placeholder="bruno" autocomplete="email">
+  <input id="user" type="text" placeholder="bruno" autocomplete="username">
   <input id="pass" type="password" placeholder="xxxxxx" autocomplete="current-password">
   <button type="submit">Entrar Agora</button>
 </form>
@@ -463,9 +463,11 @@ const baseInicial = {mes:11, ano:2025};
 let dadosCache = { lancamentos: [], salarios: [], fechamentos: [] };
 
 async function login() {
-  const email = document.getElementById("user").value.trim();
+  let email = document.getElementById("user").value.trim();
   const password = document.getElementById("pass").value.trim();
-  if (!email || !password) { alert("Preencha e-mail e senha."); return; }
+  if (!email || !password) { alert("Preencha usuário e senha."); return; }
+  // Aceita usuário curto (ex: "bruno") e completa com "@gmail.com" automaticamente
+  if (!email.includes("@")) email = email.toLowerCase() + "@gmail.com";
   await supabaseClient.auth.signOut();
   const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
 if (error) { alert("Erro ao entrar: " + error.message); return; }
