@@ -121,6 +121,14 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
         Imóveis
       </button>
+      <button class="dropdown-item" id="menu-financeiro">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+        Financeiro
+      </button>
+      <button class="dropdown-item" id="menu-semana">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        Pagamento da Semana
+      </button>
       <button class="dropdown-item" id="menu-usuarios" style="display:none">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
         Usuários
@@ -309,6 +317,159 @@
         </button>
       </div>
 
+      <!-- VIEW: FINANCEIRO (lista de gastos) -->
+      <div id="view-financeiro" class="view">
+        <div class="finance-summary">
+          <div class="fin-card">
+            <span class="fin-label">Total</span>
+            <strong id="fin-total">R$ 0,00</strong>
+          </div>
+          <div class="fin-card open">
+            <span class="fin-label">A pagar (semana)</span>
+            <strong id="fin-semana">R$ 0,00</strong>
+          </div>
+          <div class="fin-card paid">
+            <span class="fin-label">Pago</span>
+            <strong id="fin-pago">R$ 0,00</strong>
+          </div>
+        </div>
+
+        <div class="filter-bar">
+          <div class="filter-tabs" id="filter-fin-dest">
+            <button class="filter-tab active" data-dest="todos">Todos</button>
+            <button class="filter-tab" data-dest="socio">👤 Sócio</button>
+            <button class="filter-tab" data-dest="familia">👪 Família</button>
+            <button class="filter-tab" data-dest="obra">🏗️ Obra</button>
+          </div>
+          <div class="filter-row">
+            <select id="filter-fin-cat" class="select-filter">
+              <option value="">Todas categorias</option>
+              <option value="material">🧱 Material</option>
+              <option value="servico">🔧 Serviço</option>
+              <option value="pedreiro">👷 Mão-de-obra</option>
+              <option value="outros">📦 Outros</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="list-expenses" class="expense-list">
+          <div class="empty-state" id="empty-expenses">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+            <p>Nenhum gasto lançado ainda</p>
+          </div>
+        </div>
+
+        <button class="fab" id="btn-novo-gasto">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </button>
+      </div>
+
+      <!-- VIEW: NOVO GASTO -->
+      <div id="view-novo-gasto" class="view">
+        <form id="form-gasto" class="form-view">
+          <div class="form-group">
+            <label>Direcionar para *</label>
+            <div class="dest-picker">
+              <button type="button" class="dest-btn active" data-dest="socio"   onclick="setDestGasto('socio')">👤 Sócio</button>
+              <button type="button" class="dest-btn"        data-dest="familia" onclick="setDestGasto('familia')">👪 Família</button>
+              <button type="button" class="dest-btn"        data-dest="obra"    onclick="setDestGasto('obra')">🏗️ Obra</button>
+            </div>
+          </div>
+
+          <!-- Destino: SÓCIO -->
+          <div class="form-group dest-field dest-field-socio">
+            <label>Sócio *</label>
+            <select id="gasto-socio" required>
+              <option value="">Selecione o sócio</option>
+            </select>
+          </div>
+
+          <!-- Destino: FAMÍLIA -->
+          <div class="form-group dest-field dest-field-familia hidden">
+            <label>Familiar *</label>
+            <input type="text" id="gasto-familia" placeholder="Ex: Dona Maria (mãe do João)">
+          </div>
+
+          <!-- Destino: OBRA -->
+          <div class="form-group dest-field dest-field-obra hidden">
+            <label>Obra / Imóvel</label>
+            <select id="gasto-projeto">
+              <option value="">Nenhuma grande obra</option>
+            </select>
+            <select id="gasto-imovel" style="margin-top:8px">
+              <option value="">Nenhum imóvel</option>
+            </select>
+            <small style="color:var(--text-hint)">Selecione uma grande obra OU um imóvel</small>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Valor (R$) *</label>
+              <input type="number" inputmode="decimal" step="0.01" min="0" id="gasto-valor" required placeholder="0,00">
+            </div>
+            <div class="form-group">
+              <label>Data *</label>
+              <input type="date" id="gasto-data" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Descrição *</label>
+            <input type="text" id="gasto-desc" required maxlength="140" placeholder="Ex: 20 sacos de cimento">
+          </div>
+
+          <div class="form-group">
+            <label>Categoria *</label>
+            <select id="gasto-cat" required>
+              <option value="material">🧱 Material</option>
+              <option value="servico">🔧 Serviço avulso</option>
+              <option value="pedreiro">👷 Mão-de-obra (pedreiro, encanador, pintor...)</option>
+              <option value="outros">📦 Outros</option>
+            </select>
+          </div>
+
+          <!-- Campos específicos p/ serviço / mão-de-obra -->
+          <div id="gasto-worker-fields" class="hidden">
+            <div class="form-row">
+              <div class="form-group">
+                <label>Tipo de serviço</label>
+                <input type="text" id="gasto-servicetype" placeholder="Ex: Pedreiro, Pintor, Encanador">
+              </div>
+              <div class="form-group">
+                <label>Nome do prestador</label>
+                <input type="text" id="gasto-worker" placeholder="Ex: Seu João">
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Observações</label>
+            <textarea id="gasto-notes" rows="2" placeholder="Opcional..."></textarea>
+          </div>
+
+          <div id="gasto-error" class="error-msg hidden"></div>
+          <button type="submit" class="btn btn-primary btn-full btn-lg" id="btn-salvar-gasto">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            Lançar Gasto
+          </button>
+        </form>
+      </div>
+
+      <!-- VIEW: PAGAMENTO DA SEMANA -->
+      <div id="view-semana" class="view">
+        <div class="week-header card">
+          <div>
+            <h3 id="week-title">Semana</h3>
+            <small id="week-range"></small>
+          </div>
+          <div class="week-total">
+            <small>Total a pagar</small>
+            <strong id="week-total-pending">R$ 0,00</strong>
+          </div>
+        </div>
+        <div id="list-workers" class="workers-list"></div>
+      </div>
+
     </main>
 
     <!-- BOTTOM NAV -->
@@ -465,6 +626,7 @@
   <script src="js/properties.js"></script>
   <script src="js/projects.js"></script>
   <script src="js/requests.js"></script>
+  <script src="js/finance.js"></script>
   <script src="js/notifications.js"></script>
   <script src="js/app.js"></script>
 

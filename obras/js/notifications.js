@@ -66,6 +66,86 @@ const Notifications = (() => {
     });
   }
 
+  // ---- Notificações de gastos (financeiro) ----
+
+  // Busca todos os sócios
+  async function _getAllSocios() {
+    const { data } = await supabase
+      .from('profiles')
+      .select('id, name')
+      .eq('role', 'socio');
+    return data || [];
+  }
+
+  // Formata rótulo do destino para a mensagem
+  function _destinationLabel(exp) {
+    if (exp.destination_type === 'socio')
+      return exp.socio?.name ? `sócio ${exp.socio.name}` : 'sócio';
+    if (exp.destination_type === 'familia')
+      return exp.destination_family ? `família (${exp.destination_family})` : 'família';
+    if (exp.destination_type === 'obra') {
+      const obra = exp.projects?.name || exp.properties?.name || '';
+      return obra ? `obra ${obra}` : 'obra';
+    }
+    return exp.destination_type;
+  }
+
+  function _formatBRL(v) {
+    const n = Number(v) || 0;
+    return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  }
+
+  // Notifica sócios sobre novo gasto
+  //   - direcionado a SÓCIO: notifica só o sócio escolhido
+  //   - direcionado a FAMÍLIA ou OBRA: notifica todos os sócios
+  async function notifyExpense(expense) {
+    let targets = [];
+    let type = 'gasto_obra';
+
+    if (expense.destination_type === 'socio') {
+      type = 'gasto_socio';
+      if (expense.destination_socio_id) {
+        targets = [{ id: expense.destination_socio_id }];
+      }
+    } else {
+      type = expense.destination_type === 'familia' ? 'gasto_familia' : 'gasto_obra';
+      targets = await _getAllSocios();
+    }
+
+    if (!targets.length) return;
+
+    const destTxt = _destinationLabel(expense);
+    const valor   = _formatBRL(expense.amount);
+    const icon    = expense.destination_type === 'socio'   ? '👤'
+                  : expense.destination_type === 'familia' ? '👪'
+                  : '🏗️';
+
+    const payload = targets.map(t => ({
+      user_id: t.id,
+      expense_id: expense.id,
+      type,
+      message: `${icon} Novo gasto de ${valor} para ${destTxt}: "${expense.description}"`
+    }));
+
+    await supabase.from('notifications').insert(payload);
+  }
+
+  // Notifica sócios quando um gasto é marcado como pago
+  async function notifyExpensePaid(expense) {
+    const socios = await _getAllSocios();
+    if (!socios.length) return;
+
+    const who = expense.worker_name ? ` a ${expense.worker_name}` : '';
+    const valor = _formatBRL(expense.amount);
+    const payload = socios.map(s => ({
+      user_id: s.id,
+      expense_id: expense.id,
+      type: 'gasto_pago',
+      message: `💸 Pagamento realizado${who}: ${valor} — "${expense.description}"`
+    }));
+    await supabase.from('notifications').insert(payload);
+  }
+
   // Notifica criador quando status muda
   async function notifyUpdate(request, newStatus) {
     if (!request.created_by) return;
@@ -218,16 +298,22 @@ const Notifications = (() => {
   // Renderiza item de notificação
   function renderItem(notif) {
     const time = timeAgo(new Date(notif.created_at));
+    const moneySvg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>`;
     const icons = {
       nova_pendencia: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg>`,
       concluido: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>`,
-      atualizado: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>`
+      atualizado: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>`,
+      gasto_socio:   moneySvg,
+      gasto_familia: moneySvg,
+      gasto_obra:    moneySvg,
+      gasto_pago:    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/><circle cx="19" cy="19" r="2"/></svg>`
     };
 
     const item = document.createElement('div');
-    item.className = `notif-item ${notif.read ? 'lida' : ''}`;
+    item.className = `notif-item ${notif.read ? 'lida' : ''} notif-${notif.type}`;
     item.dataset.id = notif.id;
-    item.dataset.requestId = notif.request_id;
+    if (notif.request_id) item.dataset.requestId = notif.request_id;
+    if (notif.expense_id) item.dataset.expenseId = notif.expense_id;
     item.innerHTML = `
       <div class="notif-icon ${notif.type}">${icons[notif.type] || icons.atualizado}</div>
       <div class="notif-body">
@@ -252,6 +338,8 @@ const Notifications = (() => {
     notifyNew,
     notifyDone,
     notifyUpdate,
+    notifyExpense,
+    notifyExpensePaid,
     list,
     getUnreadCount,
     markAllRead,

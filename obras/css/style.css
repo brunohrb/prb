@@ -819,3 +819,162 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
   .fab { bottom: calc(var(--nav-h) + env(safe-area-inset-bottom) + 16px); }
   .toast { bottom: calc(var(--nav-h) + env(safe-area-inset-bottom) + 12px); }
 }
+
+/* =============================================
+   FINANCEIRO - Bandeira Obras
+   Paleta: ROXO (para distinguir das notificações
+   do sistema F do /prb)
+   ============================================= */
+:root {
+  --fin-primary:    #6D28D9;   /* roxo escuro */
+  --fin-primary-bg: #EDE9FE;   /* lilás claro */
+  --fin-accent:     #8B5CF6;   /* roxo médio */
+  --fin-green:      #059669;
+  --fin-green-bg:   #D1FAE5;
+  --fin-orange:     #D97706;
+  --fin-orange-bg:  #FEF3C7;
+}
+
+/* Resumo */
+.finance-summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.fin-card {
+  background: var(--card);
+  border-radius: var(--radius-sm);
+  padding: 12px 10px;
+  text-align: center;
+  box-shadow: var(--shadow);
+  border-top: 3px solid var(--fin-primary);
+}
+.fin-card.open  { border-top-color: var(--fin-orange); }
+.fin-card.paid  { border-top-color: var(--fin-green); }
+.fin-label { display: block; font-size: 11px; color: var(--text-hint); text-transform: uppercase; margin-bottom: 4px; }
+.fin-card strong { font-size: 16px; color: var(--text); font-weight: 700; }
+
+/* Cards de gasto */
+.expense-list { display: flex; flex-direction: column; gap: 10px; padding-bottom: 80px; }
+.expense-card {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  box-shadow: var(--shadow);
+  border-left: 4px solid var(--fin-primary);
+}
+.expense-top {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 8px; margin-bottom: 6px;
+}
+.expense-amount { font-size: 20px; font-weight: 700; color: var(--fin-primary); }
+.expense-dest {
+  display: inline-block;
+  font-size: 11px; font-weight: 700;
+  padding: 3px 10px; border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+.dest-socio   { background: var(--primary-bg);    color: var(--primary); }
+.dest-familia { background: var(--fin-primary-bg); color: var(--fin-primary); }
+.dest-obra    { background: var(--fin-green-bg);  color: var(--fin-green); }
+
+.expense-desc { font-size: 14px; font-weight: 500; margin-bottom: 4px; }
+.expense-worker { font-size: 13px; color: var(--text-secondary); margin-bottom: 6px; }
+.expense-meta {
+  display: flex; flex-wrap: wrap; gap: 10px;
+  font-size: 12px; color: var(--text-hint);
+}
+.expense-paid { color: var(--fin-green); font-weight: 700; }
+.expense-open { color: var(--fin-orange); font-weight: 700; }
+
+/* Form de gasto — seletor de destino */
+.dest-picker {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+.dest-btn {
+  padding: 12px 4px; border: 2px solid var(--border);
+  background: var(--card); border-radius: var(--radius-sm);
+  font-size: 13px; font-weight: 600; cursor: pointer;
+  transition: all 0.15s;
+}
+.dest-btn.active {
+  border-color: var(--fin-primary);
+  background: var(--fin-primary-bg);
+  color: var(--fin-primary);
+}
+
+/* Lista Semana dos Prestadores */
+.week-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px; margin-bottom: 12px;
+  background: linear-gradient(135deg, var(--fin-primary) 0%, var(--fin-accent) 100%);
+  color: white;
+  border-radius: var(--radius);
+}
+.week-header h3 { font-size: 16px; font-weight: 700; }
+.week-header small { font-size: 12px; opacity: 0.9; display: block; margin-top: 2px; }
+.week-total { text-align: right; }
+.week-total small { font-size: 11px; opacity: 0.8; display: block; text-transform: uppercase; }
+.week-total strong { font-size: 20px; font-weight: 700; }
+
+.workers-list { display: flex; flex-direction: column; gap: 12px; padding-bottom: 40px; }
+.worker-card {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 14px;
+  box-shadow: var(--shadow);
+  border-top: 3px solid var(--fin-accent);
+}
+.worker-head {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 10px; margin-bottom: 10px;
+}
+.worker-name { font-size: 15px; font-weight: 700; }
+.worker-head small { font-size: 12px; color: var(--text-hint); }
+.worker-totals { text-align: right; display: flex; gap: 14px; }
+.worker-totals div { display: flex; flex-direction: column; }
+.worker-totals small { font-size: 10px; color: var(--text-hint); text-transform: uppercase; }
+.worker-totals strong { font-size: 14px; }
+.worker-totals .pending strong { color: var(--fin-orange); }
+
+.worker-items { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+.worker-item {
+  display: flex; justify-content: space-between; align-items: center;
+  gap: 8px; padding: 8px 10px;
+  background: var(--bg); border-radius: var(--radius-sm);
+  font-size: 13px;
+}
+.worker-item.paid { opacity: 0.55; text-decoration: line-through; }
+.worker-item-left small { display: block; font-size: 11px; color: var(--text-hint); }
+.worker-item-right { display: flex; align-items: center; gap: 8px; }
+
+.worker-pix {
+  background: var(--fin-primary-bg);
+  padding: 10px; border-radius: var(--radius-sm);
+  display: flex; flex-direction: column; gap: 8px;
+}
+.worker-pix label { font-size: 12px; font-weight: 700; color: var(--fin-primary); }
+.pix-row { display: flex; gap: 6px; }
+.pix-row input { flex: 1; padding: 10px; font-size: 13px;
+  border: 1px solid var(--border); border-radius: var(--radius-sm); background: white; }
+
+.tag { font-size: 10px; padding: 2px 8px; border-radius: 20px; text-transform: uppercase; font-weight: 700; }
+.tag.ok { background: var(--fin-green-bg); color: var(--fin-green); }
+
+/* Notificações diferenciadas — GASTOS = roxo */
+.notif-icon.gasto_socio   { background: var(--primary-bg);     color: var(--primary); }
+.notif-icon.gasto_familia { background: var(--fin-primary-bg); color: var(--fin-primary); }
+.notif-icon.gasto_obra    { background: var(--fin-green-bg);   color: var(--fin-green); }
+.notif-icon.gasto_pago    { background: var(--fin-primary-bg); color: var(--fin-primary); }
+
+/* Borda lateral para destacar gasto no feed de notificações */
+.notif-item.notif-gasto_socio,
+.notif-item.notif-gasto_familia,
+.notif-item.notif-gasto_obra,
+.notif-item.notif-gasto_pago {
+  border-left: 4px solid var(--fin-primary);
+}
+
