@@ -466,8 +466,22 @@ async function login() {
   let email = document.getElementById("user").value.trim();
   const password = document.getElementById("pass").value.trim();
   if (!email || !password) { alert("Preencha usuário e senha."); return; }
-  // Aceita usuário curto (ex: "bruno") e completa com "@gmail.com" automaticamente
-  if (!email.includes("@")) email = email.toLowerCase() + "@gmail.com";
+  // Aceita apelido curto (ex: "bruno", "paulo") e converte pro e-mail real do Supabase.
+  // Ajuste a lista abaixo conforme os usuários do PRB.
+  if (!email.includes("@")) {
+    const apelido = email.toLowerCase();
+    const mapaUsuarios = {
+      bruno:      "brunohrb@gmail.com",
+      paulo:      "paulo@texnet.com.br",
+      rafael:     "rafael@texnet.com.br",
+      financeiro: "financeiro@texnet.com.br"
+    };
+    if (!mapaUsuarios[apelido]) {
+      alert('Usuário "' + apelido + '" não reconhecido. Use: bruno, paulo, rafael ou financeiro — ou digite o e-mail completo.');
+      return;
+    }
+    email = mapaUsuarios[apelido];
+  }
   await supabaseClient.auth.signOut();
   const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
 if (error) { alert("Erro ao entrar: " + error.message); return; }
