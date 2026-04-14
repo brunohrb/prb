@@ -9,9 +9,27 @@ para não misturar tabelas com o sistema financeiro do PRB.
 
 1. Entre em: https://supabase.com/dashboard/project/xuwwgprchhfshrqdhuqn/sql
 2. Abra o **SQL Editor**, cole o conteúdo de `supabase-install.sql` e clique **Run**
-3. Vá em **Settings → API → "Exposed schemas"** e **adicione `obras`**
+3. (Só se o install já foi rodado antes) cole também o `supabase-patch-01.sql`
+   para habilitar a integração com o pró-labore do PRB
+4. Vá em **Settings → API → "Exposed schemas"** e **adicione `obras`**
    (deixe: `public, graphql_public, obras`)
-4. Pronto — tabelas, RLS, realtime, storage e os 6 usuários estão criados
+5. Pronto — tabelas, RLS, realtime, storage, usuários e integração com PRB criados
+
+### 🔗 Integração com o PRB (pró-labore)
+
+Quando um **responsável** lança um gasto no obras, o valor é espelhado
+automaticamente na tabela `public.movimentacoes` do PRB:
+
+| Destino no Obras        | Vira `socio=` no PRB |
+|-------------------------|----------------------|
+| 👤 Sócio **Paulo**      | `paulo`              |
+| 👤 Sócio **Rafael**     | `rafael`             |
+| 👤 Sócio **Bruno**      | `bruno`              |
+| 👪 Família              | `familia`            |
+| 🏗️ Obra                | `obras`              |
+
+Os lançamentos aparecem marcados com `(Obras)` na descrição pra identificar
+a origem.
 
 ### 2. Usuários já criados pelo install
 

@@ -70,7 +70,6 @@ const Finance = (() => {
       .from('expenses')
       .select(`
         *,
-        socio:profiles!expenses_destination_socio_id_fkey (id, name, email),
         properties (id, name, unit),
         projects (id, name),
         creator:profiles!expenses_created_by_fkey (id, name)
@@ -99,7 +98,6 @@ const Finance = (() => {
       .from('expenses')
       .select(`
         *,
-        socio:profiles!expenses_destination_socio_id_fkey (id, name, email),
         properties (id, name, unit),
         projects (id, name),
         creator:profiles!expenses_created_by_fkey (id, name)
@@ -114,20 +112,24 @@ const Finance = (() => {
     invalidateCache();
     const userId = Auth.getUser()?.id;
 
+    const socioName = payload.destination_type === 'socio'
+      ? (payload.destination_socio_name || null)
+      : null;
+
     const row = {
-      description:          payload.description,
-      amount:               payload.amount,
-      expense_date:         payload.expense_date || new Date().toISOString().slice(0, 10),
-      category:             payload.category || 'material',
-      service_type:         payload.service_type || null,
-      worker_name:          payload.worker_name || null,
-      destination_type:     payload.destination_type,
-      destination_socio_id: payload.destination_type === 'socio'   ? (payload.destination_socio_id || null) : null,
-      destination_family:   payload.destination_type === 'familia' ? (payload.destination_family   || null) : null,
-      property_id:          payload.destination_type === 'obra'    ? (payload.property_id          || null) : null,
-      project_id:           payload.destination_type === 'obra'    ? (payload.project_id           || null) : null,
-      notes:                payload.notes || null,
-      created_by:           userId
+      description:            payload.description,
+      amount:                 payload.amount,
+      expense_date:           payload.expense_date || new Date().toISOString().slice(0, 10),
+      category:               payload.category || 'material',
+      service_type:           payload.service_type || null,
+      worker_name:            payload.worker_name || null,
+      destination_type:       payload.destination_type,
+      destination_socio_name: socioName,
+      destination_family:     payload.destination_type === 'familia' ? (payload.destination_family || null) : null,
+      property_id:            payload.destination_type === 'obra'    ? (payload.property_id        || null) : null,
+      project_id:             payload.destination_type === 'obra'    ? (payload.project_id         || null) : null,
+      notes:                  payload.notes || null,
+      created_by:             userId
     };
 
     const { data, error } = await supabase
@@ -135,7 +137,6 @@ const Finance = (() => {
       .insert(row)
       .select(`
         *,
-        socio:profiles!expenses_destination_socio_id_fkey (id, name, email),
         properties (id, name, unit),
         projects (id, name)
       `)
@@ -143,14 +144,64 @@ const Finance = (() => {
 
     if (error) throw error;
 
-    // Dispara notificação para sócios
+    // 1) Notifica sócios (dentro do app Obras)
     try {
       await Notifications.notifyExpense(data);
     } catch (e) {
       console.error('Erro ao enviar notificação de gasto:', e);
     }
 
+    // 2) Espelha no pró-labore do PRB (public.movimentacoes)
+    try {
+      await _mirrorToPRB(data);
+    } catch (e) {
+      console.error('Erro ao espelhar no PRB:', e);
+    }
+
     return data;
+  }
+
+  // ---- Integração PRB ----
+  // Mapeia destination → nome da entidade no PRB
+  // paulo/rafael/bruno = sócios; obras/familia = grupos extras
+  function _getPRBEntity(exp) {
+    if (exp.destination_type === 'familia') return 'familia';
+    if (exp.destination_type === 'obra')    return 'obras';
+    if (exp.destination_type === 'socio' && exp.destination_socio_name) {
+      const n = String(exp.destination_socio_name).toLowerCase();
+      if (['paulo', 'rafael', 'bruno'].includes(n)) return n;
+    }
+    return null;
+  }
+
+  // Insere um lançamento na tabela public.movimentacoes do PRB
+  async function _mirrorToPRB(exp) {
+    const socio = _getPRBEntity(exp);
+    if (!socio) {
+      console.warn('[Obras→PRB] destino não mapeado:', exp.destination_type, exp.destination_socio_name);
+      return;
+    }
+    const d = new Date(exp.expense_date + 'T00:00:00');
+    const ano = d.getFullYear();
+    const mes = d.getMonth(); // PRB usa 0-11
+
+    // Marca a origem para facilitar filtragem/estorno no futuro
+    const tagObras = ` <b style="color:#6D28D9">(Obras)</b>`;
+    const row = {
+      socio,
+      desc: `${exp.description}${tagObras}`,
+      valor: Math.abs(Number(exp.amount) || 0),
+      ano,
+      mes,
+      usuario_id: Auth.getUser()?.id || null
+    };
+
+    const { error } = await supabase
+      .schema('public')
+      .from('movimentacoes')
+      .insert([row]);
+
+    if (error) throw error;
   }
 
   async function update(id, fields) {
@@ -185,7 +236,6 @@ const Finance = (() => {
       .eq('id', id)
       .select(`
         *,
-        socio:profiles!expenses_destination_socio_id_fkey (id, name),
         properties (id, name, unit),
         projects (id, name)
       `)
@@ -279,8 +329,10 @@ const Finance = (() => {
     const destColor = DESTINATION_COLORS[exp.destination_type] || '';
     const destLabel = DESTINATION_LABELS[exp.destination_type] || exp.destination_type;
     let destExtra = '';
-    if (exp.destination_type === 'socio')
-      destExtra = exp.socio?.name ? ` · ${escapeHtml(exp.socio.name)}` : '';
+    if (exp.destination_type === 'socio') {
+      const n = exp.destination_socio_name;
+      destExtra = n ? ` · ${escapeHtml(n.charAt(0).toUpperCase() + n.slice(1))}` : '';
+    }
     else if (exp.destination_type === 'familia')
       destExtra = exp.destination_family ? ` · ${escapeHtml(exp.destination_family)}` : '';
     else if (exp.destination_type === 'obra') {
