@@ -161,6 +161,13 @@ const Finance = (() => {
       data._prbError = e.message || String(e);
     }
 
+    // 3) Cria notificação no sino do PRB (public.notificacoes)
+    try {
+      await _notifyPRB(data);
+    } catch (e) {
+      console.error('[Obras→PRB notif] falhou:', e);
+    }
+
     return data;
   }
 
@@ -203,6 +210,42 @@ const Finance = (() => {
       .schema('public')
       .from('movimentacoes')
       .insert([row]);
+
+    if (error) throw error;
+  }
+
+  // Cria notificação no painel do PRB (public.notificacoes)
+  //   - Gasto para sócio → notifica APENAS esse sócio
+  //   - Gasto para família ou obra → notifica TODOS os sócios (paulo, rafael, bruno)
+  async function _notifyPRB(exp) {
+    const entity = _getPRBEntity(exp);
+    if (!entity) return;
+
+    const valor = formatBRL(exp.amount);
+    let base = `${exp.description} — ${valor}`;
+    let recipients;
+
+    if (entity === 'familia') {
+      base = `[Família] ${base}`;
+      recipients = ['paulo', 'rafael', 'bruno'];
+    } else if (entity === 'obras') {
+      base = `[Obra] ${base}`;
+      recipients = ['paulo', 'rafael', 'bruno'];
+    } else {
+      // sócio específico
+      recipients = [entity];
+    }
+
+    const rows = recipients.map(r => ({
+      tipo: 'despesa_obras',
+      mensagem: base,
+      socio: r
+    }));
+
+    const { error } = await supabase
+      .schema('public')
+      .from('notificacoes')
+      .insert(rows);
 
     if (error) throw error;
   }
