@@ -32,18 +32,51 @@
   <!-- ===== TELA DE LOGIN ===== -->
   <div id="screen-login" class="screen">
     <div class="login-container">
+      <div class="login-header">
+        <img src="assets/logo.png" alt="Bandeira Obras" class="login-logo">
+        <h1>Bandeira Obras</h1>
+        <p>Gestão de Manutenções</p>
+      </div>
       <form id="login-form" class="card">
         <div class="form-group">
-          <input type="text" id="login-email" placeholder="bruno" required autocomplete="username">
+          <label for="login-email">Usuário</label>
+          <input type="text" id="login-email" placeholder="ex: bruno" required autocomplete="username">
         </div>
         <div class="form-group">
-          <input type="password" id="login-password" placeholder="xxxxxx" required autocomplete="current-password">
+          <label for="login-password">Senha</label>
+          <div class="input-with-icon">
+            <input type="password" id="login-password" placeholder="••••••••" required autocomplete="current-password">
+            <button type="button" class="btn-icon" id="toggle-password">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
         </div>
+        <label class="checkbox-label">
+          <input type="checkbox" id="login-remember">
+          <span class="checkmark"></span>
+          <span>Lembrar meu usuário</span>
+        </label>
         <div id="login-error" class="error-msg hidden"></div>
         <button type="submit" class="btn btn-primary btn-full" id="login-btn">
           <span>Entrar</span>
         </button>
       </form>
+
+      <!-- Botão biometria (aparece automaticamente se disponível) -->
+      <button class="btn-biometrico hidden" id="btn-biometrico">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="22" height="22">
+          <path d="M12 2C8.5 2 6 4.5 6 8v1"/>
+          <path d="M12 22c3.5 0 6-2.5 6-6v-1"/>
+          <path d="M9 8.5A3.5 3.5 0 0115 12v2"/>
+          <path d="M9 15.5A3.5 3.5 0 019 12v-1"/>
+          <path d="M12 8v8"/>
+          <path d="M6 12H3"/>
+          <path d="M21 12h-3"/>
+        </svg>
+        Entrar com Face ID / Digital
+      </button>
+
+      <p class="login-footer">Bandeira Participações © 2025</p>
     </div>
   </div>
 
