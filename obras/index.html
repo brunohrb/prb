@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#1565C0">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="B. Obras">
+  <meta name="description" content="Sistema de gestão de manutenções - Bandeira Participações">
+
+  <title>Bandeira Obras</title>
+
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="assets/logo.png">
+  <link rel="stylesheet" href="css/style.css">
+
+  <!-- Supabase JS -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+</head>
+<body>
+
+  <!-- ===== TELA DE LOADING ===== -->
+  <div id="screen-loading" class="screen active">
+    <div class="loading-container">
+      <img src="assets/logo.png" alt="Bandeira Obras" class="loading-logo">
+      <div class="loading-spinner"></div>
+      <p>Carregando...</p>
+    </div>
+  </div>
+
+  <!-- ===== TELA DE LOGIN ===== -->
+  <div id="screen-login" class="screen">
+    <div class="login-container">
+      <div class="login-header">
+        <img src="assets/logo.png" alt="Bandeira Obras" class="login-logo">
+        <h1>Bandeira Obras</h1>
+        <p>Gestão de Manutenções</p>
+      </div>
+      <form id="login-form" class="card">
+        <div class="form-group">
+          <label for="login-email">Usuário</label>
+          <input type="text" id="login-email" placeholder="ex: bruno" required autocomplete="username">
+        </div>
+        <div class="form-group">
+          <label for="login-password">Senha</label>
+          <div class="input-with-icon">
+            <input type="password" id="login-password" placeholder="••••••••" required autocomplete="current-password">
+            <button type="button" class="btn-icon" id="toggle-password">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+        </div>
+        <label class="checkbox-label">
+          <input type="checkbox" id="login-remember">
+          <span class="checkmark"></span>
+          <span>Lembrar meu usuário</span>
+        </label>
+        <div id="login-error" class="error-msg hidden"></div>
+        <button type="submit" class="btn btn-primary btn-full" id="login-btn">
+          <span>Entrar</span>
+        </button>
+      </form>
+
+      <!-- Botão biometria (aparece automaticamente se disponível) -->
+      <button class="btn-biometrico hidden" id="btn-biometrico">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="22" height="22">
+          <path d="M12 2C8.5 2 6 4.5 6 8v1"/>
+          <path d="M12 22c3.5 0 6-2.5 6-6v-1"/>
+          <path d="M9 8.5A3.5 3.5 0 0115 12v2"/>
+          <path d="M9 15.5A3.5 3.5 0 019 12v-1"/>
+          <path d="M12 8v8"/>
+          <path d="M6 12H3"/>
+          <path d="M21 12h-3"/>
+        </svg>
+        Entrar com Face ID / Digital
+      </button>
+
+      <p class="login-footer">Bandeira Participações © 2025</p>
+    </div>
+  </div>
+
+  <!-- ===== APP PRINCIPAL ===== -->
+  <div id="screen-app" class="screen">
+
+    <!-- HEADER -->
+    <header class="app-header" id="app-header">
+      <button class="btn-icon header-back hidden" id="btn-back">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <div class="header-title">
+        <img src="assets/logo.png" alt="" class="header-logo">
+        <h2 id="page-title">Pendências</h2>
+      </div>
+      <div class="header-actions">
+        <button class="btn-icon notif-btn" id="btn-notif">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          <span class="notif-badge hidden" id="notif-badge">0</span>
+        </button>
+        <button class="btn-icon" id="btn-menu">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- MENU DROPDOWN -->
+    <div id="dropdown-menu" class="dropdown hidden">
+      <div class="dropdown-user">
+        <div class="user-avatar" id="user-avatar">?</div>
+        <div>
+          <strong id="user-name">Carregando...</strong>
+          <span id="user-role-label">—</span>
+        </div>
+      </div>
+      <hr>
+      <button class="dropdown-item" id="menu-projetos">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>
+        Grandes Obras
+      </button>
+      <button class="dropdown-item" id="menu-imoveis">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Imóveis
+      </button>
+      <button class="dropdown-item" id="menu-usuarios" style="display:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+        Usuários
+      </button>
+      <button class="dropdown-item" id="menu-logout">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Sair
+      </button>
+    </div>
+
+    <!-- CONTEÚDO DINÂMICO -->
+    <main class="app-main" id="app-main">
+
+      <!-- VIEW: DASHBOARD / LISTA DE PENDÊNCIAS -->
+      <div id="view-dashboard" class="view active">
+        <!-- Filtros -->
+        <div class="filter-bar">
+          <div class="filter-tabs" id="filter-status">
+            <button class="filter-tab active" data-status="todos">Todas</button>
+            <button class="filter-tab" data-status="pendente">Pendentes</button>
+            <button class="filter-tab" data-status="em_andamento">Em andamento</button>
+            <button class="filter-tab" data-status="concluido">Concluídas</button>
+          </div>
+          <div class="filter-row">
+            <select id="filter-imovel" class="select-filter">
+              <option value="">Todos os imóveis</option>
+            </select>
+            <select id="filter-urgencia" class="select-filter">
+              <option value="">Todas urgências</option>
+              <option value="critica">🔴 Crítica</option>
+              <option value="alta">🟠 Alta</option>
+              <option value="media">🟡 Média</option>
+              <option value="baixa">🟢 Baixa</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-row" id="stats-row">
+          <div class="stat-card">
+            <span class="stat-num" id="stat-pendente">0</span>
+            <span class="stat-label">Pendentes</span>
+          </div>
+          <div class="stat-card urgente">
+            <span class="stat-num" id="stat-critica">0</span>
+            <span class="stat-label">Críticas</span>
+          </div>
+          <div class="stat-card ok">
+            <span class="stat-num" id="stat-concluido">0</span>
+            <span class="stat-label">Concluídas</span>
+          </div>
+        </div>
+
+        <!-- Lista de pendências -->
+        <div id="list-pendencias" class="pendencias-list">
+          <div class="empty-state" id="empty-pendencias">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg>
+            <p>Nenhuma pendência encontrada</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIEW: DETALHE DA PENDÊNCIA -->
+      <div id="view-detalhe" class="view">
+        <div id="detalhe-content"></div>
+      </div>
+
+      <!-- VIEW: NOVA PENDÊNCIA -->
+      <div id="view-nova" class="view">
+        <form id="form-nova" class="form-view">
+          <div class="form-group">
+            <label>Vincular a</label>
+            <div style="display:flex;gap:8px;margin-bottom:8px">
+              <button type="button" class="btn btn-primary btn-sm" id="tipo-imovel" onclick="setTipoNova('imovel')">Imóvel</button>
+              <button type="button" class="btn btn-outline btn-sm" id="tipo-projeto" onclick="setTipoNova('projeto')">Grande Obra</button>
+            </div>
+            <select id="nova-imovel">
+              <option value="">Selecione o imóvel</option>
+            </select>
+            <select id="nova-projeto" class="hidden" style="margin-top:8px">
+              <option value="">Selecione a grande obra</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Título da pendência *</label>
+            <input type="text" id="nova-titulo" placeholder="Ex: Trocar pia da cozinha" required maxlength="100">
+          </div>
+          <div class="form-group">
+            <label>Descrição</label>
+            <textarea id="nova-descricao" rows="3" placeholder="Descreva o problema em detalhes..."></textarea>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Urgência *</label>
+              <select id="nova-urgencia" required>
+                <option value="">Selecione</option>
+                <option value="baixa">🟢 Baixa</option>
+                <option value="media">🟡 Média</option>
+                <option value="alta">🟠 Alta</option>
+                <option value="critica">🔴 Crítica</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Prazo máximo</label>
+              <input type="date" id="nova-prazo">
+            </div>
+          </div>
+
+          <!-- Upload de fotos -->
+          <div class="form-group">
+            <label>Fotos</label>
+            <div class="photo-section">
+              <div class="photo-grid" id="photo-preview"></div>
+              <div class="photo-buttons">
+                <button type="button" class="btn btn-outline" id="btn-camera">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                  Câmera
+                </button>
+                <button type="button" class="btn btn-outline" id="btn-galeria">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                  Galeria
+                </button>
+              </div>
+              <input type="file" id="input-camera" accept="image/*" capture="environment" class="hidden">
+              <input type="file" id="input-galeria" accept="image/*" multiple class="hidden">
+            </div>
+          </div>
+
+          <div id="nova-error" class="error-msg hidden"></div>
+          <button type="submit" class="btn btn-primary btn-full btn-lg" id="btn-salvar-nova">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            Salvar Pendência
+          </button>
+        </form>
+      </div>
+
+      <!-- VIEW: IMÓVEIS -->
+      <div id="view-imoveis" class="view">
+        <div id="list-imoveis" class="imoveis-list"></div>
+        <button class="fab" id="btn-novo-imovel">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </button>
+      </div>
+
+      <!-- VIEW: NOTIFICAÇÕES -->
+      <div id="view-notificacoes" class="view">
+        <div id="list-notificacoes" class="notif-list">
+          <div class="empty-state">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+            <p>Nenhuma notificação</p>
+          </div>
+        </div>
+        <button class="btn btn-outline btn-sm" id="btn-limpar-notifs" style="margin:16px auto;display:block">
+          Marcar todas como lidas
+        </button>
+      </div>
+
+      <!-- VIEW: USUÁRIOS -->
+      <div id="view-usuarios" class="view">
+        <div id="list-usuarios" class="usuarios-list"></div>
+        <button class="fab" id="btn-novo-usuario">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </button>
+      </div>
+
+      <!-- VIEW: PROJETOS -->
+      <div id="view-projetos" class="view">
+        <div id="list-projetos"></div>
+        <button class="fab" id="btn-novo-projeto">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </button>
+      </div>
+
+      <!-- VIEW: DETALHE PROJETO (pendências do projeto) -->
+      <div id="view-projeto-detalhe" class="view">
+        <div id="projeto-detalhe-header" class="project-detalhe-header card"></div>
+        <div class="filter-tabs" id="filter-status-projeto" style="padding:0 0 12px;overflow-x:auto;display:flex;gap:6px">
+          <button class="filter-tab active" data-status="todos">Todas</button>
+          <button class="filter-tab" data-status="pendente">Pendentes</button>
+          <button class="filter-tab" data-status="em_andamento">Em andamento</button>
+          <button class="filter-tab" data-status="concluido">Concluídas</button>
+        </div>
+        <div id="list-projeto-pendencias"></div>
+        <button class="fab" id="btn-nova-pendencia-projeto">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </button>
+      </div>
+
+    </main>
+
+    <!-- BOTTOM NAV -->
+    <nav class="bottom-nav">
+      <button class="nav-btn active" data-view="dashboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+        <span>Pendências</span>
+      </button>
+      <button class="nav-btn nav-add" id="nav-nova">
+        <div class="nav-add-circle">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </div>
+        <span>Nova</span>
+      </button>
+      <button class="nav-btn" data-view="notificacoes" id="nav-notif">
+        <div style="position:relative;display:inline-block">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+          <span class="notif-badge-nav hidden" id="notif-badge-nav">0</span>
+        </div>
+        <span>Alertas</span>
+      </button>
+    </nav>
+
+    <!-- FAB principal -->
+    <button class="fab fab-main hidden" id="fab-main">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    </button>
+
+  </div><!-- end screen-app -->
+
+  <!-- ===== MODAIS ===== -->
+
+  <!-- Modal: Novo Imóvel -->
+  <div id="modal-imovel" class="modal-overlay hidden">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="modal-imovel-title">Novo Imóvel</h3>
+        <button class="btn-icon" id="close-modal-imovel">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <form id="form-imovel">
+        <input type="hidden" id="imovel-edit-id">
+        <div class="form-group">
+          <label>Nome do imóvel *</label>
+          <input type="text" id="imovel-nome" placeholder="Ex: Cond. Pedra Branca" required>
+        </div>
+        <div class="form-group">
+          <label>Unidade</label>
+          <input type="text" id="imovel-unidade" placeholder="Ex: Apto 101, Bloco A, Casa 5">
+        </div>
+        <div class="form-group">
+          <label>Endereço</label>
+          <input type="text" id="imovel-endereco" placeholder="Rua, número, bairro">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" id="cancel-modal-imovel">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Novo Usuário -->
+  <div id="modal-usuario" class="modal-overlay hidden">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Convidar Usuário</h3>
+        <button class="btn-icon" id="close-modal-usuario">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <form id="form-usuario">
+        <div class="form-group">
+          <label>Nome completo *</label>
+          <input type="text" id="usuario-nome" required>
+        </div>
+        <div class="form-group">
+          <label>Usuário *</label>
+          <input type="text" id="usuario-email" placeholder="ex: joao" required>
+        </div>
+        <div class="form-group">
+          <label>Senha inicial *</label>
+          <input type="password" id="usuario-senha" required minlength="6">
+        </div>
+        <div class="form-group">
+          <label>Perfil *</label>
+          <select id="usuario-perfil" required>
+            <option value="socio">Sócio</option>
+            <option value="responsavel">Responsável pelas Obras</option>
+          </select>
+        </div>
+        <div id="usuario-error" class="error-msg hidden"></div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" id="cancel-modal-usuario">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Criar Usuário</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Novo Projeto -->
+  <div id="modal-projeto" class="modal-overlay hidden">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="modal-projeto-title">Nova Grande Obra</h3>
+        <button class="btn-icon" id="close-modal-projeto">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <form id="form-projeto">
+        <input type="hidden" id="projeto-edit-id">
+        <div class="form-group">
+          <label>Nome da obra *</label>
+          <input type="text" id="projeto-nome" placeholder="Ex: Obra Casa 2.7 da Taíba" required>
+        </div>
+        <div class="form-group">
+          <label>Localização</label>
+          <input type="text" id="projeto-local" placeholder="Ex: Taíba, CE">
+        </div>
+        <div class="form-group">
+          <label>Descrição</label>
+          <textarea id="projeto-desc" rows="2" placeholder="Detalhes da obra..."></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Status</label>
+            <select id="projeto-status">
+              <option value="planejamento">📋 Planejamento</option>
+              <option value="em_andamento" selected>🔨 Em andamento</option>
+              <option value="pausado">⏸️ Pausado</option>
+              <option value="concluido">✅ Concluído</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Previsão de término</label>
+            <input type="date" id="projeto-end">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" id="cancel-modal-projeto">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast notification -->
+  <div id="toast" class="toast hidden"></div>
+
+  <!-- Scripts -->
+  <script src="js/config.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/properties.js"></script>
+  <script src="js/projects.js"></script>
+  <script src="js/requests.js"></script>
+  <script src="js/notifications.js"></script>
+  <script src="js/app.js"></script>
+
+</body>
+</html>
