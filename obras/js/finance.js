@@ -154,8 +154,11 @@ const Finance = (() => {
     // 2) Espelha no pró-labore do PRB (public.movimentacoes)
     try {
       await _mirrorToPRB(data);
+      data._prbMirrored = true;
     } catch (e) {
-      console.error('Erro ao espelhar no PRB:', e);
+      console.error('[Obras→PRB] falhou:', e);
+      data._prbMirrored = false;
+      data._prbError = e.message || String(e);
     }
 
     return data;

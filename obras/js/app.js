@@ -1147,8 +1147,12 @@ function setupGastoForm() {
 
     setLoading(btn, true, 'Salvando...');
     try {
-      await Finance.create(payload);
-      showToast('Gasto lançado! Sócios notificados ✓', 'success');
+      const result = await Finance.create(payload);
+      if (result._prbMirrored) {
+        showToast('Gasto lançado e enviado ao PRB ✓', 'success');
+      } else {
+        showToast('Gasto salvo no Obras, mas NÃO foi para o PRB: ' + (result._prbError || 'destino não mapeado'), 'error');
+      }
       navigateTo('financeiro');
     } catch (err) {
       errEl.textContent = 'Erro ao salvar: ' + err.message;
