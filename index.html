@@ -466,8 +466,9 @@ async function login() {
   let email = document.getElementById("user").value.trim();
   const password = document.getElementById("pass").value.trim();
   if (!email || !password) { alert("Preencha usuário e senha."); return; }
-  // Aceita usuário curto (ex: "bruno") e completa com "@gmail.com" automaticamente
-  if (!email.includes("@")) email = email.toLowerCase() + "@gmail.com";
+  // Aceita usuário curto (ex: "bruno") e completa com "@bandeira.app" automaticamente.
+  // É o domínio padrão usado nos cadastros do Supabase deste projeto.
+  if (!email.includes("@")) email = email.toLowerCase() + "@bandeira.app";
   await supabaseClient.auth.signOut();
   const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
 if (error) { alert("Erro ao entrar: " + error.message); return; }
