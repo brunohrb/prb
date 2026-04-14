@@ -170,8 +170,12 @@ button{border:none;cursor:pointer; font-weight:600;}
 <div id="loginScreen">
   <div class="login-box">
 <form onsubmit="event.preventDefault(); login()">
-  <input id="user" type="text" placeholder="bruno" autocomplete="username">
+  <input id="user" type="text" placeholder="usuario" autocomplete="username">
   <input id="pass" type="password" placeholder="xxxxxx" autocomplete="current-password">
+  <div style="display:flex; align-items:center; gap:8px; margin:10px 0; text-align:left">
+    <input type="checkbox" id="gravar" checked style="width:auto; margin:0">
+    <label for="gravar" style="color:#666; font-size:14px; cursor:pointer">Gravar senha</label>
+  </div>
   <button type="submit">Entrar Agora</button>
 </form>
   </div>
@@ -486,10 +490,15 @@ async function login() {
   const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
 if (error) { alert("Erro ao entrar: " + error.message); return; }
 
-// Salva automaticamente pra entrar direto na próxima vez no mesmo aparelho.
-// Se o usuário clicar em "Sair", essas chaves são apagadas no logout().
-localStorage.setItem("saved_email", email);
-localStorage.setItem("saved_pass", password);
+// Se o checkbox "Gravar senha" estiver marcado, salva pra entrar automático
+// na próxima vez no mesmo aparelho. Se desmarcado, apaga o que havia salvo.
+if (document.getElementById("gravar")?.checked) {
+  localStorage.setItem("saved_email", email);
+  localStorage.setItem("saved_pass", password);
+} else {
+  localStorage.removeItem("saved_email");
+  localStorage.removeItem("saved_pass");
+}
 
 document.getElementById("loginScreen").style.display = "none";
   document.getElementById("app").classList.remove("hidden");
