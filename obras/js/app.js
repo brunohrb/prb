@@ -1032,7 +1032,7 @@ async function loadFinanceiro() {
 async function openDetalheGasto(id) {
   try {
     const exp = await Finance.getById(id);
-    const destInfo = exp.destination_type === 'socio'   ? (exp.socio?.name || '—')
+    const destInfo = exp.destination_type === 'socio'   ? ((exp.destination_socio_name || '—').toUpperCase())
                    : exp.destination_type === 'familia' ? (exp.destination_family || '—')
                    : (exp.projects?.name || exp.properties?.name || 'Obra');
     const msg = `Valor: ${Finance.formatBRL(exp.amount)}\n` +
@@ -1066,19 +1066,17 @@ async function openNovoGasto() {
   await Projects.populateSelect('gasto-projeto');
 }
 
-async function populateSociosSelect(selectId) {
+// Lista fixa dos sócios (mesmas entidades do pró-labore do PRB)
+const SOCIOS_PRB = ['paulo', 'rafael', 'bruno'];
+
+function populateSociosSelect(selectId) {
   const sel = document.getElementById(selectId);
   if (!sel) return;
   sel.innerHTML = '<option value="">Selecione o sócio</option>';
-  const { data } = await supabase
-    .from('profiles')
-    .select('id, name, email')
-    .eq('role', 'socio')
-    .order('name');
-  (data || []).forEach(p => {
+  SOCIOS_PRB.forEach(s => {
     const opt = document.createElement('option');
-    opt.value = p.id;
-    opt.textContent = p.name || p.email;
+    opt.value = s;
+    opt.textContent = s.charAt(0).toUpperCase() + s.slice(1);
     sel.appendChild(opt);
   });
 }
@@ -1131,8 +1129,8 @@ function setupGastoForm() {
     };
 
     if (tipoGasto === 'socio') {
-      payload.destination_socio_id = document.getElementById('gasto-socio').value;
-      if (!payload.destination_socio_id) {
+      payload.destination_socio_name = document.getElementById('gasto-socio').value;
+      if (!payload.destination_socio_name) {
         errEl.textContent = 'Selecione o sócio.';
         errEl.classList.remove('hidden'); return;
       }

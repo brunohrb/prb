@@ -119,10 +119,12 @@ CREATE TABLE IF NOT EXISTS obras.expenses (
                           CHECK (category IN ('material', 'servico', 'pedreiro', 'outros')),
   service_type          TEXT,
   worker_name           TEXT,
-  destination_type      TEXT NOT NULL
+  destination_type       TEXT NOT NULL
                           CHECK (destination_type IN ('socio', 'familia', 'obra')),
-  destination_socio_id  UUID REFERENCES obras.profiles(id)   ON DELETE SET NULL,
-  destination_family    TEXT,
+  -- Nome da entidade no PRB: 'paulo' | 'rafael' | 'bruno'
+  destination_socio_name TEXT,
+  destination_socio_id   UUID REFERENCES obras.profiles(id)   ON DELETE SET NULL,
+  destination_family     TEXT,
   property_id           UUID REFERENCES obras.properties(id) ON DELETE SET NULL,
   project_id            UUID REFERENCES obras.projects(id)   ON DELETE SET NULL,
   paid                  BOOLEAN NOT NULL DEFAULT FALSE,
@@ -135,8 +137,9 @@ CREATE TABLE IF NOT EXISTS obras.expenses (
   created_at            TIMESTAMPTZ DEFAULT NOW(),
   updated_at            TIMESTAMPTZ DEFAULT NOW(),
   CONSTRAINT expense_destination_coherence CHECK (
-    (destination_type = 'socio'   AND destination_socio_id IS NOT NULL) OR
-    (destination_type = 'familia' AND destination_family    IS NOT NULL) OR
+    (destination_type = 'socio'
+       AND (destination_socio_name IS NOT NULL OR destination_socio_id IS NOT NULL)) OR
+    (destination_type = 'familia' AND destination_family IS NOT NULL) OR
     (destination_type = 'obra')
   )
 );

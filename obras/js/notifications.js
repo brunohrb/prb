@@ -79,8 +79,10 @@ const Notifications = (() => {
 
   // Formata rótulo do destino para a mensagem
   function _destinationLabel(exp) {
-    if (exp.destination_type === 'socio')
-      return exp.socio?.name ? `sócio ${exp.socio.name}` : 'sócio';
+    if (exp.destination_type === 'socio') {
+      const n = exp.destination_socio_name;
+      return n ? `sócio ${n.charAt(0).toUpperCase() + n.slice(1)}` : 'sócio';
+    }
     if (exp.destination_type === 'familia')
       return exp.destination_family ? `família (${exp.destination_family})` : 'família';
     if (exp.destination_type === 'obra') {
@@ -104,8 +106,16 @@ const Notifications = (() => {
 
     if (expense.destination_type === 'socio') {
       type = 'gasto_socio';
-      if (expense.destination_socio_id) {
-        targets = [{ id: expense.destination_socio_id }];
+      const n = expense.destination_socio_name;
+      if (n) {
+        // procura o profile pelo email correspondente (nome@bandeira.app)
+        const email = `${String(n).toLowerCase()}@bandeira.app`;
+        const { data } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('email', email)
+          .limit(1);
+        if (data?.[0]) targets = [{ id: data[0].id }];
       }
     } else {
       type = expense.destination_type === 'familia' ? 'gasto_familia' : 'gasto_obra';
