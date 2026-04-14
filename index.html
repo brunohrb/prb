@@ -1724,7 +1724,13 @@ async function alterarSenha(){
   if(!s||s.length<6){alert('Minimo 6 caracteres.');return;}
   var r=await supabaseClient.auth.updateUser({password:s});
   if(r.error)alert('Erro: '+r.error.message);
-  else{alert('Senha alterada!');document.getElementById('novaSenha').value='';}
+  else{
+    // Atualiza a senha gravada no aparelho (se estava ativo o "Gravar senha"),
+    // pra que o login automático continue funcionando na próxima visita.
+    if(localStorage.getItem('saved_email')) localStorage.setItem('saved_pass', s);
+    alert('Senha alterada!');
+    document.getElementById('novaSenha').value='';
+  }
 }
 
 </script>
