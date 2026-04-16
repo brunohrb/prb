@@ -574,11 +574,9 @@ function verificarBackupDiario() {
   const ultimoBackup = localStorage.getItem("ultimoBackupDiario");
 
   if (ultimoBackup !== hoje) {
-    // Aguarda 3 segundos e gera o backup automaticamente
     setTimeout(() => {
       gerarBackupExcel();
       localStorage.setItem("ultimoBackupDiario", hoje);
-      alert("✅ Backup diário gerado automaticamente!");
     }, 3000);
   }
 }
