@@ -367,7 +367,10 @@ button{border:none;cursor:pointer; font-weight:600;}
  <div class="modal-box">
   <h3>Editar lançamento</h3>
   <input id="mdDesc" placeholder="Descrição">
-  <input id="mdValor" inputmode="decimal" oninput="mask(this)" placeholder="R$ 0,00">
+  <div style="display:flex;gap:6px;margin-top:8px;align-items:stretch">
+    <button type="button" id="mdValorNeg" onclick="toggleNegativo('mdValor','mdValorNeg')" style="width:44px;min-width:44px;flex-shrink:0;margin-top:0;background:#e2e8f0;color:#374151;font-size:22px;font-weight:700;padding:0;border-radius:12px;line-height:1">−</button>
+    <input id="mdValor" inputmode="decimal" oninput="mask(this)" placeholder="R$ 0,00" style="margin-top:0;flex:1">
+  </div>
   <div style="display:flex; gap:10px; margin-top:20px">
     <button class="primary" onclick="salvarEdicao()">Salvar</button>
     <button class="secondary" onclick="fecharModal()">Cancelar</button>
@@ -732,7 +735,10 @@ async function render(){
 ${!ehFuncionario ? `<div class="small">Salário: ${fmt(base)} | Saldo ant: <b class="${prev>=0?'pos':'neg'}">${fmt(prev)}</b></div>` : ''}
      ${!isFechado ? `
   <input id="d_${s}" placeholder="Descrição">
-  <input id="v_${s}" placeholder="R$ 0,00 (valor TOTAL se parcelado)" inputmode="decimal" oninput="mask(this)">
+  <div style="display:flex;gap:6px;margin-top:8px;align-items:stretch">
+    <button type="button" id="negbtn_${s}" onclick="toggleNegativo('v_${s}','negbtn_${s}')" style="width:44px;min-width:44px;flex-shrink:0;margin-top:0;background:#e2e8f0;color:#374151;font-size:22px;font-weight:700;padding:0;border-radius:12px;line-height:1">−</button>
+    <input id="v_${s}" placeholder="R$ 0,00 (valor TOTAL se parcelado)" inputmode="decimal" oninput="mask(this)" style="margin-top:0;flex:1">
+  </div>
 
   <label class="small">
 <input type="checkbox" id="p_${s}" onclick="toggleParcelado('${s}')">
@@ -778,7 +784,7 @@ ${!ehFuncionario ? `<div class="small" style="margin-top:10px">Total: ${fmt(tota
     const arr = dadosCache.lancamentos.filter(l => l.socio === g && l.ano == a && l.mes == m).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
     const total = arr.reduce((x,y)=>x+y.valor,0);
     html += `<div class="card"><div class="socio"><span>${g.toUpperCase()}</span></div>
-      ${!isFechado ? `<input id="d_${g}" placeholder="Descrição"><input id="v_${g}" placeholder="R$ 0,00" inputmode="decimal" oninput="mask(this)"><button class="primary" onclick="add('${g}')">Adicionar</button>` : ""}
+      ${!isFechado ? `<input id="d_${g}" placeholder="Descrição"><div style="display:flex;gap:6px;margin-top:8px;align-items:stretch"><button type="button" id="negbtn_${g}" onclick="toggleNegativo('v_${g}','negbtn_${g}')" style="width:44px;min-width:44px;flex-shrink:0;margin-top:0;background:#e2e8f0;color:#374151;font-size:22px;font-weight:700;padding:0;border-radius:12px;line-height:1">−</button><input id="v_${g}" placeholder="R$ 0,00" inputmode="decimal" oninput="mask(this)" style="margin-top:0;flex:1"></div><button class="primary" onclick="add('${g}')">Adicionar</button>` : ""}
       <div style="margin-top:15px">${arr.map(r=>`<div class="linha"><div title="${new Date(r.created_at).toLocaleString('pt-BR')}">${!ehFuncionario ? r.desc.replace(/\(F\)/g, '<b style="color:#16a34a">(F)</b>') : r.desc}</div><div class="${r.valor < 0 ? 'pos' : 'neg'}">
   ${fmt(r.valor)}
 </div>
@@ -1152,6 +1158,22 @@ function parseMoeda(v){
   return negativo ? -num : num;
 }
 
+function toggleNegativo(inputId, btnId) {
+  const input = document.getElementById(inputId);
+  const btn = document.getElementById(btnId);
+  const isNeg = input.value.includes('-');
+  const raw = input.value.replace(/[^\d]/g, '');
+  input.value = (isNeg ? '' : '-') + raw;
+  mask(input);
+  // Para zero virando negativo, forçar o '-' visível
+  if (!isNeg && parseMoeda(input.value) === 0) {
+    input.value = 'R$ -0,00';
+  }
+  const nowNeg = input.value.includes('-');
+  btn.style.background = nowNeg ? '#dc2626' : '#e2e8f0';
+  btn.style.color = nowNeg ? '#fff' : '#374151';
+}
+
 function mask(i){
   let v = i.value.replace(/[^\d-]/g,'');
 
@@ -1226,6 +1248,12 @@ function fecharModal(){ modal.classList.add("hidden"); }
 
   mdDesc.value = lanc.desc;
   mdValor.value = fmt(lanc.valor);
+  const mdNegBtn = document.getElementById('mdValorNeg');
+  if (mdNegBtn) {
+    const isNeg = lanc.valor < 0;
+    mdNegBtn.style.background = isNeg ? '#dc2626' : '#e2e8f0';
+    mdNegBtn.style.color = isNeg ? '#fff' : '#374151';
+  }
   modal.classList.remove("hidden");
 
   modal.dataset.editId = id;
