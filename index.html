@@ -1161,33 +1161,18 @@ function parseMoeda(v){
 function toggleNegativo(inputId, btnId) {
   const input = document.getElementById(inputId);
   const btn = document.getElementById(btnId);
-  const isNeg = input.value.includes('-');
-  const raw = input.value.replace(/[^\d]/g, '');
-  input.value = (isNeg ? '' : '-') + raw;
+  const nowNeg = input.dataset.negative !== '1';
+  input.dataset.negative = nowNeg ? '1' : '0';
   mask(input);
-  // Para zero virando negativo, forçar o '-' visível
-  if (!isNeg && parseMoeda(input.value) === 0) {
-    input.value = 'R$ -0,00';
-  }
-  const nowNeg = input.value.includes('-');
   btn.style.background = nowNeg ? '#dc2626' : '#e2e8f0';
   btn.style.color = nowNeg ? '#fff' : '#374151';
 }
 
 function mask(i){
-  let v = i.value.replace(/[^\d-]/g,'');
-
-  // garante só um sinal negativo no início
-  if (v.indexOf('-') > 0) {
-    v = v.replace(/-/g,'');
-  }
-
-  const negativo = v.startsWith('-');
-  v = v.replace('-','');
-
+  const v = i.value.replace(/[^\d]/g,'');
+  const negativo = i.dataset.negative === '1';
   let num = Number(v) / 100;
   if (negativo) num = -num;
-
   i.value = "R$ " + num.toLocaleString('pt-BR',{minimumFractionDigits:2});
 }
 
@@ -1247,10 +1232,12 @@ function fecharModal(){ modal.classList.add("hidden"); }
   if(!lanc) return alert("Lançamento não encontrado");
 
   mdDesc.value = lanc.desc;
+  const isNeg = lanc.valor < 0;
+  mdValor.dataset.negative = isNeg ? '1' : '0';
   mdValor.value = fmt(lanc.valor);
+  mask(mdValor);
   const mdNegBtn = document.getElementById('mdValorNeg');
   if (mdNegBtn) {
-    const isNeg = lanc.valor < 0;
     mdNegBtn.style.background = isNeg ? '#dc2626' : '#e2e8f0';
     mdNegBtn.style.color = isNeg ? '#fff' : '#374151';
   }
