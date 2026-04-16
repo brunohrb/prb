@@ -916,6 +916,7 @@ if (subs && subs.length > 0) {
 
     const [anoIni, mesIniNum] = mesIni.split("-").map(Number);
     const valorParcela = +(valorTotal / parcelas).toFixed(2);
+    const divValorParcela = temDivisao ? +(divValor / parcelas).toFixed(2) : 0;
 
     for (let i = 0; i < parcelas; i++) {
       const dataObj = new Date(anoIni, (mesIniNum - 1) + i, 1);
@@ -929,9 +930,9 @@ const { data: { session } } = await supabaseClient.auth.getSession();
         .select("perfil")
         .eq("id", session.user.id)
         .single();
-      
+
       const perfilUsuario = usuarioSistema?.perfil || "admin";
-      
+
       const { error } = await supabaseClient
         .from("movimentacoes")
         .insert([{
@@ -946,6 +947,39 @@ desc: (perfilUsuario === "funcionario" || perfilUsuario === "limitado") ? `${des
         alert("Erro ao salvar parcela");
         console.error(error);
         return;
+      }
+
+      // Parcela da divisão: reembolso para o pagador + despesa para quem dividiu
+      if (temDivisao) {
+        const { error: errReemb } = await supabaseClient
+          .from("movimentacoes")
+          .insert([{
+            socio: s,
+            desc: `Reembolso: ${divDesc} (${i + 1}/${parcelas})`,
+            valor: -divValorParcela,
+            ano: y,
+            mes: m
+          }]);
+        if (errReemb) {
+          alert("Erro ao salvar reembolso da parcela");
+          console.error(errReemb);
+          return;
+        }
+
+        const { error: errDiv } = await supabaseClient
+          .from("movimentacoes")
+          .insert([{
+            socio: divPara,
+            desc: `${divDesc} (${i + 1}/${parcelas})`,
+            valor: divValorParcela,
+            ano: y,
+            mes: m
+          }]);
+        if (errDiv) {
+          alert("Erro ao salvar divisão da parcela");
+          console.error(errDiv);
+          return;
+        }
       }
     }
   }
