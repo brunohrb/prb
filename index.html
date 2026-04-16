@@ -29,6 +29,11 @@ button{border:none;cursor:pointer; font-weight:600;}
 .secondary{background:#64748b;color:#fff}
 .danger{background:#c0392b;color:#fff}
 .linha{ display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px dashed var(--borda); font-size:14px; }
+.ver-mais{margin-top:0}
+.ver-mais>summary{cursor:pointer;text-align:center;padding:10px 0;color:#64748b;font-size:13px;font-weight:600;list-style:none;user-select:none}
+.ver-mais>summary::-webkit-details-marker{display:none}
+.ver-mais>summary:hover{color:#0f172a}
+.ver-mais[open]>summary{border-bottom:1px dashed var(--borda);margin-bottom:4px}
 .acoes span{cursor:pointer;margin-left:10px}
 .pos{color:#16a34a}
 .neg{color:#dc2626}
@@ -683,6 +688,14 @@ async function marcarTodasLidas() {
   await carregarNotificacoes();
 }
 
+function montarLista(arr, renderLinha, limite = 5) {
+  if (arr.length <= limite) return arr.map(renderLinha).join("");
+  const visiveis = arr.slice(0, limite).map(renderLinha).join("");
+  const restantes = arr.slice(limite).map(renderLinha).join("");
+  const qtd = arr.length - limite;
+  return `${visiveis}<details class="ver-mais"><summary>Ver mais ${qtd} lançamento${qtd > 1 ? "s" : ""} ▼</summary>${restantes}</details>`;
+}
+
 function obterSalarioBase(s, m, a) {
     let curM = m, curA = a;
     while (curA >= baseInicial.ano) {
@@ -773,24 +786,24 @@ ${!ehFuncionario ? `<div class="small">Salário: ${fmt(base)} | Saldo ant: <b cl
   <button id="okbtn_${s}" class="primary" onclick="add('${s}')">OK</button>
 ` : ""}
 
-      <div style="margin-top:15px">${arr.map(r=>`<div class="linha"><div title="${new Date(r.created_at).toLocaleString('pt-BR')}">${r.desc.replace(/\(F\)/g, '<b style="color:#16a34a">(F)</b>')}</div><div class="${r.valor < 0 ? 'pos' : 'neg'}">
+      <div style="margin-top:15px">${montarLista(arr, r => `<div class="linha"><div title="${new Date(r.created_at).toLocaleString('pt-BR')}">${r.desc.replace(/\(F\)/g, '<b style="color:#16a34a">(F)</b>')}</div><div class="${r.valor < 0 ? 'pos' : 'neg'}">
   ${fmt(r.valor)}
 </div>
 
       ${!isFechado ? `<div class="acoes"> <span onclick="abrirEditar('${r.id}')">✏️</span>
-  <span onclick="excluir('${r.id}')">🗑️</span></div>` : ""}</div>`).join("")}</div>
+  <span onclick="excluir('${r.id}')">🗑️</span></div>` : ""}</div>`)}</div>
 ${!ehFuncionario ? `<div class="small" style="margin-top:10px">Total: ${fmt(total)} | Saldo: <b class="${saldo>=0?'pos':'neg'}">${fmt(saldo)}</b></div>` : `<div class="small" style="margin-top:10px">Total lançado: <b>${fmt(total)}</b></div>`}</div>`;  }
   for (const g of gruposExtras) {
     const arr = dadosCache.lancamentos.filter(l => l.socio === g && l.ano == a && l.mes == m).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
     const total = arr.reduce((x,y)=>x+y.valor,0);
     html += `<div class="card"><div class="socio"><span>${g.toUpperCase()}</span></div>
       ${!isFechado ? `<input id="d_${g}" placeholder="Descrição"><div style="display:flex;gap:6px;margin-top:8px;align-items:stretch"><button type="button" id="negbtn_${g}" onclick="toggleNegativo('v_${g}','negbtn_${g}')" style="width:44px;min-width:44px;flex-shrink:0;margin-top:0;background:#e2e8f0;color:#374151;font-size:22px;font-weight:700;padding:0;border-radius:12px;line-height:1">−</button><input id="v_${g}" placeholder="R$ 0,00" inputmode="decimal" oninput="mask(this)" style="margin-top:0;flex:1"></div><button id="okbtn_${g}" class="primary" onclick="add('${g}')">Adicionar</button>` : ""}
-      <div style="margin-top:15px">${arr.map(r=>`<div class="linha"><div title="${new Date(r.created_at).toLocaleString('pt-BR')}">${!ehFuncionario ? r.desc.replace(/\(F\)/g, '<b style="color:#16a34a">(F)</b>') : r.desc}</div><div class="${r.valor < 0 ? 'pos' : 'neg'}">
+      <div style="margin-top:15px">${montarLista(arr, r => `<div class="linha"><div title="${new Date(r.created_at).toLocaleString('pt-BR')}">${!ehFuncionario ? r.desc.replace(/\(F\)/g, '<b style="color:#16a34a">(F)</b>') : r.desc}</div><div class="${r.valor < 0 ? 'pos' : 'neg'}">
   ${fmt(r.valor)}
 </div>
 
       ${!isFechado ? `<div class="acoes"> <span onclick="abrirEditar('${r.id}')">✏️</span>
-  <span onclick="excluir('${r.id}')">🗑️</span></div>` : ""}</div>`).join("")}</div>
+  <span onclick="excluir('${r.id}')">🗑️</span></div>` : ""}</div>`)}</div>
       <div class="small" style="margin-top:10px">Total: <b class="neg">${fmt(total)}</b></div></div>`;
   }
   cards.innerHTML = html;
