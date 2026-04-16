@@ -28,7 +28,10 @@ button{border:none;cursor:pointer; font-weight:600;}
 .primary{background:var(--azul);color:#fff; box-shadow:0 4px 12px rgba(0,0,0,0.2);}
 .secondary{background:#64748b;color:#fff}
 .danger{background:#c0392b;color:#fff}
-.linha{ display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px dashed var(--borda); font-size:14px; }
+.linha{ display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px dashed var(--borda); font-size:14px; gap:8px; }
+.linha>:first-child{flex:1;min-width:0;word-break:break-word}
+.linha>.pos,.linha>.neg{white-space:nowrap;text-align:right;flex-shrink:0}
+.linha>.acoes{flex-shrink:0}
 .ver-mais{margin-top:0}
 .ver-mais>summary{cursor:pointer;text-align:center;padding:10px 0;color:#64748b;font-size:13px;font-weight:600;list-style:none;user-select:none}
 .ver-mais>summary::-webkit-details-marker{display:none}
@@ -739,6 +742,8 @@ async function render(){
   for (const s of socios) {
     const arr = dadosCache.lancamentos.filter(l => l.socio === s && l.ano == a && l.mes == m).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
     const total = arr.reduce((x, y) => x + y.valor, 0);
+    const totalF = arr.filter(l => /\(F\)/.test(l.desc)).reduce((x, y) => x + y.valor, 0);
+    const totalObras = arr.filter(l => /\(OBRAS\)/i.test(l.desc)).reduce((x, y) => x + y.valor, 0);
     const base = obterSalarioBase(s, m, a);
     const prev = calcularSaldoAte(s, m, a);
     const saldo = base + prev - total;
@@ -790,7 +795,7 @@ ${!ehFuncionario ? `<div class="small">Salário: ${fmt(base)} | Saldo ant: <b cl
 
       ${!isFechado ? `<div class="acoes"> <span onclick="abrirEditar('${r.id}')">✏️</span>
   <span onclick="excluir('${r.id}')">🗑️</span></div>` : ""}</div>`)}</div>
-${!ehFuncionario ? `<div class="small" style="margin-top:10px">Total: ${fmt(total)} | Saldo: <b class="${saldo>=0?'pos':'neg'}">${fmt(saldo)}</b></div>` : `<div class="small" style="margin-top:10px">Total lançado: <b>${fmt(total)}</b></div>`}</div>`;  }
+${!ehFuncionario ? `<div class="small" style="margin-top:10px">Total: ${fmt(total)} | Saldo: <b class="${saldo>=0?'pos':'neg'}">${fmt(saldo)}</b></div><div class="small" style="margin-top:4px">Total (F): <b style="color:#16a34a">${fmt(totalF)}</b> | Total (Obras): <b style="color:#ea580c">${fmt(totalObras)}</b></div>` : `<div class="small" style="margin-top:10px">Total lançado: <b>${fmt(total)}</b></div>`}</div>`;  }
   for (const g of gruposExtras) {
     const arr = dadosCache.lancamentos.filter(l => l.socio === g && l.ano == a && l.mes == m).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
     const total = arr.reduce((x,y)=>x+y.valor,0);
