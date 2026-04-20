@@ -218,7 +218,6 @@ button{border:none;cursor:pointer; font-weight:600;}
  </div>
  <div class="grid" id="cards"></div>
  <button class="secondary" onclick="alternarFechamento()" style="margin-top:20px">Fechar / Reabrir mês</button>
-<button id="btnNotif" class="secondary" onclick="registrarPush()" style="margin-top:10px;display:none">🔔 Ativar notificações</button>
 </div>
 
 <div id="abaSocios" class="hidden">
@@ -361,6 +360,14 @@ button{border:none;cursor:pointer; font-weight:600;}
  </div>
  <button class="primary" onclick="salvarSalarios()" style="margin-top:20px">Salvar salários</button>
  <hr style="margin:30px 0; opacity:0.1">
+ <h4>🔔 Notificações push</h4>
+ <div id="notifStatus" class="small" style="margin:8px 0 4px">Verificando…</div>
+ <div id="notifInfo" class="small" style="color:#94a3b8;margin-bottom:10px">Você recebe alertas apenas dos lançamentos do seu sócio vinculado. Funciona no computador, Android e iPhone (iPhone exige instalar o app na tela inicial).</div>
+ <div style="display:flex;gap:10px;flex-wrap:wrap">
+  <button id="btnAtivarNotif" class="primary" onclick="ativarNotificacoes()" style="display:none">🔔 Ativar notificações</button>
+  <button id="btnDesativarNotif" class="secondary" onclick="desativarNotificacoes()" style="display:none">🔕 Desativar notificações</button>
+ </div>
+ <hr style="margin:30px 0; opacity:0.1">
  <h4>Alterar minha senha</h4>
  <input id="novaSenha" type="password" placeholder="Nova senha">
  <button class="primary" onclick="alterarSenha()">Alterar senha</button>
@@ -403,44 +410,145 @@ function urlBase64ToUint8Array(base64String) {
   return Uint8Array.from([...rawData].map(c => c.charCodeAt(0)));
 }
 
+function pushSuportado() {
+  return 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+}
+
+async function salvarSubscription(reg) {
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (!session) return;
+  const { data: usuario } = await supabaseClient
+    .from("usuarios")
+    .select("socio")
+    .eq("id", session.user.id)
+    .maybeSingle();
+
+  const subscription = await reg.pushManager.subscribe({
+    userVisibleOnly: true,
+    applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+  });
+
+  const { error } = await supabaseClient.from("push_subscriptions").upsert({
+    usuario_id: session.user.id,
+    socio: usuario?.socio || null,
+    subscription: subscription.toJSON()
+  }, { onConflict: "usuario_id" });
+
+  if (error) console.log("Erro ao salvar subscription:", error);
+  return subscription;
+}
+
+// Re-registra a subscription no load, sem pedir permissão — usado só se o usuário
+// já autorizou antes. Em iOS, exige que o app esteja instalado na tela inicial.
 async function registrarPush() {
   try {
-    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-      console.log("Push não suportado neste navegador");
-      return;
-    }
-
+    if (!pushSuportado()) return;
     const reg = await navigator.serviceWorker.register('/prb/sw.js');
-    console.log("Service Worker registrado:", reg);
-
-    const permissao = await Notification.requestPermission();
-    console.log("Permissão:", permissao);
-    if (permissao !== 'granted') return;
-
-    const { data: { session } } = await supabaseClient.auth.getSession();
-    const { data: usuario } = await supabaseClient
-      .from("usuarios")
-      .select("socio")
-      .eq("id", session.user.id)
-      .maybeSingle();
-
-    const subscription = await reg.pushManager.subscribe({
-      userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
-    });
-    console.log("Subscription criada:", JSON.stringify(subscription));
-
-    const { error } = await supabaseClient.from("push_subscriptions").upsert({
-      usuario_id: session.user.id,
-      socio: usuario?.socio || null,
-      subscription: subscription.toJSON()
-    }, { onConflict: "usuario_id" });
-
-    if (error) console.log("Erro ao salvar:", error);
-    else console.log("Subscription salva com sucesso!");
-
+    if (Notification.permission !== 'granted') return;
+    await salvarSubscription(reg);
   } catch(e) {
     console.log("Erro no registrarPush:", e.message);
+  }
+}
+
+// Chamado pelo botão na aba Configurações. Pede permissão (precisa de gesto do
+// usuário, especialmente em iOS) e registra a subscription.
+async function ativarNotificacoes() {
+  try {
+    if (!pushSuportado()) {
+      alert("Este navegador não suporta notificações push.");
+      return;
+    }
+    const reg = await navigator.serviceWorker.register('/prb/sw.js');
+    const permissao = await Notification.requestPermission();
+    if (permissao !== 'granted') {
+      alert("Permissão negada. Ative as notificações nas configurações do navegador/sistema.");
+      await atualizarStatusNotif();
+      return;
+    }
+    await salvarSubscription(reg);
+    await atualizarStatusNotif();
+    alert("Notificações ativadas neste aparelho.");
+  } catch(e) {
+    alert("Erro ao ativar notificações: " + e.message);
+  }
+}
+
+async function desativarNotificacoes() {
+  try {
+    if (!confirm("Desativar notificações neste aparelho?")) return;
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if ('serviceWorker' in navigator) {
+      const reg = await navigator.serviceWorker.getRegistration('/prb/sw.js');
+      if (reg) {
+        const sub = await reg.pushManager.getSubscription();
+        if (sub) await sub.unsubscribe();
+      }
+    }
+    if (session) {
+      await supabaseClient.from("push_subscriptions").delete().eq("usuario_id", session.user.id);
+    }
+    await atualizarStatusNotif();
+    alert("Notificações desativadas.");
+  } catch(e) {
+    alert("Erro ao desativar: " + e.message);
+  }
+}
+
+async function atualizarStatusNotif() {
+  const el = document.getElementById("notifStatus");
+  const bOn = document.getElementById("btnAtivarNotif");
+  const bOff = document.getElementById("btnDesativarNotif");
+  if (!el || !bOn || !bOff) return;
+
+  if (!pushSuportado()) {
+    el.textContent = "❌ Navegador não suporta notificações push.";
+    bOn.style.display = "none";
+    bOff.style.display = "none";
+    return;
+  }
+
+  const iOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  const standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  if (iOS && !standalone) {
+    el.textContent = "⚠️ No iPhone, adicione o app à tela inicial (Compartilhar → Adicionar à Tela de Início) e abra a partir do ícone.";
+    bOn.style.display = "none";
+    bOff.style.display = "none";
+    return;
+  }
+
+  if (Notification.permission === "denied") {
+    el.textContent = "❌ Permissão bloqueada. Libere nas configurações do navegador/sistema.";
+    bOn.style.display = "none";
+    bOff.style.display = "none";
+    return;
+  }
+
+  let inscrito = false;
+  try {
+    const reg = await navigator.serviceWorker.getRegistration('/prb/sw.js');
+    if (reg) {
+      const sub = await reg.pushManager.getSubscription();
+      inscrito = !!sub && Notification.permission === "granted";
+    }
+  } catch(e) {}
+
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  const { data: usuario } = session
+    ? await supabaseClient.from("usuarios").select("socio").eq("id", session.user.id).maybeSingle()
+    : { data: null };
+  const socio = usuario?.socio;
+
+  if (inscrito) {
+    el.innerHTML = socio
+      ? `✅ Ativas neste aparelho — você recebe alertas do sócio <b>${socio.toString().toUpperCase()}</b>.`
+      : "✅ Ativas neste aparelho. (Sem sócio vinculado, você não receberá alertas — contate um admin.)";
+    bOn.style.display = "none";
+    bOff.style.display = "inline-block";
+  } else {
+    el.textContent = "🔕 Desativadas neste aparelho.";
+    bOn.style.display = "inline-block";
+    bOff.style.display = "none";
   }
 }
 
@@ -1262,6 +1370,7 @@ function abrirAba(a){
   if(a==='log') renderLogs();
   if(a==='ind') renderIndicadores();
   if(a==='socios'){ cCarregar(); pCarregar(false); iCarregar(false); }
+  if(a==='conf') atualizarStatusNotif();
 }
 
 function abrirSocios(){
