@@ -208,6 +208,11 @@ button{border:none;cursor:pointer; font-weight:600;}
  </div>
 </header>
 <div id="abaLanc">
+ <div id="bannerAtivarNotif" class="hidden" style="background:linear-gradient(135deg,#1f3c88,#4f6bdc);color:#fff;padding:14px 18px;border-radius:14px;margin-bottom:12px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;box-shadow:0 4px 14px rgba(31,60,136,0.3)">
+  <span id="bannerAtivarNotifTxt" style="flex:1;min-width:200px;font-size:14px"></span>
+  <button id="bannerAtivarNotifBtn" class="primary" style="width:auto;background:#fff;color:#1f3c88;padding:8px 16px">Ativar agora</button>
+  <span onclick="dispensarBannerNotif()" style="cursor:pointer;font-size:18px;padding:4px 8px;opacity:0.8" title="Dispensar">✕</span>
+ </div>
  <div id="statusMes" class="small" style="margin-bottom:10px"></div>
 <div id="painelNotif" class="hidden" style="background:rgba(220,38,38,0.1); padding:15px; border-radius:12px; margin-bottom:15px">
   <div style="display:flex; justify-content:space-between; align-items:center">
@@ -364,8 +369,9 @@ button{border:none;cursor:pointer; font-weight:600;}
  <div id="notifStatus" class="small" style="margin:8px 0 4px">Verificando…</div>
  <div id="notifInfo" class="small" style="color:#94a3b8;margin-bottom:10px">Você recebe alertas apenas dos lançamentos do seu sócio vinculado. Funciona no computador, Android e iPhone (iPhone exige instalar o app na tela inicial).</div>
  <div style="display:flex;gap:10px;flex-wrap:wrap">
-  <button id="btnAtivarNotif" class="primary" onclick="ativarNotificacoes()" style="display:none">🔔 Ativar notificações</button>
-  <button id="btnDesativarNotif" class="secondary" onclick="desativarNotificacoes()" style="display:none">🔕 Desativar notificações</button>
+  <button id="btnAtivarNotif" class="primary" onclick="ativarNotificacoes()" style="display:none;width:auto">🔔 Ativar notificações</button>
+  <button id="btnDesativarNotif" class="secondary" onclick="desativarNotificacoes()" style="display:none;width:auto">🔕 Desativar notificações</button>
+  <button class="secondary" onclick="resetarNotificacoesAparelho()" style="width:auto;background:#64748b">🔄 Resetar neste aparelho</button>
  </div>
  <hr style="margin:30px 0; opacity:0.1">
  <h4>Alterar minha senha</h4>
@@ -518,8 +524,16 @@ async function atualizarStatusNotif() {
   }
 
   if (Notification.permission === "denied") {
-    el.textContent = "❌ Permissão bloqueada. Libere nas configurações do navegador/sistema.";
-    bOn.style.display = "none";
+    const ua = navigator.userAgent;
+    let passo = "Clique no cadeado 🔒 (ou ícone de aviso) ao lado da URL → Permissões / Configurações do site → Notificações → <b>Permitir</b>, depois recarregue a página (Ctrl+Shift+R).";
+    if (/Firefox/i.test(ua)) {
+      passo = "Clique no cadeado 🔒 ao lado da URL → 'Mais informações' → Permissões → Receber notificações → desmarque 'Bloquear' / escolha 'Permitir', depois recarregue (Ctrl+Shift+R).";
+    } else if (/Safari/i.test(ua) && !/Chrome|Chromium|Edg/i.test(ua)) {
+      passo = "No Safari: menu Safari → Configurações → Sites → Notificações → localize este site e troque para 'Permitir'. Depois recarregue.";
+    }
+    el.innerHTML = "❌ Permissão bloqueada neste navegador.<br><span style='color:#94a3b8'>" + passo + "</span>";
+    bOn.textContent = "🔄 Já liberei, tentar de novo";
+    bOn.style.display = "inline-block";
     bOff.style.display = "none";
     return;
   }
@@ -539,6 +553,7 @@ async function atualizarStatusNotif() {
     : { data: null };
   const socio = usuario?.socio;
 
+  bOn.textContent = "🔔 Ativar notificações";
   if (inscrito) {
     el.innerHTML = socio
       ? `✅ Ativas neste aparelho — você recebe alertas do sócio <b>${socio.toString().toUpperCase()}</b>.`
@@ -549,6 +564,83 @@ async function atualizarStatusNotif() {
     el.textContent = "🔕 Desativadas neste aparelho.";
     bOn.style.display = "inline-block";
     bOff.style.display = "none";
+  }
+  atualizarBannerNotif();
+}
+
+async function atualizarBannerNotif() {
+  const banner = document.getElementById("bannerAtivarNotif");
+  if (!banner) return;
+  if (!pushSuportado()) { banner.classList.add("hidden"); return; }
+  if (localStorage.getItem("notifBannerDispensado") === "1") { banner.classList.add("hidden"); return; }
+
+  const iOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  const standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+
+  let inscrito = false;
+  try {
+    const reg = await navigator.serviceWorker.getRegistration('/prb/sw.js');
+    if (reg) {
+      const sub = await reg.pushManager.getSubscription();
+      inscrito = !!sub && Notification.permission === "granted";
+    }
+  } catch(e) {}
+
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  const { data: usuario } = session
+    ? await supabaseClient.from("usuarios").select("socio").eq("id", session.user.id).maybeSingle()
+    : { data: null };
+  const socio = usuario?.socio;
+
+  if (inscrito || !socio) { banner.classList.add("hidden"); return; }
+
+  const txt = document.getElementById("bannerAtivarNotifTxt");
+  const btn = document.getElementById("bannerAtivarNotifBtn");
+  if (iOS && !standalone) {
+    txt.innerHTML = "🔔 No iPhone, instale o app: <b>Compartilhar → Adicionar à Tela de Início</b>. Abra pelo ícone para receber notificações.";
+    btn.style.display = "none";
+  } else if (Notification.permission === "denied") {
+    txt.innerHTML = "🔔 Notificações bloqueadas neste navegador. Clique no cadeado 🔒 ao lado da URL → Notificações → <b>Permitir</b>, depois recarregue.";
+    btn.textContent = "Ver em Configurações";
+    btn.onclick = () => abrirAba('conf');
+    btn.style.display = "inline-block";
+  } else {
+    txt.innerHTML = `🔔 Ative as notificações para receber alertas de lançamentos do sócio <b>${socio.toString().toUpperCase()}</b>.`;
+    btn.textContent = "Ativar agora";
+    btn.onclick = () => ativarNotificacoes();
+    btn.style.display = "inline-block";
+  }
+  banner.classList.remove("hidden");
+}
+
+function dispensarBannerNotif() {
+  localStorage.setItem("notifBannerDispensado", "1");
+  document.getElementById("bannerAtivarNotif")?.classList.add("hidden");
+}
+
+async function resetarNotificacoesAparelho() {
+  if (!confirm("Resetar notificações deste aparelho? Isso apaga a inscrição atual e pede para ativar de novo.")) return;
+  try {
+    if ('serviceWorker' in navigator) {
+      const reg = await navigator.serviceWorker.getRegistration('/prb/sw.js');
+      if (reg) {
+        const sub = await reg.pushManager.getSubscription();
+        if (sub) await sub.unsubscribe();
+      }
+    }
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (session) {
+      await supabaseClient.from("push_subscriptions").delete().eq("usuario_id", session.user.id);
+    }
+    localStorage.removeItem("notifBannerDispensado");
+    await atualizarStatusNotif();
+    if (Notification.permission === "denied") {
+      alert("Reset feito. A permissão deste navegador ainda está BLOQUEADA — destrave no cadeado 🔒 ao lado da URL (Notificações → Permitir) e recarregue. Depois clique em Ativar.");
+    } else {
+      alert("Reset feito. Clique em 'Ativar notificações' para ativar de novo.");
+    }
+  } catch(e) {
+    alert("Erro no reset: " + e.message);
   }
 }
 
@@ -674,6 +766,7 @@ if (!usuarioSistema) {
 await carregarNotificacoes();
 verificarBackupDiario();
 registrarPush();
+atualizarBannerNotif();
 }
 
 
