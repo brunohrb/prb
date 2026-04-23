@@ -907,6 +907,7 @@ ${!ehFuncionario ? `<div class="small" style="margin-top:10px">Total: ${fmt(tota
   for (const g of gruposExtras) {
     const arr = dadosCache.lancamentos.filter(l => l.socio === g && l.ano == a && l.mes == m).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
     const total = arr.reduce((x,y)=>x+y.valor,0);
+    const totalF = arr.filter(l => /\(F\)/.test(l.desc)).reduce((x, y) => x + y.valor, 0);
     html += `<div class="card"><div class="socio"><span>${g.toUpperCase()}</span></div>
       ${!isFechado ? `<input id="d_${g}" placeholder="Descrição"><div style="display:flex;gap:6px;margin-top:8px;align-items:stretch"><button type="button" id="negbtn_${g}" onclick="toggleNegativo('v_${g}','negbtn_${g}')" style="width:44px;min-width:44px;flex-shrink:0;margin-top:0;background:#e2e8f0;color:#374151;font-size:22px;font-weight:700;padding:0;border-radius:12px;line-height:1">−</button><input id="v_${g}" placeholder="R$ 0,00" inputmode="decimal" oninput="mask(this)" style="margin-top:0;flex:1"></div><button id="okbtn_${g}" class="primary" onclick="add('${g}')">Adicionar</button>` : ""}
       <div style="margin-top:15px">${montarLista(arr, r => `<div class="linha"><div title="${new Date(r.created_at).toLocaleString('pt-BR')}">${!ehFuncionario ? r.desc.replace(/\(F\)/g, '<b style="color:#16a34a">(F)</b>') : r.desc}</div><div class="${r.valor < 0 ? 'pos' : 'neg'}">
@@ -915,7 +916,7 @@ ${!ehFuncionario ? `<div class="small" style="margin-top:10px">Total: ${fmt(tota
 
       ${!isFechado ? `<div class="acoes"> <span onclick="abrirEditar('${r.id}')">✏️</span>
   <span onclick="excluir('${r.id}')">🗑️</span></div>` : ""}</div>`)}</div>
-      <div class="small" style="margin-top:10px">Total: <b class="neg">${fmt(total)}</b></div></div>`;
+      <div class="small" style="margin-top:10px">Total: <b class="neg">${fmt(total)}</b></div>${!ehFuncionario ? `<div class="small" style="margin-top:4px">Total (F): <b style="color:#16a34a">${fmt(totalF)}</b></div>` : ''}</div>`;
   }
   cards.innerHTML = html;
 await carregarNotificacoes();
