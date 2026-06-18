@@ -1719,7 +1719,11 @@ function _cRenderMulti(){
 async function cCarregar(){
   document.getElementById('consolCards').innerHTML='<div class="consol-loading">Buscando dados...</div>';
   try{
-    var r=await supabaseClient.from('indicadores_app_storage').select('value').eq('key','consolidado_dados').maybeSingle();
+    // Lê direto da tabela 'app_storage' — o armazenamento real do app TEXNET (indicadores),
+    // onde o consolidado é gravado ao vivo (upload de planilha + sync IXC). Assim o PRB fica
+    // sempre sincronizado com a Texnet, sem precisar de export manual. A tabela antiga
+    // 'indicadores_app_storage' era uma cópia separada que ficava defasada.
+    var r=await supabaseClient.from('app_storage').select('value').eq('key','consolidado_dados').maybeSingle();
     if(r.error)throw new Error(r.error.message);
     if(!r.data||!r.data.value){document.getElementById('consolCards').innerHTML='<div class="consol-error">Sem dados. Acesse TEXNET.</div>';return;}
     _cCache=JSON.parse(r.data.value);_cRenderMulti();gRender();
