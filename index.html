@@ -22,6 +22,8 @@ header{ display:flex; justify-content:space-between; align-items:center; margin-
 .card:hover{ transform:translateY(-3px); box-shadow:0 16px 40px rgba(0,0,0,0.12); }
 .socio{text-align:center;font-weight:700;margin-bottom:12px}
 .socio span{ border:2px solid var(--azul); border-radius:50px; padding:6px 18px; }
+.pl-texnet{ margin-top:10px; background:linear-gradient(135deg,#8b5cf6,#6d4ad6); color:#fff; border-radius:14px; padding:10px 14px; display:flex; align-items:center; justify-content:space-between; gap:8px; font-weight:600; box-shadow:0 6px 16px rgba(139,92,246,0.3); }
+.pl-texnet b{ font-size:1.15rem; white-space:nowrap; }
 input,select,button{ padding:10px; font-size:14px; border-radius:12px; border:none; width:100%; background:rgba(0,0,0,0.02); color:var(--texto); margin-top: 8px; }
 input:focus,select:focus{ outline:none; box-shadow:0 0 0 2px rgba(31,60,136,0.25); background:#fff; }
 button{border:none;cursor:pointer; font-weight:600;}
@@ -903,7 +905,7 @@ ${!ehFuncionario ? `<div class="small">Salário: ${fmt(base)} | Saldo ant: <b cl
 
       ${!isFechado ? `<div class="acoes"> <span onclick="abrirEditar('${r.id}')">✏️</span>
   <span onclick="excluir('${r.id}')">🗑️</span></div>` : ""}</div>`)}</div>
-${!ehFuncionario ? `<div class="small" style="margin-top:10px">Total: ${fmt(total)} | Saldo: <b class="${saldo>=0?'pos':'neg'}">${fmt(saldo)}</b></div><div class="small" style="margin-top:4px">Total (F): <b style="color:#16a34a">${fmt(totalF)}</b> | Total (Obras): <b style="color:#ea580c">${fmt(totalObras)}</b></div>` : `<div class="small" style="margin-top:10px">Total lançado: <b>${fmt(total)}</b></div>`}</div>`;  }
+${!ehFuncionario ? `<div class="small" style="margin-top:10px">Total: ${fmt(total)} | Saldo: <b class="${saldo>=0?'pos':'neg'}">${fmt(saldo)}</b></div><div class="pl-texnet"><span>&#128188; PL Texnet</span><b>${fmt(totalF)}</b></div><div class="small" style="margin-top:6px">Total (Obras): <b style="color:#ea580c">${fmt(totalObras)}</b></div>` : `<div class="small" style="margin-top:10px">Total lançado: <b>${fmt(total)}</b></div>`}</div>`;  }
   for (const g of gruposExtras) {
     const arr = dadosCache.lancamentos.filter(l => l.socio === g && l.ano == a && l.mes == m).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
     const total = arr.reduce((x,y)=>x+y.valor,0);
@@ -916,7 +918,7 @@ ${!ehFuncionario ? `<div class="small" style="margin-top:10px">Total: ${fmt(tota
 
       ${!isFechado ? `<div class="acoes"> <span onclick="abrirEditar('${r.id}')">✏️</span>
   <span onclick="excluir('${r.id}')">🗑️</span></div>` : ""}</div>`)}</div>
-      <div class="small" style="margin-top:10px">Total: <b class="neg">${fmt(total)}</b></div>${!ehFuncionario ? `<div class="small" style="margin-top:4px">Total (F): <b style="color:#16a34a">${fmt(totalF)}</b></div>` : ''}</div>`;
+      <div class="small" style="margin-top:10px">Total: <b class="neg">${fmt(total)}</b></div>${!ehFuncionario ? `<div class="pl-texnet"><span>&#128188; PL Texnet</span><b>${fmt(totalF)}</b></div>` : ''}</div>`;
   }
   cards.innerHTML = html;
 await carregarNotificacoes();
@@ -1319,11 +1321,16 @@ document.addEventListener("DOMContentLoaded", () => {
 async function renderIndicadores() {
   const a = +anoIndicador.value;
   let html = "";
+  let totalGeralPL = 0;
   for(const s of entidades) {
-    const total = dadosCache.lancamentos.filter(l => l.socio === s && l.ano == a).reduce((acc, l) => acc + l.valor, 0);
-    html += `<div class="card"><div class="socio"><span>${s.toUpperCase()}</span></div><b>Total: ${fmt(total)}</b></div>`;
+    const arr = dadosCache.lancamentos.filter(l => l.socio === s && l.ano == a);
+    const total = arr.reduce((acc, l) => acc + l.valor, 0);
+    const plTexnet = arr.filter(l => /\(F\)/.test(l.desc)).reduce((acc, l) => acc + l.valor, 0);
+    totalGeralPL += plTexnet;
+    html += `<div class="card"><div class="socio"><span>${s.toUpperCase()}</span></div><b>Total: ${fmt(total)}</b><div class="pl-texnet"><span>&#128188; PL Texnet</span><b>${fmt(plTexnet)}</b></div></div>`;
   }
-  indicadores.innerHTML = html;
+  const cardGeral = `<div class="card" style="grid-column:1/-1;border:2px solid #8b5cf6;background:rgba(139,92,246,0.06)"><div class="socio"><span style="border-color:#8b5cf6;color:#8b5cf6">&#128188; PL TEXNET — TOTAL ${a}</span></div><div style="font-size:1.8rem;font-weight:800;color:#8b5cf6;text-align:center">${fmt(totalGeralPL)}</div><div class="small" style="text-align:center;margin-top:4px">Somatória de todos os lançamentos (F) do financeiro</div></div>`;
+  indicadores.innerHTML = cardGeral + html;
 }
 
 
@@ -1696,6 +1703,17 @@ function _cRenderMulti(){
   var fat=0,despTot=0,imp=0,ebitda=0,invDiv=0,lucroSocio=0,lucroBruto=0;
   _cAnos.forEach(function(ano){var df=anoMap[ano];if(!df)return;var c=_cCalc(df,_cMeses);fat+=c.fat;despTot+=c.despTot;imp+=c.imp;ebitda+=c.ebitda;invDiv+=c.invDiv;lucroSocio+=c.lucroSocio;lucroBruto+=c.lucroBruto;});
   var f=fat;
+  // PL Texnet = somatória dos lançamentos marcados (F) pelo financeiro (tabela movimentacoes),
+  // respeitando o(s) ano(s)/mês(es) selecionados no filtro do Consolidado.
+  var plTexnet=0;
+  if(typeof dadosCache!=='undefined'&&dadosCache&&dadosCache.lancamentos){
+    var _plMeses=(_cMeses[0]==='todos')?null:_cMeses.map(function(mk){return _MK.indexOf(mk);});
+    dadosCache.lancamentos.forEach(function(l){
+      if(_cAnos.indexOf(String(l.ano))<0)return;
+      if(_plMeses&&_plMeses.indexOf(l.mes)<0)return;
+      if(/\(F\)/.test(l.desc||''))plTexnet+=(l.valor||0);
+    });
+  }
   var anosL=_cAnos.slice().sort().join('+');
   var per=(_cMeses[0]==='todos')?'Todos os meses':_cMeses.map(function(m){return _MN[_MK.indexOf(m)];}).join(', ');
   var pe=document.getElementById('consolPeriodo');if(pe)pe.textContent='Periodo: '+per+' / '+anosL;
@@ -1708,6 +1726,7 @@ function _cRenderMulti(){
     {t:'EBITDA AJUSTADO',v:ebitda,cor:'#10b981',i:'&#128202;',p:_cp(ebitda,f),s:null},
     {t:'INVEST. E DIVIDAS',v:invDiv,cor:'#3b82f6',i:'&#128230;',p:_cp(invDiv,f),s:'Aj. Caixa - Participacao de Lucro'},
     {t:'LUCRO SOCIO',v:lucroSocio,cor:'#8b5cf6',i:'&#127942;',p:_cp(lucroSocio,f),s:'EBITDA Ajustado + Pro-Labore'},
+    {t:'PL TEXNET',v:plTexnet,cor:'#8b5cf6',i:'&#128188;',p:_cp(plTexnet,f),s:'Lancamentos (F) do financeiro'},
     {t:'LUCRO BRUTO',v:lucroBruto,cor:'#f59e0b',i:'&#128176;',p:_cp(lucroBruto,f),s:'Fat - Desp.(sem PL) - Impostos - Invest.'}
   ];
   var h='';
