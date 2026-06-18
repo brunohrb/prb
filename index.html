@@ -1730,7 +1730,10 @@ async function cCarregar(){
   }catch(e){document.getElementById('consolCards').innerHTML='<div class="consol-error">Erro: '+e.message+'</div>';}
 }
 // ===== BANDEIRA BEACH HOUSE =====
-var sbB=supabase.createClient('https://vzdxhxbevewmbdnmetrj.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ6ZHhoeGJldmV3bWJkbm1ldHJqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgwOTI4MTgsImV4cCI6MjA4MzY2ODgxOH0.XRWZ66NkqYFM8qWPwBQD5D1veokAuNaWMSwjbG1a5RE');
+// O banco antigo do BBH (vzdxhxbevewmbdnmetrj) deixou de existir. As tabelas
+// proprietarios/unidades/reservas/despesas migraram para o projeto "Bandeira Imóveis"
+// (daozgmiytfrwomxznjln) — o mesmo usado pelo bloco Imóveis Mensal abaixo (sbI).
+var sbB=supabase.createClient('https://daozgmiytfrwomxznjln.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRhb3pnbWl5dGZyd29teHpuamxuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwMDY4NzMsImV4cCI6MjA5MDU4Mjg3M30.evEDpNDP5nFaxCDPqyhyWg2uxM9TvjsVKP0ujNqfQWs');
 var _MABR=['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'];
 var _pAnos=['2024','2025','2026'];var _pMeses=['todos'];var _pData=null;
 function _pf(v){return new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL',minimumFractionDigits:2}).format(v||0);}
