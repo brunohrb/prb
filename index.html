@@ -20,10 +20,9 @@ header{ display:flex; justify-content:space-between; align-items:center; margin-
 @media(max-width:900px){ .grid{grid-template-columns:1fr} }
 .card{ background:var(--card); border:none; border-radius:20px; padding:22px; box-shadow:0 10px 30px rgba(0,0,0,0.08); transition:transform 0.2s ease, box-shadow 0.2s ease; }
 .card:hover{ transform:translateY(-3px); box-shadow:0 16px 40px rgba(0,0,0,0.12); }
-.socio{text-align:center;font-weight:700;margin-bottom:12px}
-.socio span{ border:2px solid var(--azul); border-radius:50px; padding:6px 18px; }
-.pl-texnet{ margin-top:10px; background:linear-gradient(135deg,#8b5cf6,#6d4ad6); color:#fff; border-radius:14px; padding:10px 14px; display:flex; align-items:center; justify-content:space-between; gap:8px; font-weight:600; box-shadow:0 6px 16px rgba(139,92,246,0.3); }
-.pl-texnet b{ font-size:1.15rem; white-space:nowrap; }
+.socio{text-align:center;font-weight:700;margin-bottom:12px;display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap}
+.socio>span:first-child{ border:2px solid var(--azul); border-radius:50px; padding:6px 18px; }
+.socio .pl-badge{ border:none; background:linear-gradient(135deg,#8b5cf6,#6d4ad6); color:#fff; border-radius:50px; padding:4px 12px; font-size:0.78rem; font-weight:700; white-space:nowrap; box-shadow:0 3px 8px rgba(139,92,246,0.3); }
 input,select,button{ padding:10px; font-size:14px; border-radius:12px; border:none; width:100%; background:rgba(0,0,0,0.02); color:var(--texto); margin-top: 8px; }
 input:focus,select:focus{ outline:none; box-shadow:0 0 0 2px rgba(31,60,136,0.25); background:#fff; }
 button{border:none;cursor:pointer; font-weight:600;}
@@ -71,7 +70,7 @@ button{border:none;cursor:pointer; font-weight:600;}
 .c-btn-ano.ativo{background:#2563eb!important;border-color:#2563eb!important;color:white!important;}
 .c-btn-mes:hover{border-color:#f59e0b!important;color:#f59e0b!important;}
 .c-btn-mes.ativo{background:#f59e0b!important;border-color:#f59e0b!important;color:white!important;}
-.consol-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:12px;margin-top:8px;}
+.consol-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:10px;margin-top:8px;}
 @media(max-width:1200px){.consol-grid{grid-template-columns:repeat(4,1fr)}}
 @media(max-width:700px){.consol-grid{grid-template-columns:repeat(2,1fr)}}
 .consol-card{background:var(--card);border-radius:14px;padding:14px 16px;box-shadow:0 2px 12px rgba(0,0,0,0.07);border-top:3px solid var(--cc,#2563eb);transition:transform .2s,box-shadow .2s;}
@@ -857,7 +856,7 @@ async function render(){
     const base = obterSalarioBase(s, m, a);
     const prev = calcularSaldoAte(s, m, a);
     const saldo = base + prev - total;
-    html += `<div class="card"><div class="socio"><span>${s.toUpperCase()}</span></div>
+    html += `<div class="card"><div class="socio"><span>${s.toUpperCase()}</span>${!ehFuncionario?`<span class="pl-badge">&#128188; ${fmt(totalF)}</span>`:''}</div>
 ${!ehFuncionario ? `<div class="small">Salário: ${fmt(base)} | Saldo ant: <b class="${prev>=0?'pos':'neg'}">${fmt(prev)}</b></div>` : ''}
      ${!isFechado ? `
   <input id="d_${s}" placeholder="Descrição">
@@ -905,12 +904,12 @@ ${!ehFuncionario ? `<div class="small">Salário: ${fmt(base)} | Saldo ant: <b cl
 
       ${!isFechado ? `<div class="acoes"> <span onclick="abrirEditar('${r.id}')">✏️</span>
   <span onclick="excluir('${r.id}')">🗑️</span></div>` : ""}</div>`)}</div>
-${!ehFuncionario ? `<div class="small" style="margin-top:10px">Total: ${fmt(total)} | Saldo: <b class="${saldo>=0?'pos':'neg'}">${fmt(saldo)}</b></div><div class="pl-texnet"><span>&#128188; PL Texnet</span><b>${fmt(totalF)}</b></div><div class="small" style="margin-top:6px">Total (Obras): <b style="color:#ea580c">${fmt(totalObras)}</b></div>` : `<div class="small" style="margin-top:10px">Total lançado: <b>${fmt(total)}</b></div>`}</div>`;  }
+${!ehFuncionario ? `<div class="small" style="margin-top:10px">Total: ${fmt(total)} | Saldo: <b class="${saldo>=0?'pos':'neg'}">${fmt(saldo)}</b></div><div class="small" style="margin-top:6px">Total (Obras): <b style="color:#ea580c">${fmt(totalObras)}</b></div>` : `<div class="small" style="margin-top:10px">Total lançado: <b>${fmt(total)}</b></div>`}</div>`;  }
   for (const g of gruposExtras) {
     const arr = dadosCache.lancamentos.filter(l => l.socio === g && l.ano == a && l.mes == m).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
     const total = arr.reduce((x,y)=>x+y.valor,0);
     const totalF = arr.filter(l => /\(F\)/.test(l.desc)).reduce((x, y) => x + y.valor, 0);
-    html += `<div class="card"><div class="socio"><span>${g.toUpperCase()}</span></div>
+    html += `<div class="card"><div class="socio"><span>${g.toUpperCase()}</span>${!ehFuncionario?`<span class="pl-badge">&#128188; ${fmt(totalF)}</span>`:''}</div>
       ${!isFechado ? `<input id="d_${g}" placeholder="Descrição"><div style="display:flex;gap:6px;margin-top:8px;align-items:stretch"><button type="button" id="negbtn_${g}" onclick="toggleNegativo('v_${g}','negbtn_${g}')" style="width:44px;min-width:44px;flex-shrink:0;margin-top:0;background:#e2e8f0;color:#374151;font-size:22px;font-weight:700;padding:0;border-radius:12px;line-height:1">−</button><input id="v_${g}" placeholder="R$ 0,00" inputmode="decimal" oninput="mask(this)" style="margin-top:0;flex:1"></div><button id="okbtn_${g}" class="primary" onclick="add('${g}')">Adicionar</button>` : ""}
       <div style="margin-top:15px">${montarLista(arr, r => `<div class="linha"><div title="${new Date(r.created_at).toLocaleString('pt-BR')}">${!ehFuncionario ? r.desc.replace(/\(F\)/g, '<b style="color:#16a34a">(F)</b>') : r.desc}</div><div class="${r.valor < 0 ? 'pos' : 'neg'}">
   ${fmt(r.valor)}
@@ -918,7 +917,7 @@ ${!ehFuncionario ? `<div class="small" style="margin-top:10px">Total: ${fmt(tota
 
       ${!isFechado ? `<div class="acoes"> <span onclick="abrirEditar('${r.id}')">✏️</span>
   <span onclick="excluir('${r.id}')">🗑️</span></div>` : ""}</div>`)}</div>
-      <div class="small" style="margin-top:10px">Total: <b class="neg">${fmt(total)}</b></div>${!ehFuncionario ? `<div class="pl-texnet"><span>&#128188; PL Texnet</span><b>${fmt(totalF)}</b></div>` : ''}</div>`;
+      <div class="small" style="margin-top:10px">Total: <b class="neg">${fmt(total)}</b></div></div>`;
   }
   cards.innerHTML = html;
 await carregarNotificacoes();
@@ -1327,7 +1326,7 @@ async function renderIndicadores() {
     const total = arr.reduce((acc, l) => acc + l.valor, 0);
     const plTexnet = arr.filter(l => /\(F\)/.test(l.desc)).reduce((acc, l) => acc + l.valor, 0);
     totalGeralPL += plTexnet;
-    html += `<div class="card"><div class="socio"><span>${s.toUpperCase()}</span></div><b>Total: ${fmt(total)}</b><div class="pl-texnet"><span>&#128188; PL Texnet</span><b>${fmt(plTexnet)}</b></div></div>`;
+    html += `<div class="card"><div class="socio"><span>${s.toUpperCase()}</span><span class="pl-badge">&#128188; ${fmt(plTexnet)}</span></div><b>Total: ${fmt(total)}</b></div>`;
   }
   const cardGeral = `<div class="card" style="grid-column:1/-1;border:2px solid #8b5cf6;background:rgba(139,92,246,0.06)"><div class="socio"><span style="border-color:#8b5cf6;color:#8b5cf6">&#128188; PL TEXNET — TOTAL ${a}</span></div><div style="font-size:1.8rem;font-weight:800;color:#8b5cf6;text-align:center">${fmt(totalGeralPL)}</div><div class="small" style="text-align:center;margin-top:4px">Somatória de todos os lançamentos (F) do financeiro</div></div>`;
   indicadores.innerHTML = cardGeral + html;
