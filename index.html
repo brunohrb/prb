@@ -1330,7 +1330,26 @@ async function renderIndicadores() {
     html += `<div class="card"><div class="socio"><span>${s.toUpperCase()}</span><span class="pl-badge">&#128188; PL Texnet ${fmt(plTexnet)}</span></div><b>Saldo líquido: ${fmt(total)}</b><div class="small" style="opacity:.65;margin-top:2px">Soma de todos os lançamentos do ano (inclui ajustes/manuais, não só o PL Texnet)</div></div>`;
   }
   const cardGeral = `<div class="card" style="grid-column:1/-1;border:2px solid #8b5cf6;background:rgba(139,92,246,0.06)"><div class="socio"><span style="border-color:#8b5cf6;color:#8b5cf6">&#128188; PL TEXNET — TOTAL ${a}</span></div><div style="font-size:1.8rem;font-weight:800;color:#8b5cf6;text-align:center">${fmt(totalGeralPL)}</div><div class="small" style="text-align:center;margin-top:4px">Somatória de todos os lançamentos (F) do financeiro</div></div>`;
-  indicadores.innerHTML = cardGeral + html;
+  // ===== Acerto entre sócios (situação atual / hoje) =====
+  // Usa o "saldo do sócio" acumulado (salário previsto − retiradas) até o mês corrente,
+  // a mesma conta do card de Lançamentos. Igualação pela MÉDIA (soma zero):
+  // quem retirou a mais devolve, quem tem a receber recebe.
+  const hoje = new Date();
+  const mAtual = hoje.getMonth(), aAtual = hoje.getFullYear();
+  const saldosSocios = socios.map(s => ({ s, saldo: calcularSaldoAte(s, mAtual + 1, aAtual) }));
+  const mediaSaldo = saldosSocios.reduce((acc, x) => acc + x.saldo, 0) / saldosSocios.length;
+  let linhasAcerto = "";
+  for (const { s, saldo } of saldosSocios) {
+    const dif = mediaSaldo - saldo; // dif<0 => recebe ; dif>0 => devolve
+    const acerto = Math.abs(dif) < 0.005
+      ? `<span style="color:#64748b">já está na média</span>`
+      : (dif < 0
+          ? `&#11014;&#65039; <span style="color:#16a34a;font-weight:700">recebe ${fmt(-dif)}</span>`
+          : `&#11015;&#65039; <span style="color:#dc2626;font-weight:700">devolve ${fmt(dif)}</span>`);
+    linhasAcerto += `<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid rgba(148,163,184,.2)"><span style="font-weight:700;min-width:64px">${s.toUpperCase()}</span><span class="small">Saldo: <b class="${saldo>=0?'pos':'neg'}">${fmt(saldo)}</b></span><span>${acerto}</span></div>`;
+  }
+  const cardAcerto = `<div class="card" style="grid-column:1/-1;border:2px solid #0ea5e9;background:rgba(14,165,233,0.06)"><div class="socio"><span style="border-color:#0ea5e9;color:#0ea5e9">&#9878;&#65039; ACERTO ENTRE SÓCIOS — situação hoje</span></div>${linhasAcerto}<div class="small" style="text-align:center;margin-top:8px;opacity:.75">Para os três ficarem iguais (média de ${fmt(mediaSaldo)}): quem retirou a mais devolve, quem tem a receber recebe — a soma fecha em zero.</div></div>`;
+  indicadores.innerHTML = cardGeral + html + cardAcerto;
 }
 
 
