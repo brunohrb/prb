@@ -694,6 +694,36 @@ function verificarBackupDiario() {
 }
 
 
+// O Supabase/PostgREST limita CADA select a 1000 linhas. Quando a tabela passa
+// de 1000, um `.select("*")` simples corta as linhas excedentes silenciosamente
+// (sem erro) — e justamente as mais novas somem. Foi isso que fez lançamentos
+// recém-adicionados aparecerem no Log mas não nos cards. Este helper pagina com
+// .range() até trazer a tabela inteira. Ordena por "id" (PK única) só para
+// garantir janelas de paginação estáveis, sem sobreposição nem buraco.
+async function fetchAll(tabela, aplicarFiltro) {
+  const passo = 1000;
+  let inicio = 0;
+  let todos = [];
+  while (true) {
+    let query = supabaseClient
+      .from(tabela)
+      .select("*")
+      .order("id", { ascending: true })
+      .range(inicio, inicio + passo - 1);
+    if (aplicarFiltro) query = aplicarFiltro(query);
+    const { data, error } = await query;
+    if (error) {
+      console.error("Erro ao carregar " + tabela + ":", error);
+      break;
+    }
+    if (!data || data.length === 0) break;
+    todos = todos.concat(data);
+    if (data.length < passo) break; // última página
+    inicio += passo;
+  }
+  return todos;
+}
+
 async function carregarTudo() {
   const { data: { session } } = await supabaseClient.auth.getSession();
   const { data: usuarioSistema } = await supabaseClient
@@ -701,34 +731,23 @@ async function carregarTudo() {
     .select("perfil")
     .eq("id", session.user.id)
     .single();
-  
+
   const perfilUsuario = usuarioSistema?.perfil || "admin";
-  
+
   let lancs, sals;
-  
+
   if (perfilUsuario === "funcionario" || perfilUsuario === "limitado") {
     // Usuário limitado: vê apenas seus próprios lançamentos
-    const { data: lancsLimitado } = await supabaseClient
-      .from("movimentacoes")
-      .select("*")
-      .eq("usuario_id", session.user.id);
-    lancs = lancsLimitado;
-    
+    lancs = await fetchAll("movimentacoes", q => q.eq("usuario_id", session.user.id));
     // Salários padrão (sem socio específico)
-    const { data: salsLimitado } = await supabaseClient
-      .from("salarios")
-      .select("*")
-      .is("socio", null);
-    sals = salsLimitado;
+    sals = await fetchAll("salarios", q => q.is("socio", null));
   } else {
     // Admin/Socio: vê tudo
-    const { data: lancsTodos } = await supabaseClient.from("movimentacoes").select("*");
-    const { data: salsTodos } = await supabaseClient.from("salarios").select("*");
-    lancs = lancsTodos;
-    sals = salsTodos;
+    lancs = await fetchAll("movimentacoes");
+    sals = await fetchAll("salarios");
   }
-  
-  const { data: fechs } = await supabaseClient.from("fechamentos").select("*");
+
+  const fechs = await fetchAll("fechamentos");
   dadosCache.lancamentos = lancs || [];
   dadosCache.salarios = sals || [];
   dadosCache.fechamentos = fechs || [];
