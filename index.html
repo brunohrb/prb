@@ -555,13 +555,21 @@ async function atualizarStatusNotif() {
 
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+let sessionAtualId = null;
+
 supabaseClient.auth.onAuthStateChange((event, session) => {
   if (event === "SIGNED_OUT") {
+    sessionAtualId = null;
     document.getElementById("app").classList.add("hidden");
     document.getElementById("loginScreen").style.display = "flex";
     dadosCache = { lancamentos: [], salarios: [], fechamentos: [] };
   }
   if (event === "SIGNED_IN") {
+    // O Supabase reemite SIGNED_IN quando a aba volta a ficar ativa (troca de tela,
+    // volta do segundo plano), mesmo sem um login novo. Sem essa checagem, isso chamava
+    // init()/render() de novo e apagava o que a pessoa estava digitando no lançamento.
+    if (session?.user?.id && session.user.id === sessionAtualId) return;
+    sessionAtualId = session?.user?.id || null;
     document.getElementById("loginScreen").style.display = "none";
     document.getElementById("app").classList.remove("hidden");
     init();
@@ -649,6 +657,7 @@ if (!usuarioSistema) {
     return;
 }
 
+  sessionAtualId = session.user.id;
   document.getElementById("loginScreen").style.display = "none";
   document.getElementById("app").classList.remove("hidden");
   mes.innerHTML = meses.map((m,i)=>`<option value="${i}">${m}</option>`).join("");
