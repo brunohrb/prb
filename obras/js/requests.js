@@ -97,6 +97,26 @@ const Requests = (() => {
     return data;
   }
 
+  // Atualiza campos editáveis (título, descrição, urgência, prazo)
+  async function update(id, { title, description, urgency, deadline }) {
+    invalidateCache();
+    const { data, error } = await supabase
+      .from('maintenance_requests')
+      .update({
+        title,
+        description: description || null,
+        urgency,
+        deadline: deadline || null,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  }
+
   // Atualiza status
   async function updateStatus(id, status, notes) {
     invalidateCache();
@@ -370,15 +390,21 @@ const Requests = (() => {
         ${req.notes ? `<br><strong>Obs. do responsável:</strong> ${escapeHtml(req.notes)}` : ''}
       </div>
       ${!isResponsavel ? `
-      <button class="btn btn-danger btn-full" id="btn-excluir-pendencia" style="margin-top:8px">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
-        Excluir Pendência
-      </button>` : ''}
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button class="btn btn-outline" id="btn-editar-pendencia" style="flex:1">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          Editar
+        </button>
+        <button class="btn btn-danger" id="btn-excluir-pendencia" style="flex:1">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+          Excluir
+        </button>
+      </div>` : ''}
     `;
   }
 
   return {
-    list, getById, create, updateStatus, remove,
+    list, getById, create, update, updateStatus, remove,
     invalidateCache,
     initPhotoPicker, getPendingPhotos, clearPendingPhotos,
     urgencyLabel, statusLabel, formatDate, isOverdue,

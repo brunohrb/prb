@@ -209,6 +209,9 @@ function setupApp() {
   // Modais imóveis
   setupImoveisModal();
 
+  // Modal editar pendência
+  setupEditarPendenciaModal();
+
   // Modal usuários
   setupUsuariosModal();
 
@@ -527,6 +530,12 @@ async function openDetalhe(id) {
       img.addEventListener('click', () => openImageViewer(img.dataset.url));
     });
 
+    // Bind editar (sócios)
+    const btnEditar = content.querySelector('#btn-editar-pendencia');
+    if (btnEditar) {
+      btnEditar.addEventListener('click', () => openEditarPendencia(req));
+    }
+
     // Bind excluir (sócios)
     const btnExcluir = content.querySelector('#btn-excluir-pendencia');
     if (btnExcluir) {
@@ -565,6 +574,54 @@ async function confirmDelete(id) {
     showToast('Erro ao excluir', 'error');
     console.error(err);
   }
+}
+
+// ---- Editar pendência ----
+
+function openEditarPendencia(req) {
+  document.getElementById('editar-titulo').value = req.title || '';
+  document.getElementById('editar-descricao').value = req.description || '';
+  document.getElementById('editar-urgencia').value = req.urgency || 'media';
+  document.getElementById('editar-prazo').value = req.deadline || '';
+  document.getElementById('modal-editar-pendencia').classList.remove('hidden');
+}
+
+function setupEditarPendenciaModal() {
+  const modal = document.getElementById('modal-editar-pendencia');
+  const form = document.getElementById('form-editar-pendencia');
+
+  document.getElementById('close-modal-editar-pendencia').addEventListener('click', () => modal.classList.add('hidden'));
+  document.getElementById('cancel-modal-editar-pendencia').addEventListener('click', () => modal.classList.add('hidden'));
+  modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.add('hidden'); });
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const submitBtn = form.querySelector('button[type="submit"]');
+    if (submitBtn.classList.contains('btn-loading')) return; // trava contra duplo clique/toque
+
+    const title = document.getElementById('editar-titulo').value.trim();
+    const description = document.getElementById('editar-descricao').value.trim();
+    const urgency = document.getElementById('editar-urgencia').value;
+    const deadline = document.getElementById('editar-prazo').value;
+
+    if (!title) {
+      showToast('Título não pode ficar em branco', 'error');
+      return;
+    }
+
+    setLoading(submitBtn, true, 'Salvando...');
+    try {
+      await Requests.update(currentRequestId, { title, description, urgency, deadline });
+      showToast('Pendência atualizada ✓', 'success');
+      modal.classList.add('hidden');
+      await openDetalhe(currentRequestId);
+    } catch (err) {
+      showToast('Erro ao atualizar pendência', 'error');
+      console.error(err);
+    } finally {
+      setLoading(submitBtn, false);
+    }
+  });
 }
 
 // ---- Tipo nova pendência (imóvel ou projeto) ----
