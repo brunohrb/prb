@@ -557,6 +557,47 @@
     </div>
   </div>
 
+  <!-- Modal: Editar Pendência -->
+  <div id="modal-editar-pendencia" class="modal-overlay hidden">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Editar Pendência</h3>
+        <button class="btn-icon" id="close-modal-editar-pendencia">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <form id="form-editar-pendencia">
+        <div class="form-group">
+          <label>Título da pendência *</label>
+          <input type="text" id="editar-titulo" required maxlength="100">
+        </div>
+        <div class="form-group">
+          <label>Descrição</label>
+          <textarea id="editar-descricao" rows="3" placeholder="Descreva o problema em detalhes..."></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Urgência *</label>
+            <select id="editar-urgencia" required>
+              <option value="baixa">🟢 Baixa</option>
+              <option value="media">🟡 Média</option>
+              <option value="alta">🟠 Alta</option>
+              <option value="critica">🔴 Crítica</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Prazo máximo</label>
+            <input type="date" id="editar-prazo">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline btn-lg" id="cancel-modal-editar-pendencia">Cancelar</button>
+          <button type="submit" class="btn btn-primary btn-lg">Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- Modal: Novo Usuário -->
   <div id="modal-usuario" class="modal-overlay hidden">
     <div class="modal-card">
