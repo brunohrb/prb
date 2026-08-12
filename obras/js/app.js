@@ -571,10 +571,10 @@ async function confirmDelete(id) {
 let tipoNova = 'imovel';
 function setTipoNova(tipo) {
   tipoNova = tipo;
-  document.getElementById('nova-imovel').classList.toggle('hidden', tipo === 'projeto');
+  document.querySelector('.select-with-action').classList.toggle('hidden', tipo === 'projeto');
   document.getElementById('nova-projeto').classList.toggle('hidden', tipo === 'imovel');
-  document.getElementById('tipo-imovel').className = `btn btn-sm ${tipo === 'imovel' ? 'btn-primary' : 'btn-outline'}`;
-  document.getElementById('tipo-projeto').className = `btn btn-sm ${tipo === 'projeto' ? 'btn-primary' : 'btn-outline'}`;
+  document.getElementById('tipo-imovel').classList.toggle('active', tipo === 'imovel');
+  document.getElementById('tipo-projeto').classList.toggle('active', tipo === 'projeto');
 }
 
 // ---- Nova pendência ----
@@ -632,16 +632,39 @@ async function loadImoveis() {
     list.innerHTML = '';
 
     if (props.length === 0) {
-      list.innerHTML = '<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><p>Nenhum imóvel cadastrado</p></div>';
+      list.innerHTML = `
+        <div class="empty-state">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+          <p>Nenhum imóvel cadastrado</p>
+          <button type="button" class="btn btn-primary" id="btn-novo-imovel-empty" style="margin-top:16px">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Cadastrar imóvel
+          </button>
+        </div>`;
       return;
     }
 
     props.forEach(p => {
+      const totalReqs = reqs.filter(r => r.property_id === p.id).length;
       const pending = reqs.filter(r => r.property_id === p.id && r.status !== 'concluido').length;
       const card = Properties.renderCard(p, pending);
-      card.addEventListener('click', (e) => {
+      card.addEventListener('click', async (e) => {
         if (e.target.closest('.btn-edit-imovel')) {
           openEditImovel(p);
+        } else if (e.target.closest('.btn-delete-imovel')) {
+          const aviso = totalReqs > 0
+            ? `Este imóvel tem ${totalReqs} pendência(s) cadastrada(s), que também serão excluídas. `
+            : '';
+          if (!confirm(`${aviso}Tem certeza que deseja excluir "${Properties.getDisplayName(p)}"? Esta ação não pode ser desfeita.`)) return;
+          try {
+            await Properties.remove(p.id);
+            showToast('Imóvel excluído ✓', 'success');
+            await Properties.populateSelects(['filter-imovel', 'nova-imovel']);
+            loadImoveis();
+          } catch (err) {
+            showToast('Erro ao excluir imóvel', 'error');
+            console.error(err);
+          }
         } else {
           // Filtra por imóvel no dashboard
           filterState.propertyId = p.id;
@@ -660,12 +683,29 @@ async function loadImoveis() {
 function setupImoveisModal() {
   const modal = document.getElementById('modal-imovel');
   const form = document.getElementById('form-imovel');
+  let selectAfterCreate = false;
 
   document.getElementById('btn-novo-imovel').addEventListener('click', () => {
+    selectAfterCreate = false;
     document.getElementById('modal-imovel-title').textContent = 'Novo Imóvel';
     document.getElementById('imovel-edit-id').value = '';
     form.reset();
     modal.classList.remove('hidden');
+  });
+
+  document.getElementById('btn-novo-imovel-inline').addEventListener('click', () => {
+    selectAfterCreate = true;
+    document.getElementById('modal-imovel-title').textContent = 'Novo Imóvel';
+    document.getElementById('imovel-edit-id').value = '';
+    form.reset();
+    modal.classList.remove('hidden');
+  });
+
+  // Botão do estado vazio (recriado a cada loadImoveis) reaproveita o fluxo do FAB
+  document.getElementById('view-imoveis').addEventListener('click', (e) => {
+    if (e.target.closest('#btn-novo-imovel-empty')) {
+      document.getElementById('btn-novo-imovel').click();
+    }
   });
 
   document.getElementById('close-modal-imovel').addEventListener('click', () => modal.classList.add('hidden'));
@@ -674,26 +714,38 @@ function setupImoveisModal() {
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
+    const submitBtn = form.querySelector('button[type="submit"]');
+    if (submitBtn.classList.contains('btn-loading')) return; // trava contra duplo clique/toque
     const id = document.getElementById('imovel-edit-id').value;
     const nome = document.getElementById('imovel-nome').value.trim();
     const unidade = document.getElementById('imovel-unidade').value.trim();
     const endereco = document.getElementById('imovel-endereco').value.trim();
 
+    setLoading(submitBtn, true, 'Salvando...');
     try {
+      let created = null;
       if (id) {
         await Properties.update(id, nome, unidade, endereco);
         showToast('Imóvel atualizado ✓', 'success');
       } else {
-        await Properties.create(nome, unidade, endereco);
+        created = await Properties.create(nome, unidade, endereco);
         showToast('Imóvel criado ✓', 'success');
       }
       modal.classList.add('hidden');
       await Properties.list();
       await Properties.populateSelects(['filter-imovel', 'nova-imovel']);
-      loadImoveis();
+
+      if (created && selectAfterCreate) {
+        document.getElementById('nova-imovel').value = created.id;
+        selectAfterCreate = false;
+      } else if (document.getElementById('view-imoveis').classList.contains('active')) {
+        loadImoveis();
+      }
     } catch (err) {
       showToast('Erro ao salvar imóvel', 'error');
       console.error(err);
+    } finally {
+      setLoading(submitBtn, false);
     }
   });
 }

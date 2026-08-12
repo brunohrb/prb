@@ -199,47 +199,71 @@
       <!-- VIEW: NOVA PENDÊNCIA -->
       <div id="view-nova" class="view">
         <form id="form-nova" class="form-view">
-          <div class="form-group">
-            <label>Vincular a</label>
-            <div style="display:flex;gap:8px;margin-bottom:8px">
-              <button type="button" class="btn btn-primary btn-sm" id="tipo-imovel" onclick="setTipoNova('imovel')">Imóvel</button>
-              <button type="button" class="btn btn-outline btn-sm" id="tipo-projeto" onclick="setTipoNova('projeto')">Grande Obra</button>
+
+          <div class="form-card">
+            <div class="form-card-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.07 0l2.83-2.83a5 5 0 00-7.07-7.07l-1.5 1.5"/><path d="M14 11a5 5 0 00-7.07 0L4.1 13.83a5 5 0 007.07 7.07l1.5-1.5"/></svg>
+              Vincular a
             </div>
-            <select id="nova-imovel">
-              <option value="">Selecione o imóvel</option>
-            </select>
-            <select id="nova-projeto" class="hidden" style="margin-top:8px">
+            <div class="segmented">
+              <button type="button" class="seg-btn active" id="tipo-imovel" onclick="setTipoNova('imovel')">Imóvel</button>
+              <button type="button" class="seg-btn" id="tipo-projeto" onclick="setTipoNova('projeto')">Grande Obra</button>
+            </div>
+            <div class="select-with-action">
+              <select id="nova-imovel">
+                <option value="">Selecione o imóvel</option>
+              </select>
+              <button type="button" class="btn btn-outline btn-sm" id="btn-novo-imovel-inline" title="Criar novo imóvel">+ Novo</button>
+            </div>
+            <select id="nova-projeto" class="hidden" style="margin-top:10px">
               <option value="">Selecione a grande obra</option>
             </select>
           </div>
-          <div class="form-group">
-            <label>Título da pendência *</label>
-            <input type="text" id="nova-titulo" placeholder="Ex: Trocar pia da cozinha" required maxlength="100">
-          </div>
-          <div class="form-group">
-            <label>Descrição</label>
-            <textarea id="nova-descricao" rows="3" placeholder="Descreva o problema em detalhes..."></textarea>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label>Urgência *</label>
-              <select id="nova-urgencia" required>
-                <option value="">Selecione</option>
-                <option value="baixa">🟢 Baixa</option>
-                <option value="media">🟡 Média</option>
-                <option value="alta">🟠 Alta</option>
-                <option value="critica">🔴 Crítica</option>
-              </select>
+
+          <div class="form-card">
+            <div class="form-card-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              Detalhes
             </div>
             <div class="form-group">
-              <label>Prazo máximo</label>
-              <input type="date" id="nova-prazo">
+              <label>Título da pendência *</label>
+              <input type="text" id="nova-titulo" placeholder="Ex: Trocar pia da cozinha" required maxlength="100">
+            </div>
+            <div class="form-group">
+              <label>Descrição</label>
+              <textarea id="nova-descricao" rows="3" placeholder="Descreva o problema em detalhes..."></textarea>
+            </div>
+          </div>
+
+          <div class="form-card">
+            <div class="form-card-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01M10.29 3.86l-8.18 14.14A2 2 0 004 21h16a2 2 0 001.89-3l-8.18-14.14a2 2 0 00-3.42 0z"/></svg>
+              Urgência e prazo
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Urgência *</label>
+                <select id="nova-urgencia" required>
+                  <option value="">Selecione</option>
+                  <option value="baixa">🟢 Baixa</option>
+                  <option value="media">🟡 Média</option>
+                  <option value="alta">🟠 Alta</option>
+                  <option value="critica">🔴 Crítica</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Prazo máximo</label>
+                <input type="date" id="nova-prazo">
+              </div>
             </div>
           </div>
 
           <!-- Upload de fotos -->
-          <div class="form-group">
-            <label>Fotos</label>
+          <div class="form-card">
+            <div class="form-card-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+              Fotos
+            </div>
             <div class="photo-section">
               <div class="photo-grid" id="photo-preview"></div>
               <div class="photo-buttons">
@@ -526,8 +550,8 @@
           <input type="text" id="imovel-endereco" placeholder="Rua, número, bairro">
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-outline" id="cancel-modal-imovel">Cancelar</button>
-          <button type="submit" class="btn btn-primary">Salvar</button>
+          <button type="button" class="btn btn-outline btn-lg" id="cancel-modal-imovel">Cancelar</button>
+          <button type="submit" class="btn btn-primary btn-lg">Salvar</button>
         </div>
       </form>
     </div>
