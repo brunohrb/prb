@@ -327,7 +327,7 @@ const Requests = (() => {
     return card;
   }
 
-  function renderDetalhe(req, isResponsavel) {
+  function renderDetalhe(req) {
     const propName = req.properties
       ? (req.properties.unit ? `${req.properties.unit} · ${req.properties.name}` : req.properties.name)
       : req.projects
@@ -349,20 +349,17 @@ const Requests = (() => {
       `;
     }
 
-    let acoesHTML = '';
-    if (isResponsavel) {
-      acoesHTML = `
-        <div class="acoes-section card">
-          <h4>Atualizar status</h4>
-          <div class="status-buttons">
-            ${req.status !== 'em_andamento' ? `<button class="btn btn-outline" data-action="em_andamento">▶ Marcar como Em Andamento</button>` : ''}
-            ${req.status !== 'concluido' ? `<button class="btn btn-success" data-action="concluido">✓ Marcar como Concluído</button>` : ''}
-            ${req.status !== 'pendente' ? `<button class="btn btn-outline" data-action="pendente">↩ Voltar para Pendente</button>` : ''}
-          </div>
-          <textarea id="status-notes" class="notas-input" rows="2" placeholder="Observações (opcional)...">${req.notes || ''}</textarea>
+    const acoesHTML = `
+      <div class="acoes-section card">
+        <h4>Atualizar status</h4>
+        <div class="status-buttons">
+          ${req.status !== 'em_andamento' ? `<button class="btn btn-outline" data-action="em_andamento">▶ Marcar como Em Andamento</button>` : ''}
+          ${req.status !== 'concluido' ? `<button class="btn btn-success" data-action="concluido">✓ Marcar como Concluído</button>` : ''}
+          ${req.status !== 'pendente' ? `<button class="btn btn-outline" data-action="pendente">↩ Voltar para Pendente</button>` : ''}
         </div>
-      `;
-    }
+        <textarea id="status-notes" class="notas-input" rows="2" placeholder="Observações (opcional)...">${req.notes || ''}</textarea>
+      </div>
+    `;
 
     return `
       <div class="detalhe-header card">
@@ -389,7 +386,6 @@ const Requests = (() => {
         ${updatedAt ? `<br><strong>Última atualização:</strong> ${updatedAt}` : ''}
         ${req.notes ? `<br><strong>Obs. do responsável:</strong> ${escapeHtml(req.notes)}` : ''}
       </div>
-      ${!isResponsavel ? `
       <div style="display:flex;gap:8px;margin-top:8px">
         <button class="btn btn-outline" id="btn-editar-pendencia" style="flex:1">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
@@ -399,7 +395,7 @@ const Requests = (() => {
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
           Excluir
         </button>
-      </div>` : ''}
+      </div>
     `;
   }
 

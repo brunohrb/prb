@@ -516,27 +516,25 @@ async function openDetalhe(id) {
 
   try {
     const req = await Requests.getById(id);
-    content.innerHTML = Requests.renderDetalhe(req, Auth.isResponsavel());
+    content.innerHTML = Requests.renderDetalhe(req);
 
-    // Bind botões de status (apenas responsável)
-    if (Auth.isResponsavel()) {
-      content.querySelectorAll('[data-action]').forEach(btn => {
-        btn.addEventListener('click', () => updateStatus(id, btn.dataset.action));
-      });
-    }
+    // Bind botões de status
+    content.querySelectorAll('[data-action]').forEach(btn => {
+      btn.addEventListener('click', () => updateStatus(id, btn.dataset.action));
+    });
 
     // Bind fotos (lightbox)
     content.querySelectorAll('.foto-thumb').forEach(img => {
       img.addEventListener('click', () => openImageViewer(img.dataset.url));
     });
 
-    // Bind editar (sócios)
+    // Bind editar
     const btnEditar = content.querySelector('#btn-editar-pendencia');
     if (btnEditar) {
       btnEditar.addEventListener('click', () => openEditarPendencia(req));
     }
 
-    // Bind excluir (sócios)
+    // Bind excluir
     const btnExcluir = content.querySelector('#btn-excluir-pendencia');
     if (btnExcluir) {
       btnExcluir.addEventListener('click', () => confirmDelete(id));
