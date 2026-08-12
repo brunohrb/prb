@@ -365,13 +365,19 @@ $$;
 -- Sócios:       bruno, paulo, rafael, cassiano
 -- Responsáveis: ellen, tatiana
 -- (caso o papel esteja errado, basta rodar um UPDATE depois)
+--
+-- NÃO preencha senhas reais aqui — este arquivo é versionado no
+-- repositório público. Rode os comandos abaixo manualmente no SQL
+-- Editor do Supabase, substituindo SENHA_AQUI por uma senha forte
+-- e ÚNICA por pessoa, e apague o texto do editor depois de rodar
+-- (mesmo procedimento da seção "Reset de senha" do CLAUDE.md).
 -- ============================================================
-SELECT obras.create_user('bruno',    '04958346', 'Bruno',    'socio');
-SELECT obras.create_user('paulo',    '186207',   'Paulo',    'socio');
-SELECT obras.create_user('rafael',   '174707',   'Rafael',   'socio');
-SELECT obras.create_user('cassiano', '123456',   'Cassiano', 'socio');
-SELECT obras.create_user('ellen',    '04958346', 'Ellen',    'responsavel');
-SELECT obras.create_user('tatiana',  '186207',   'Tatiana',  'responsavel');
+-- SELECT obras.create_user('bruno',    'SENHA_AQUI', 'Bruno',    'socio');
+-- SELECT obras.create_user('paulo',    'SENHA_AQUI', 'Paulo',    'socio');
+-- SELECT obras.create_user('rafael',   'SENHA_AQUI', 'Rafael',   'socio');
+-- SELECT obras.create_user('cassiano', 'SENHA_AQUI', 'Cassiano', 'socio');
+-- SELECT obras.create_user('ellen',    'SENHA_AQUI', 'Ellen',    'responsavel');
+-- SELECT obras.create_user('tatiana',  'SENHA_AQUI', 'Tatiana',  'responsavel');
 
 -- Para mudar o papel de alguém depois:
 -- UPDATE obras.profiles SET role = 'responsavel' WHERE email = 'bruno@bandeira.app';
