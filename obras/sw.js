@@ -1,5 +1,5 @@
 // Service Worker - Bandeira Obras PWA
-const CACHE_NAME = 'bandeira-obras-v2';
+const CACHE_NAME = 'bandeira-obras-v3';
 const STATIC_ASSETS = [
   './',
   './index.html',

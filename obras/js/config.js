@@ -9,7 +9,7 @@ const SUPABASE_URL       = 'https://xuwwgprchhfshrqdhuqn.supabase.co';
 const SUPABASE_ANON_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh1d3dncHJjaGhmc2hycWRodXFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY5NTI0NTQsImV4cCI6MjA4MjUyODQ1NH0.MEUMQ4_z1R5tF3_wQbEj_eTitGJia03b0M0LT3aOAnc';
 const OBRAS_SCHEMA       = 'obras';
 const STORAGE_BUCKET     = 'obras-fotos';
-const APP_VERSION        = '2.0.0';
+const APP_VERSION        = '2.1.0';
 
 // Inicializa cliente — sobrescreve window.supabase (lib) com o cliente instanciado
 // db.schema='obras' faz com que todos os .from('xxx') apontem para obras.xxx

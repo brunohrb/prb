@@ -29,7 +29,9 @@ function showToast(msg, type = '') {
 function setLoading(btn, loading, text = '') {
   if (!btn) return;
   if (loading) {
-    btn.dataset.origText = btn.innerHTML;
+    // não sobrescreve o texto original se já estiver em loading
+    // (permite trocar a mensagem no meio da operação)
+    if (!btn.classList.contains('btn-loading')) btn.dataset.origText = btn.innerHTML;
     btn.innerHTML = `<span class="spinner-sm"></span>${text || ''}`;
     btn.classList.add('btn-loading');
   } else {
@@ -251,6 +253,11 @@ function navigateTo(viewName, pushHistory = true) {
   if (pushHistory && currentView !== viewName) {
     viewHistory.push(currentView);
   }
+
+  // Saiu da tela de nova pendência sem salvar: cancela uploads em andamento
+  // e apaga do storage as fotos que ficariam órfãs.
+  if (currentView === 'nova' && viewName !== 'nova') Requests.resetPhotos();
+
   currentView = viewName;
 
   // Atualiza views
@@ -295,13 +302,12 @@ function navigateTo(viewName, pushHistory = true) {
     case 'novo-gasto': openNovoGasto(); break;
     case 'semana': loadSemana(); break;
     case 'nova':
-      Requests.initPhotoPicker();
-      Requests.clearPendingPhotos();
+      Requests.initPhotoPicker();   // liga os listeners (uma vez) e zera as fotos
       document.getElementById('form-nova').reset();
+      setLoading(document.getElementById('btn-salvar-nova'), false);
       Properties.populateSelects(['nova-imovel']);
       Projects.populateSelect('nova-projeto');
       setTipoNova('imovel');
-      document.getElementById('photo-preview').innerHTML = '';
       document.getElementById('nova-error').classList.add('hidden');
       break;
   }
@@ -640,6 +646,7 @@ function setupNovaForm() {
     e.preventDefault();
     const btn = document.getElementById('btn-salvar-nova');
     const errEl = document.getElementById('nova-error');
+    if (btn.classList.contains('btn-loading')) return; // trava contra duplo toque
     errEl.classList.add('hidden');
 
     const propertyId = tipoNova === 'imovel' ? document.getElementById('nova-imovel').value : null;
@@ -658,19 +665,45 @@ function setupNovaForm() {
     setLoading(btn, true, 'Salvando...');
 
     try {
-      const photos = Requests.getPendingPhotos();
-      await Requests.create({ propertyId, projectId, title, description, urgency, deadline, photos });
+      // As fotos sobem em background assim que são escolhidas.
+      // Aqui só esperamos as que ainda estiverem no ar.
+      if (Requests.hasPendingUploads()) {
+        setLoading(btn, true, 'Enviando fotos...');
+        await Requests.waitForUploads();
+      }
 
-      showToast('Pendência criada! Responsável notificado. ✓', 'success');
-      Requests.clearPendingPhotos();
+      const fotos = Requests.getPhotoStatus();
+      if (fotos.failed > 0) {
+        const aviso = fotos.failed === 1
+          ? '1 foto não foi enviada (sem sinal?).'
+          : `${fotos.failed} fotos não foram enviadas (sem sinal?).`;
+        const ok = confirm(
+          `${aviso}\n\n` +
+          `OK = salvar a pendência sem ${fotos.failed === 1 ? 'ela' : 'elas'}.\n` +
+          `Cancelar = voltar e tentar de novo (toque no ↻ da foto).`
+        );
+        if (!ok) {
+          setLoading(btn, false);
+          return;
+        }
+      }
+
+      await Requests.create({
+        propertyId, projectId, title, description, urgency, deadline,
+        photoUrls: Requests.getPhotoUrls()
+      });
+
+      const msgFotos = fotos.ok > 0 ? ` (${fotos.ok} foto${fotos.ok > 1 ? 's' : ''})` : '';
+      showToast(`Pendência criada!${msgFotos} Responsável notificado. ✓`, 'success');
+      Requests.resetPhotos(true);   // fotos já pertencem à pendência
       form.reset();
-      document.getElementById('photo-preview').innerHTML = '';
       navigateTo('dashboard');
     } catch (err) {
       errEl.textContent = 'Erro ao salvar: ' + err.message;
       errEl.classList.remove('hidden');
-      setLoading(btn, false);
       console.error(err);
+    } finally {
+      setLoading(btn, false);
     }
   });
 }

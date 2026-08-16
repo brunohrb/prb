@@ -4,7 +4,20 @@
 // =============================================
 
 const Requests = (() => {
-  let pendingPhotos = [];
+  // ---- Config das fotos ----
+  const MAX_PHOTOS     = 8;
+  const PHOTO_MAX_DIM  = 1280;   // maior lado da imagem depois de comprimir
+  const PHOTO_QUALITY  = 0.75;
+  const COMPRESS_TIMEOUT = 20000;
+  const UPLOAD_TIMEOUT   = 60000;
+
+  // Cada foto escolhida vira um item com ciclo de vida próprio:
+  // 'preparando' -> 'enviando' -> 'pronto' | 'erro'
+  // O upload acontece assim que a foto é escolhida (não no submit),
+  // então salvar a pendência é instantâneo na maioria das vezes.
+  let photoItems = [];
+  let photoSeq = 0;
+  let pickerBound = false;
 
   // ---- Cache simples (45 segundos) ----
   let _cache = null;
@@ -58,16 +71,10 @@ const Requests = (() => {
     return data;
   }
 
-  // Cria nova pendência
-  async function create({ propertyId, projectId, title, description, urgency, deadline, photos }) {
+  // Cria nova pendência — as fotos já chegam aqui enviadas (upload em background)
+  async function create({ propertyId, projectId, title, description, urgency, deadline, photoUrls = [] }) {
     invalidateCache();
     const userId = Auth.getUser()?.id;
-
-    // Upload das fotos primeiro
-    let photoUrls = [];
-    if (photos && photos.length > 0) {
-      photoUrls = await uploadPhotos(photos);
-    }
 
     const { data, error } = await supabase
       .from('maintenance_requests')
@@ -160,23 +167,87 @@ const Requests = (() => {
     if (error) throw error;
   }
 
-  // ---- FOTOS ----
+  // ---- FOTOS: upload ----
 
-  async function uploadPhotos(files) {
-    const urls = [];
-    for (const file of files) {
-      const ext = file.name?.split('.').pop() || 'jpg';
-      const path = `${Auth.getUser()?.id}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
-      const { error } = await supabase.storage.from(STORAGE_BUCKET).upload(path, file, {
-        cacheControl: '3600',
-        upsert: false
-      });
-      if (!error) {
+  // Sobe um arquivo via XHR (dá progresso real e timeout de verdade).
+  // Cai para o SDK do Supabase se algo impedir o XHR.
+  function uploadViaXhr(path, file, token, onProgress, onStart) {
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', `${SUPABASE_URL}/storage/v1/object/${STORAGE_BUCKET}/${path}`, true);
+      xhr.timeout = UPLOAD_TIMEOUT;
+      xhr.setRequestHeader('apikey', SUPABASE_ANON_KEY);
+      xhr.setRequestHeader('authorization', `Bearer ${token}`);
+      xhr.setRequestHeader('cache-control', 'max-age=3600');
+      xhr.setRequestHeader('content-type', file.type || 'image/jpeg');
+      xhr.setRequestHeader('x-upsert', 'false');
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable && onProgress) onProgress(e.loaded / e.total);
+      };
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) resolve();
+        else reject(new Error(`HTTP ${xhr.status}`));
+      };
+      xhr.onerror   = () => reject(new Error('Falha de conexão'));
+      xhr.ontimeout = () => reject(new Error('Tempo esgotado'));
+      xhr.onabort   = () => reject(new Error('Cancelado'));
+      if (onStart) onStart(xhr);      // permite cancelar o envio
+      if (onProgress) onProgress(0);
+      xhr.send(file);
+    });
+  }
+
+  // Se o caminho por XHR der erro de protocolo (não de rede), o app inteiro
+  // passa a usar só o SDK — não adianta insistir a cada foto.
+  let xhrUploadBroken = false;
+
+  // Sobe uma foto com até 3 tentativas. Nunca lança — devolve {url, path} ou null.
+  async function uploadOne(item) {
+    const userId = Auth.getUser()?.id || 'anon';
+    let lastErr = null;
+
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      if (item.removed) return null;
+      // caminho novo a cada tentativa: evita colisão com um upload
+      // que estourou o timeout mas chegou no servidor
+      const path = `${userId}/${Date.now()}_${Math.random().toString(36).slice(2)}.jpg`;
+      const useXhr = !xhrUploadBroken && attempt < 3;
+      try {
+        if (useXhr) {
+          const { data: sess } = await supabase.auth.getSession();
+          const token = sess?.session?.access_token;
+          if (!token) throw new Error('Sessão expirada');
+          await uploadViaXhr(
+            path,
+            item.file,
+            token,
+            (frac) => { item.progress = frac; paintItem(item); },
+            (xhr) => { item.xhr = xhr; }
+          );
+        } else {
+          // caminho do SDK: sem progresso, mas é a via mais testada
+          item.progress = 0;
+          paintItem(item);
+          const { error } = await supabase.storage
+            .from(STORAGE_BUCKET)
+            .upload(path, item.file, { cacheControl: '3600', upsert: false });
+          if (error) throw error;
+        }
         const { data: urlData } = supabase.storage.from(STORAGE_BUCKET).getPublicUrl(path);
-        urls.push(urlData.publicUrl);
+        return { url: urlData.publicUrl, path };
+      } catch (err) {
+        lastErr = err;
+        item.xhr = null;
+        if (item.removed || err.message === 'Cancelado') return null;
+        // 4xx = a requisição em si está errada -> passa a usar só o SDK.
+        // 5xx / queda de rede são passageiros: continua tentando pelo XHR.
+        if (useXhr && /^HTTP 4\d\d$/.test(err.message || '')) xhrUploadBroken = true;
+        console.error(`Upload da foto falhou (tentativa ${attempt}/3):`, err);
+        if (attempt < 3) await new Promise(r => setTimeout(r, attempt * 1500));
       }
     }
-    return urls;
+    item.error = lastErr?.message || 'Erro desconhecido';
+    return null;
   }
 
   async function deletePhotos(urls) {
@@ -186,87 +257,279 @@ const Requests = (() => {
     }
   }
 
-  // ---- PHOTO PICKER (câmera / galeria) ----
+  // ---- FOTOS: compressão ----
 
+  // Reduz a imagem. Se o navegador não conseguir decodificar (HEIC em alguns
+  // Androids, arquivo corrompido) devolve o arquivo original em vez de travar.
+  function compressImage(file) {
+    return new Promise((resolve) => {
+      let done = false;
+      const finish = (result) => {
+        if (done) return;
+        done = true;
+        clearTimeout(timer);
+        if (objUrl) URL.revokeObjectURL(objUrl);
+        resolve(result);
+      };
+      const timer = setTimeout(() => finish(file), COMPRESS_TIMEOUT);
+
+      let objUrl = null;
+      try {
+        objUrl = URL.createObjectURL(file);
+      } catch {
+        finish(file);
+        return;
+      }
+
+      const img = new Image();
+      img.onload = () => {
+        try {
+          let w = img.naturalWidth || img.width;
+          let h = img.naturalHeight || img.height;
+          if (!w || !h) return finish(file);
+
+          const scale = Math.min(1, PHOTO_MAX_DIM / Math.max(w, h));
+          w = Math.round(w * scale);
+          h = Math.round(h * scale);
+
+          const canvas = document.createElement('canvas');
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) return finish(file);
+          ctx.drawImage(img, 0, 0, w, h);
+
+          canvas.toBlob(blob => {
+            // toBlob pode devolver null; e não vale a pena trocar por um arquivo maior
+            if (!blob || (file.size && blob.size >= file.size)) return finish(file);
+            finish(new File([blob], 'foto.jpg', { type: 'image/jpeg' }));
+          }, 'image/jpeg', PHOTO_QUALITY);
+        } catch (err) {
+          console.error('Erro ao comprimir foto:', err);
+          finish(file);
+        }
+      };
+      img.onerror = () => finish(file);
+      img.src = objUrl;
+    });
+  }
+
+  // ---- FOTOS: picker (câmera / galeria) ----
+
+  // Liga os listeners UMA vez só. Antes isso rodava a cada abertura da tela
+  // "Nova pendência", acumulando listeners: na 3ª visita cada foto escolhida
+  // era adicionada 3 vezes e o botão abria a câmera 3 vezes.
+  function bindPhotoPicker() {
+    if (pickerBound) return;
+    const camBtn  = document.getElementById('btn-camera');
+    const galBtn  = document.getElementById('btn-galeria');
+    const camIn   = document.getElementById('input-camera');
+    const galIn   = document.getElementById('input-galeria');
+    const preview = document.getElementById('photo-preview');
+    if (!camBtn || !galBtn || !camIn || !galIn || !preview) return;
+
+    camBtn.addEventListener('click', () => camIn.click());
+    galBtn.addEventListener('click', () => galIn.click());
+
+    const onChange = (e) => {
+      handleFileSelect(e.target.files);
+      e.target.value = '';
+    };
+    camIn.addEventListener('change', onChange);
+    galIn.addEventListener('change', onChange);
+
+    // delegação: os botões de cada miniatura não precisam de listener próprio
+    preview.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-act]');
+      if (!btn) return;
+      const item = photoItems.find(i => i.id === Number(btn.dataset.id));
+      if (!item) return;
+      if (btn.dataset.act === 'remove') removePhoto(item);
+      if (btn.dataset.act === 'retry')  startPhoto(item);
+    });
+
+    pickerBound = true;
+  }
+
+  // Chamado ao abrir a tela de nova pendência
   function initPhotoPicker() {
-    pendingPhotos = [];
-    const previewEl = document.getElementById('photo-preview');
-    if (previewEl) previewEl.innerHTML = '';
-
-    document.getElementById('btn-camera')?.addEventListener('click', () => {
-      document.getElementById('input-camera').click();
-    });
-    document.getElementById('btn-galeria')?.addEventListener('click', () => {
-      document.getElementById('input-galeria').click();
-    });
-
-    document.getElementById('input-camera')?.addEventListener('change', (e) => {
-      handleFileSelect(e.target.files);
-      e.target.value = '';
-    });
-    document.getElementById('input-galeria')?.addEventListener('change', (e) => {
-      handleFileSelect(e.target.files);
-      e.target.value = '';
-    });
+    bindPhotoPicker();
+    resetPhotos();
   }
 
   function handleFileSelect(files) {
-    Array.from(files).forEach(file => {
-      if (!file.type.startsWith('image/')) return;
-      if (pendingPhotos.length >= 8) { showToast('Máximo de 8 fotos por pendência', 'error'); return; }
-      compressImage(file, 1200, 0.8).then(compressed => {
-        pendingPhotos.push(compressed);
-        renderPhotoPreview();
-      });
-    });
-  }
+    const list = Array.from(files || []);
+    let ignoradas = 0;
 
-  function compressImage(file, maxWidth, quality) {
-    return new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const img = new Image();
-        img.onload = () => {
-          const canvas = document.createElement('canvas');
-          let w = img.width, h = img.height;
-          if (w > maxWidth) { h = h * maxWidth / w; w = maxWidth; }
-          canvas.width = w; canvas.height = h;
-          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-          canvas.toBlob(blob => {
-            resolve(new File([blob], file.name || 'foto.jpg', { type: 'image/jpeg' }));
-          }, 'image/jpeg', quality);
-        };
-        img.src = e.target.result;
+    for (const file of list) {
+      // alguns pickers do Android mandam type vazio — deixa passar
+      if (file.type && !file.type.startsWith('image/')) continue;
+      if (photoItems.length >= MAX_PHOTOS) { ignoradas++; continue; }
+
+      const item = {
+        id: ++photoSeq,
+        file,
+        original: file,
+        status: 'preparando',
+        progress: 0,
+        url: null,
+        path: null,
+        error: null,
+        removed: false,
+        xhr: null,
+        task: null,
+        previewUrl: null
       };
-      reader.readAsDataURL(file);
-    });
+      try { item.previewUrl = URL.createObjectURL(file); } catch { /* sem preview */ }
+      photoItems.push(item);
+      renderPhotos();
+      startPhoto(item);
+    }
+
+    if (ignoradas > 0) showToast(`Máximo de ${MAX_PHOTOS} fotos por pendência`, 'error');
   }
 
-  function renderPhotoPreview() {
+  // Comprime e sobe a foto em background
+  function startPhoto(item) {
+    if (item.removed) return;
+    item.error = null;
+    item.progress = 0;
+    item.status = 'preparando';
+    paintItem(item);
+
+    item.task = (async () => {
+      try {
+        item.file = await compressImage(item.original);
+        if (item.removed) return;
+        item.status = 'enviando';
+        paintItem(item);
+
+        const res = await uploadOne(item);
+        if (item.removed) {
+          // saiu da lista durante o upload: limpa o arquivo órfão
+          if (res) deletePhotos([res.url]).catch(() => {});
+          return;
+        }
+        if (res) {
+          item.url = res.url;
+          item.path = res.path;
+          item.status = 'pronto';
+          item.progress = 1;
+        } else {
+          item.status = 'erro';
+        }
+      } catch (err) {
+        console.error('Erro ao processar foto:', err);
+        item.error = err.message;
+        item.status = 'erro';
+      } finally {
+        item.xhr = null;
+        paintItem(item);
+      }
+    })();
+  }
+
+  function removePhoto(item) {
+    item.removed = true;
+    try { item.xhr?.abort(); } catch { /* ignora */ }
+    if (item.previewUrl) URL.revokeObjectURL(item.previewUrl);
+    if (item.url) deletePhotos([item.url]).catch(() => {});
+    photoItems = photoItems.filter(i => i.id !== item.id);
+    renderPhotos();
+  }
+
+  // Limpa tudo. `keepUploaded` = true depois de salvar a pendência
+  // (as fotos agora pertencem ao registro e não devem ser apagadas).
+  function resetPhotos(keepUploaded = false) {
+    for (const item of photoItems) {
+      item.removed = true;
+      try { item.xhr?.abort(); } catch { /* ignora */ }
+      if (item.previewUrl) URL.revokeObjectURL(item.previewUrl);
+      if (!keepUploaded && item.url) deletePhotos([item.url]).catch(() => {});
+    }
+    photoItems = [];
+    renderPhotos();
+  }
+
+  // ---- FOTOS: estado consultado pelo formulário ----
+
+  function hasPendingUploads() {
+    return photoItems.some(i => i.status === 'preparando' || i.status === 'enviando');
+  }
+
+  async function waitForUploads() {
+    await Promise.allSettled(photoItems.map(i => i.task).filter(Boolean));
+  }
+
+  function getPhotoStatus() {
+    return {
+      total:   photoItems.length,
+      ok:      photoItems.filter(i => i.status === 'pronto').length,
+      failed:  photoItems.filter(i => i.status === 'erro').length,
+      pending: photoItems.filter(i => i.status === 'preparando' || i.status === 'enviando').length
+    };
+  }
+
+  function getPhotoUrls() {
+    return photoItems.filter(i => i.status === 'pronto' && i.url).map(i => i.url);
+  }
+
+  // ---- FOTOS: render ----
+
+  function statusHint(item) {
+    if (item.status === 'preparando') return 'Preparando…';
+    if (item.status === 'enviando')   return `Enviando ${Math.round((item.progress || 0) * 100)}%`;
+    if (item.status === 'erro')       return item.error || 'Falhou';
+    return 'Enviada';
+  }
+
+  function itemHTML(item) {
+    const pct = Math.round((item.progress || 0) * 100);
+    const busy = item.status === 'preparando' || item.status === 'enviando';
+    return `
+      ${item.previewUrl ? `<img src="${item.previewUrl}" alt="Foto">` : '<div class="photo-noimg">IMG</div>'}
+      ${busy ? `<div class="photo-overlay"><span class="photo-spinner"></span></div>` : ''}
+      ${item.status === 'erro' ? `
+        <button type="button" class="photo-overlay photo-overlay-erro" data-act="retry" data-id="${item.id}" title="Tentar de novo">↻</button>
+      ` : ''}
+      ${item.status === 'pronto' ? `<span class="photo-ok">✓</span>` : ''}
+      ${item.status === 'enviando' ? `<div class="photo-progress"><i style="width:${pct}%"></i></div>` : ''}
+      <button type="button" class="photo-remove" data-act="remove" data-id="${item.id}" aria-label="Remover foto">×</button>
+      <span class="photo-hint">${statusHint(item)}</span>
+    `;
+  }
+
+  // Atualiza só uma miniatura (progresso não pode redesenhar a lista inteira)
+  function paintItem(item) {
+    const el = document.querySelector(`.photo-item[data-id="${item.id}"]`);
+    if (!el) return;
+    if (item.status === 'enviando') {
+      const bar = el.querySelector('.photo-progress i');
+      const hint = el.querySelector('.photo-hint');
+      // no meio do envio só mexe na barra, evita piscar a imagem
+      if (bar && el.dataset.status === 'enviando') {
+        bar.style.width = `${Math.round((item.progress || 0) * 100)}%`;
+        if (hint) hint.textContent = statusHint(item);
+        return;
+      }
+    }
+    el.dataset.status = item.status;
+    el.innerHTML = itemHTML(item);
+  }
+
+  function renderPhotos() {
     const preview = document.getElementById('photo-preview');
     if (!preview) return;
     preview.innerHTML = '';
-    pendingPhotos.forEach((file, idx) => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const item = document.createElement('div');
-        item.className = 'photo-item';
-        item.innerHTML = `
-          <img src="${e.target.result}" alt="Foto ${idx + 1}">
-          <button class="photo-remove" data-idx="${idx}">×</button>
-        `;
-        item.querySelector('.photo-remove').addEventListener('click', () => {
-          pendingPhotos.splice(idx, 1);
-          renderPhotoPreview();
-        });
-        preview.appendChild(item);
-      };
-      reader.readAsDataURL(file);
-    });
+    for (const item of photoItems) {
+      const el = document.createElement('div');
+      el.className = 'photo-item';
+      el.dataset.id = item.id;
+      el.dataset.status = item.status;
+      el.innerHTML = itemHTML(item);
+      preview.appendChild(el);
+    }
   }
-
-  function getPendingPhotos() { return pendingPhotos; }
-  function clearPendingPhotos() { pendingPhotos = []; }
 
   // ---- RENDER ----
 
@@ -402,7 +665,8 @@ const Requests = (() => {
   return {
     list, getById, create, update, updateStatus, remove,
     invalidateCache,
-    initPhotoPicker, getPendingPhotos, clearPendingPhotos,
+    initPhotoPicker, resetPhotos,
+    hasPendingUploads, waitForUploads, getPhotoStatus, getPhotoUrls,
     urgencyLabel, statusLabel, formatDate, isOverdue,
     renderCard, renderDetalhe
   };

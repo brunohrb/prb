@@ -588,8 +588,50 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
 .photo-section { background: var(--bg); border-radius: var(--radius-sm); padding: 14px; border: 1.5px dashed var(--border); }
 .photo-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
 .photo-grid:empty { margin-bottom: 0; }
-.photo-item { position: relative; width: 80px; height: 80px; }
-.photo-item img { width: 100%; height: 100%; object-fit: cover; border-radius: var(--radius-sm); box-shadow: var(--shadow); }
+.photo-item { position: relative; width: 80px; height: 96px; }
+.photo-item img { width: 100%; height: 80px; object-fit: cover; border-radius: var(--radius-sm); box-shadow: var(--shadow); display: block; }
+.photo-noimg {
+  width: 100%; height: 80px; border-radius: var(--radius-sm);
+  background: var(--border); color: var(--text-secondary);
+  display: flex; align-items: center; justify-content: center; font-size: 11px;
+}
+
+/* estado do envio de cada foto */
+.photo-overlay {
+  position: absolute; top: 0; left: 0; right: 0; height: 80px;
+  border-radius: var(--radius-sm);
+  background: rgba(0,0,0,0.45);
+  display: flex; align-items: center; justify-content: center;
+  border: none; padding: 0; color: #fff; font-size: 24px;
+}
+.photo-overlay-erro { background: rgba(220,38,38,0.72); cursor: pointer; }
+.photo-spinner {
+  width: 22px; height: 22px;
+  border: 2.5px solid rgba(255,255,255,0.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+.photo-progress {
+  position: absolute; left: 4px; right: 4px; bottom: 20px; height: 4px;
+  background: rgba(255,255,255,0.4); border-radius: 2px; overflow: hidden;
+}
+.photo-progress i { display: block; height: 100%; background: var(--primary); transition: width 0.2s ease; }
+.photo-ok {
+  position: absolute; top: 4px; left: 4px;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: var(--success, #16a34a); color: #fff;
+  font-size: 11px; line-height: 18px; text-align: center;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+.photo-hint {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  font-size: 10px; line-height: 14px; text-align: center;
+  color: var(--text-secondary);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.photo-item[data-status="erro"] .photo-hint { color: var(--danger); font-weight: 600; }
+.photo-item[data-status="pronto"] .photo-hint { color: var(--success, #16a34a); }
 .photo-remove {
   position: absolute; top: -6px; right: -6px;
   width: 22px; height: 22px;
