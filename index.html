@@ -1699,7 +1699,7 @@ function _cp(v,f){if(!f)return'';return((v/f)*100).toFixed(1).replace('.',',')+'
 function _cs(arr,k){return(arr||[]).reduce(function(s,r){return s+(Number(r[k])||0);},0);}
 function _cCalc(df,meses){
   var keys=(meses[0]==='todos')?_MK:meses;
-  var fat=0,imp=0,cus=0,des=0,pl=0,ebitda=0,invDiv=0;
+  var fat=0,imp=0,cus=0,des=0,pl=0,ebitda=0,invDiv=0,soc=0;
   var ajArr=df.ajustes||[];
   var socItem=ajArr.find(function(r){if(!r.nome)return false;var n=r.nome.toLowerCase();return n.indexOf('cio')>=0||n.indexOf('retirada')>=0;});
   if(!socItem&&ajArr.length>0)socItem=ajArr[ajArr.length-1];
@@ -1708,6 +1708,7 @@ function _cCalc(df,meses){
     fat+=_cs(df.receitas,mk);imp+=_cs(df.impostos,mk);cus+=_cs(df.custos,mk);des+=_cs(df.despesas,mk);
     (df.despesas||[]).forEach(function(r){if(r.nome&&r.nome.toLowerCase().indexOf('labore')>=0)pl+=(Number(r[mk])||0);});
     if(eaItem)ebitda+=(Number(eaItem[mk])||0);
+    if(socItem)soc+=(Number(socItem[mk])||0);
     var invDivMk=0;
     ajArr.forEach(function(r){
       if(!r.nome)return;var n=r.nome.toLowerCase().trim();
@@ -1717,7 +1718,9 @@ function _cCalc(df,meses){
   });
   if(!eaItem)ebitda=fat-imp-cus-des;
   var despTot=cus+des;
-  return{fat:fat,despTot:despTot,imp:imp,ebitda:ebitda,invDiv:invDiv,lucroSocio:ebitda+pl,lucroBruto:fat-(despTot-pl)-imp-invDiv};
+  // retSocios = "Socios ou Retiradas" (Ajustes de Caixa) + "Pro-Labore" (Despesas Operac.),
+  // ou seja, o total que a Texnet entregou aos socios no periodo pela propria planilha.
+  return{fat:fat,despTot:despTot,imp:imp,ebitda:ebitda,invDiv:invDiv,lucroSocio:ebitda+pl,lucroBruto:fat-(despTot-pl)-imp-invDiv,retSocios:soc+pl};
 }
 function cTogAno(btn,ano){
   btn.classList.toggle('ativo');
@@ -1739,20 +1742,9 @@ function cTogMes(btn,mes){
 }
 function _cRenderMulti(){
   var anoMap={'2024':_cDados2024,'2025':_cDados2025,'2026':_cCache};
-  var fat=0,despTot=0,imp=0,ebitda=0,invDiv=0,lucroSocio=0,lucroBruto=0;
-  _cAnos.forEach(function(ano){var df=anoMap[ano];if(!df)return;var c=_cCalc(df,_cMeses);fat+=c.fat;despTot+=c.despTot;imp+=c.imp;ebitda+=c.ebitda;invDiv+=c.invDiv;lucroSocio+=c.lucroSocio;lucroBruto+=c.lucroBruto;});
+  var fat=0,despTot=0,imp=0,ebitda=0,invDiv=0,lucroSocio=0,lucroBruto=0,retSocios=0;
+  _cAnos.forEach(function(ano){var df=anoMap[ano];if(!df)return;var c=_cCalc(df,_cMeses);fat+=c.fat;despTot+=c.despTot;imp+=c.imp;ebitda+=c.ebitda;invDiv+=c.invDiv;lucroSocio+=c.lucroSocio;lucroBruto+=c.lucroBruto;retSocios+=c.retSocios;});
   var f=fat;
-  // PL Texnet = somatória dos lançamentos marcados (F) pelo financeiro (tabela movimentacoes),
-  // respeitando o(s) ano(s)/mês(es) selecionados no filtro do Consolidado.
-  var plTexnet=0;
-  if(typeof dadosCache!=='undefined'&&dadosCache&&dadosCache.lancamentos){
-    var _plMeses=(_cMeses[0]==='todos')?null:_cMeses.map(function(mk){return _MK.indexOf(mk);});
-    dadosCache.lancamentos.forEach(function(l){
-      if(_cAnos.indexOf(String(l.ano))<0)return;
-      if(_plMeses&&_plMeses.indexOf(l.mes)<0)return;
-      if(/\(F\)/.test(l.desc||''))plTexnet+=(l.valor||0);
-    });
-  }
   var anosL=_cAnos.slice().sort().join('+');
   var per=(_cMeses[0]==='todos')?'Todos os meses':_cMeses.map(function(m){return _MN[_MK.indexOf(m)];}).join(', ');
   var pe=document.getElementById('consolPeriodo');if(pe)pe.textContent='Periodo: '+per+' / '+anosL;
@@ -1766,7 +1758,7 @@ function _cRenderMulti(){
     {t:'INVEST. E DIVIDAS',v:invDiv,cor:'#3b82f6',i:'&#128230;',p:_cp(invDiv,f),s:'Aj. Caixa - Participacao de Lucro'},
     {t:'LUCRO SOCIO',v:lucroSocio,cor:'#8b5cf6',i:'&#127942;',p:_cp(lucroSocio,f),s:'EBITDA Ajustado + Pro-Labore'},
     {t:'CAIXA LIVRE PARA OS SÓCIOS',v:lucroBruto,cor:'#f59e0b',i:'&#128176;',p:_cp(lucroBruto,f),s:'Fat - Desp.(sem PL) - Impostos - Invest.'},
-    {t:'RETIRADA SÓCIOS',v:plTexnet,cor:'#8b5cf6',i:'&#128188;',p:_cp(plTexnet,f),s:'Lancamentos (F) do financeiro',tip:'Valor distribuído pela Texnet para os sócios'}
+    {t:'RETIRADA SÓCIOS',v:retSocios,cor:'#8b5cf6',i:'&#128188;',p:_cp(retSocios,f),s:'Socios ou Retiradas + Pro-Labore',tip:'Ajustes de Caixa (Sócios ou Retiradas) + despesa Pró-Labore — total entregue aos sócios no período'}
   ];
   var h='';
   for(var i=0;i<cards.length;i++){var d=cards[i];var vc=d.v<0?'style="color:#dc2626"':'';
